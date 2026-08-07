@@ -1,0 +1,212 @@
+[
+  {
+    "case_id": "example_home_01",
+    "url": "https://example.com/?case=01",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_02",
+    "url": "https://example.com/?case=02",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_03",
+    "url": "https://example.com/?case=03",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_04",
+    "url": "https://example.com/?case=04",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_05",
+    "url": "https://example.com/?case=05",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_06",
+    "url": "https://example.com/?case=06",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_07",
+    "url": "https://example.com/?case=07",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_08",
+    "url": "https://example.com/?case=08",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_09",
+    "url": "https://example.com/?case=09",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_10",
+    "url": "https://example.com/?case=10",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_11",
+    "url": "https://example.com/?case=11",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_12",
+    "url": "https://example.com/?case=12",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_13",
+    "url": "https://example.com/?case=13",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_14",
+    "url": "https://example.com/?case=14",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_home_15",
+    "url": "https://example.com/?case=15",
+    "expected_success": true,
+    "expected_status_code": 200,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_01",
+    "url": "https://example.com/does-not-exist?case=01",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_02",
+    "url": "https://example.com/does-not-exist?case=02",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_03",
+    "url": "https://example.com/does-not-exist?case=03",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_04",
+    "url": "https://example.com/does-not-exist?case=04",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_05",
+    "url": "https://example.com/does-not-exist?case=05",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_06",
+    "url": "https://example.com/does-not-exist?case=06",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_07",
+    "url": "https://example.com/does-not-exist?case=07",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_08",
+    "url": "https://example.com/does-not-exist?case=08",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_09",
+    "url": "https://example.com/does-not-exist?case=09",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_10",
+    "url": "https://example.com/does-not-exist?case=10",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_11",
+    "url": "https://example.com/does-not-exist?case=11",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_12",
+    "url": "https://example.com/does-not-exist?case=12",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_13",
+    "url": "https://example.com/does-not-exist?case=13",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_14",
+    "url": "https://example.com/does-not-exist?case=14",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  },
+  {
+    "case_id": "example_404_15",
+    "url": "https://example.com/does-not-exist?case=15",
+    "expected_success": true,
+    "expected_status_code": 404,
+    "expected_title": "Example Domain"
+  }
+]

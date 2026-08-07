@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "sales_fixture_valid",
+    "path": "fixtures/sales.csv",
+    "expected_success": true,
+    "expected_total_sales": 800000.0,
+    "expected_row_count": 6
+  },
+  {
+    "case_id": "sales_missing_column",
+    "path": "fixtures/sales_invalid_missing_column.csv",
+    "expected_success": false
+  },
+  {
+    "case_id": "sales_invalid_amount",
+    "path": "fixtures/sales_invalid_amount.csv",
+    "expected_success": false
+  }
+]

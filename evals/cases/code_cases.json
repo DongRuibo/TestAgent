@@ -1,0 +1,210 @@
+[
+  {
+    "case_id": "python_basic",
+    "kind": "python",
+    "code": "print('EVAL_PYTHON_OK:' + str(sum(range(1, 6))))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PYTHON_OK:15"
+  },
+  {
+    "case_id": "javascript_basic",
+    "kind": "javascript",
+    "code": "console.log('EVAL_JS_OK:' + [1, 2, 3].reduce((a, b) => a + b, 0))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_OK:6"
+  },
+  {
+    "case_id": "file_round_trip",
+    "kind": "file_round_trip",
+    "expected_success": true
+  },
+  {
+    "case_id": "execution_timeout",
+    "kind": "timeout",
+    "code": "import time\ntime.sleep(10)",
+    "expected_success": false,
+    "expected_error_type": "EXECUTION_TIMEOUT"
+  },
+  {
+    "case_id": "network_observation",
+    "kind": "python",
+    "code": "import socket\ntry:\n    socket.create_connection(('1.1.1.1', 443), timeout=2)\n    print('EVAL_NETWORK_REACHABLE')\nexcept Exception:\n    print('EVAL_NETWORK_BLOCKED')",
+    "expected_success": true,
+    "expected_stdout": "EVAL_NETWORK_BLOCKED"
+  },
+  {
+    "case_id": "python_string",
+    "kind": "python",
+    "code": "print('EVAL_PY_STRING:' + 'sandbox'.upper())",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_STRING:SANDBOX"
+  },
+  {
+    "case_id": "python_math",
+    "kind": "python",
+    "code": "import math\nprint('EVAL_PY_MATH:' + str(math.gcd(84, 30)))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_MATH:6"
+  },
+  {
+    "case_id": "python_json",
+    "kind": "python",
+    "code": "import json\nprint('EVAL_PY_JSON:' + json.dumps({'ok': True}, sort_keys=True))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_JSON:{\"ok\": true}"
+  },
+  {
+    "case_id": "python_dict",
+    "kind": "python",
+    "code": "values = {'a': 2, 'b': 5}\nprint('EVAL_PY_DICT:' + str(sum(values.values())))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_DICT:7"
+  },
+  {
+    "case_id": "python_bytes",
+    "kind": "python",
+    "code": "payload = 'lazyx'.encode()\nprint('EVAL_PY_BYTES:' + str(len(payload)))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_BYTES:5"
+  },
+  {
+    "case_id": "python_decimal",
+    "kind": "python",
+    "code": "from decimal import Decimal\nprint('EVAL_PY_DECIMAL:' + str(Decimal('1.20') + Decimal('2.30'))) ",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_DECIMAL:3.50"
+  },
+  {
+    "case_id": "python_datetime",
+    "kind": "python",
+    "code": "from datetime import date\nprint('EVAL_PY_DATE:' + str((date(2026, 1, 2) - date(2026, 1, 1)).days))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_DATE:1"
+  },
+  {
+    "case_id": "python_sort",
+    "kind": "python",
+    "code": "print('EVAL_PY_SORT:' + ','.join(map(str, sorted([3, 1, 2]))))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_SORT:1,2,3"
+  },
+  {
+    "case_id": "python_regex",
+    "kind": "python",
+    "code": "import re\nprint('EVAL_PY_REGEX:' + re.sub(r'\\d+', '#', 'a123'))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_REGEX:a#"
+  },
+  {
+    "case_id": "python_csv",
+    "kind": "python",
+    "code": "import csv, io\nrows = list(csv.DictReader(io.StringIO('a,b\\n1,2\\n')))\nprint('EVAL_PY_CSV:' + rows[0]['b'])",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_CSV:2"
+  },
+  {
+    "case_id": "python_hash",
+    "kind": "python",
+    "code": "import hashlib\nprint('EVAL_PY_HASH:' + hashlib.sha256(b'lazyx').hexdigest()[:8])",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_HASH:6e6e8750"
+  },
+  {
+    "case_id": "python_set",
+    "kind": "python",
+    "code": "print('EVAL_PY_SET:' + str(len(set([1, 1, 2, 3]))))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_SET:3"
+  },
+  {
+    "case_id": "python_fibonacci",
+    "kind": "python",
+    "code": "a, b = 0, 1\nfor _ in range(8):\n    a, b = b, a + b\nprint('EVAL_PY_FIB:' + str(a))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_FIB:21"
+  },
+  {
+    "case_id": "python_primes",
+    "kind": "python",
+    "code": "nums = [n for n in range(2, 12) if all(n % d for d in range(2, n))]\nprint('EVAL_PY_PRIMES:' + str(len(nums)))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_PRIMES:5"
+  },
+  {
+    "case_id": "python_unicode",
+    "kind": "python",
+    "code": "print('EVAL_PY_UNICODE:' + '沙箱'.encode('utf-8').decode('utf-8'))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_UNICODE:沙箱"
+  },
+  {
+    "case_id": "python_path",
+    "kind": "python",
+    "code": "from pathlib import PurePosixPath\nprint('EVAL_PY_PATH:' + PurePosixPath('/tmp/a.txt').suffix)",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_PATH:.txt"
+  },
+  {
+    "case_id": "python_env",
+    "kind": "python",
+    "code": "import os\nprint('EVAL_PY_ENV:' + ('yes' if 'PATH' in os.environ else 'no'))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_ENV:yes"
+  },
+  {
+    "case_id": "python_bool",
+    "kind": "python",
+    "code": "print('EVAL_PY_BOOL:' + str(all([True, 1, 'x'])))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_BOOL:True"
+  },
+  {
+    "case_id": "python_tuple",
+    "kind": "python",
+    "code": "point = (3, 4)\nprint('EVAL_PY_TUPLE:' + str(point[0] + point[1]))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_TUPLE:7"
+  },
+  {
+    "case_id": "python_nested",
+    "kind": "python",
+    "code": "data = {'items': [{'value': 4}, {'value': 6}]}\nprint('EVAL_PY_NESTED:' + str(sum(x['value'] for x in data['items'])))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_PY_NESTED:10"
+  },
+  {
+    "case_id": "javascript_array",
+    "kind": "javascript",
+    "code": "console.log('EVAL_JS_ARRAY:' + [1, 2, 3].map(x => x * 2).join(','))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_ARRAY:2,4,6"
+  },
+  {
+    "case_id": "javascript_string",
+    "kind": "javascript",
+    "code": "console.log('EVAL_JS_STRING:' + 'sandbox'.toUpperCase())",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_STRING:SANDBOX"
+  },
+  {
+    "case_id": "javascript_object",
+    "kind": "javascript",
+    "code": "const x = {a: 2, b: 3}; console.log('EVAL_JS_OBJECT:' + (x.a + x.b))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_OBJECT:5"
+  },
+  {
+    "case_id": "javascript_math",
+    "kind": "javascript",
+    "code": "console.log('EVAL_JS_MATH:' + Math.max(4, 9, 2))",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_MATH:9"
+  },
+  {
+    "case_id": "javascript_json",
+    "kind": "javascript",
+    "code": "console.log('EVAL_JS_JSON:' + JSON.parse('{\"ok\":true}').ok)",
+    "expected_success": true,
+    "expected_stdout": "EVAL_JS_JSON:true"
+  }
+]

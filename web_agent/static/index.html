@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Mini Agent 本地网页演示" />
+    <title>Mini Agent · Sandbox Lab</title>
+    <link rel="stylesheet" href="/static/app.css?v=20260807-1" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span></div>
+          <div>
+            <p class="eyebrow">SANDBOX LAB</p>
+            <h1>Mini Agent</h1>
+          </div>
+        </div>
+
+        <section class="status-card" aria-labelledby="status-title">
+          <div class="status-heading">
+            <h2 id="status-title">运行状态</h2>
+            <span class="status-pill" id="agent-status"><i></i> 检查中</span>
+          </div>
+          <dl class="status-list">
+            <div><dt>模型</dt><dd id="model-status">—</dd></div>
+            <div><dt>Sandbox Gateway</dt><dd id="code-status">—</dd></div>
+            <div><dt>沙箱工具</dt><dd id="browser-status">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="capabilities" aria-labelledby="capability-title">
+          <h2 id="capability-title">可用能力</h2>
+          <ul>
+            <li><span class="tool-icon">&gt;_</span><div><strong>执行代码</strong><small>隔离 Python 环境</small></div></li>
+            <li><span class="tool-icon">▦</span><div><strong>分析与简报</strong><small>CSV/XLSX、PDF 与 PPTX</small></div></li>
+            <li><span class="tool-icon">◎</span><div><strong>浏览网页</strong><small>公开页面与截图</small></div></li>
+          </ul>
+        </section>
+
+        <div class="sidebar-footer">
+          <span>一次工具调用，一个临时沙箱</span>
+          <button id="clear-chat" type="button">清空对话</button>
+        </div>
+      </aside>
+
+      <main class="chat-panel">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">LIVE DEMO</p>
+            <h2>和你的 Agent 对话</h2>
+          </div>
+          <div class="secure-note"><span aria-hidden="true">◆</span> 密钥仅保留在服务端</div>
+        </header>
+
+        <section class="messages" id="messages" aria-live="polite">
+          <article class="welcome-card" id="welcome-card">
+            <div class="welcome-orbit" aria-hidden="true"><span></span></div>
+            <p class="eyebrow">READY TO WORK</p>
+            <h2>想让 Agent 帮你做什么？</h2>
+            <p>它可以调用本地文件、代码沙箱、通用表格分析、经营简报和公开网页工具，并展示真实执行轨迹。</p>
+            <div class="prompt-grid">
+              <button class="prompt-chip" data-prompt="必须调用 run_code 执行 Python：计算 123456789 的平方根，并告诉我沙箱是否销毁。">
+                <strong>运行 Python</strong><span>精确计算并验证清理</span>
+              </button>
+              <button class="prompt-chip" data-prompt="必须调用 generate_business_briefing 分析 fixtures/sales.csv，告诉我核心指标、异常，以及 JSON、图表、Markdown、PDF、PPTX 产物。">
+                <strong>生成经营简报</strong><span>CSV/XLSX → PDF 与 PPTX</span>
+              </button>
+              <button class="prompt-chip" data-prompt="必须调用 browse_public_page 打开 https://example.com，告诉我标题、正文摘要和截图路径。">
+                <strong>浏览公开网页</strong><span>提取内容并截图</span>
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <section class="composer-wrap">
+          <form class="composer" id="chat-form">
+            <label class="sr-only" for="message-input">输入消息</label>
+            <textarea id="message-input" rows="1" maxlength="20000" placeholder="给 Agent 一个任务…" required></textarea>
+            <button class="send-button" id="send-button" type="submit" aria-label="发送消息">
+              <span>发送</span><b aria-hidden="true">↗</b>
+            </button>
+          </form>
+          <p class="composer-hint">Enter 发送 · Shift + Enter 换行 · 网页内容视为不可信数据</p>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js?v=20260807-1" defer></script>
+  </body>
+</html>
