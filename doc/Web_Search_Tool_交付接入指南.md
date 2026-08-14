@@ -2,7 +2,7 @@
 
 ## 1. 这份代码是什么
 
-`web-capability/` 是一个独立的 Rust HTTP 服务，不是可以直接 `import` 的 Agent
+`services/web-capability/` 是一个独立的 Rust HTTP 服务，不是可以直接 `import` 的 Agent
 插件。接收方需要先启动服务，再在自己的 Agent Runtime 中注册一个名为
 `web_search` 的 Tool，由 Tool Handler 调用服务的 `/v1/search` 接口。
 
@@ -34,7 +34,7 @@ Agent 根据结果继续调用 web_fetch 或生成回答
 ### 2.1 必须交付
 
 ```text
-web-capability/
+services/web-capability/
 ├── Cargo.toml
 ├── Cargo.lock
 ├── .env.example
@@ -47,8 +47,8 @@ web-capability/
 ### 2.2 不要交付
 
 ```text
-web-capability/.env
-web-capability/target/
+services/web-capability/.env
+services/web-capability/target/
 ```
 
 原因：
@@ -86,7 +86,7 @@ pip install "httpx>=0.27,<1"
 进入交付目录：
 
 ```bash
-cd web-capability
+cd services/web-capability
 cp .env.example .env
 ```
 
@@ -141,7 +141,7 @@ WEB_SEARCH_FALLBACK_PROVIDERS=brave,exa
 
 ### 第二步：启动服务
 
-在 `web-capability/` 目录运行：
+在 `services/web-capability/` 目录运行：
 
 ```bash
 cargo run --release
@@ -216,6 +216,22 @@ curl -X POST http://127.0.0.1:3020/v1/search \
 完成这一步说明 Rust 服务可用。下面再把它接入 Agent。
 
 ## 5. 在 Python Agent 中封装 Tool
+
+推荐直接安装仓库提供的独立 Tool 包：
+
+```bash
+pip install ./packages/web-capability-tools
+```
+
+```python
+from testagent_web_tools import WebCapabilityTools
+
+web = WebCapabilityTools.from_env()
+TOOL_DEFINITIONS = web.tool_definitions
+TOOL_HANDLERS = web.tool_handlers
+```
+
+下面的手写版本保留为其他语言或自定义 Agent Runtime 的参考实现。
 
 在接收方 Agent 项目中新建 `tools/web_capability.py`：
 
@@ -663,7 +679,7 @@ X-Request-ID
 
 检查：
 
-- `.env` 是否放在 `web-capability/` 目录。
+- `.env` 是否放在 `services/web-capability/` 目录。
 - `WEB_SEARCH_PRIMARY_PROVIDER` 与 Key 是否对应。
 - Key 前后是否有空格。
 - 修改 `.env` 后是否重启服务。
@@ -715,14 +731,14 @@ curl http://127.0.0.1:3020/health
 
 接收方可以参考当前项目中的以下文件：
 
-- `web-capability/src/lib.rs`：HTTP 路由。
-- `web-capability/src/search/service.rs`：Provider 调度、重试、缓存和 UsageLogger。
-- `tools/web_capability_client.py`：Python HTTP Client。
-- `tools/web_search.py`：最小 `web_search` Tool Handler。
-- `tools/web_fetch.py`：最小 `web_fetch` Tool Handler。
+- `services/web-capability/src/lib.rs`：HTTP 路由。
+- `services/web-capability/src/search/service.rs`：Provider 调度、重试、缓存和 UsageLogger。
+- `packages/web-capability-tools/src/testagent_web_tools/client.py`：Python HTTP Client。
+- `packages/web-capability-tools/src/testagent_web_tools/search.py`：`web_search` Handler。
+- `packages/web-capability-tools/src/testagent_web_tools/fetch.py`：`web_fetch` Handler。
 - `agent/loop.py`：Tool注册、任务级预算、去重、Tool Result回填和日期注入。
 - `tests/test_agent_loop.py`：预算、去重和日期注入测试。
 - `tests/test_web_capability_tools.py`：Python Client与工具契约测试。
 
-如果接收方只拿到 `web-capability/`，就使用本文第5至第10节在自己的 Agent Runtime
+如果接收方只拿到 `services/web-capability/`，就使用本文第5至第10节在自己的 Agent Runtime
 中实现适配。如果接收方拿到整个 TestAgent 项目，可以直接复用上述 Python 参考实现。

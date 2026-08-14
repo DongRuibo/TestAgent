@@ -369,7 +369,7 @@ CREATING → READY → RUNNING → COLLECTING → TERMINATING → TERMINATED
 | 固定评测框架 | 已实现、已完成 Code/Browser 各 30 实例 AGSX 基线 | `evals/runner.py` 统一记录成功率、95% Wilson 区间、清理率、P50/P95、并发和成本估算；最终合并 63/63 通过，但不代表生产 SLA；报告 `artifacts/evals/eval-20260806T032636Z-6d1fdc70/` |
 | 多租户隔离 / 超时清理 | 已完成 AGSX POC | `agsx_isolation_poc.py` 验证两个 tenant 同路径文件隔离、Metadata 绑定、`EXECUTION_TIMEOUT`、销毁后文件不可读和 3/3 清理；仍不是生产级串扰全量测试 |
 | PPIO / PAI 同场对照 | PPIO Code+销售与 Browser 对照已完成 | PPIO Code+销售 33/33、Browser 30/30 通过且清理 63/63，评测后残留为 0；Code+销售 P95 1,904 ms、每成功任务 0.000168 元，Browser P95 4,632 ms、每成功任务 0.000500 元；PAI 未评测 |
-| 可复用 Sandbox Gateway V0 | 已实现、已验证（PPIO Code E2E） | `sandbox_gateway/` 提供 FastAPI REST；`sandbox_client/` 提供同步/异步 SDK；支持 API Key、租户/Agent 归属、幂等提交、上传/下载、Code/销售/公开 Browser、查询/取消、Artifact、Receipt、重启恢复和项目标签孤儿扫描；真实 PPIO Code E2E 成功且扫描无遗留；当前为 SQLite、本地文件和进程内线程池，不是生产部署 |
+| 可复用 Sandbox Gateway V0 | 已实现、已验证（PPIO Code E2E） | `services/sandbox-gateway/` 提供 FastAPI REST；`packages/sandbox-client/` 提供同步/异步 SDK；支持 API Key、租户/Agent 归属、幂等提交、上传/下载、Code/销售/公开 Browser、查询/取消、Artifact、Receipt、重启恢复和项目标签孤儿扫描；真实 PPIO Code E2E 成功且扫描无遗留；当前为 SQLite、本地文件和进程内线程池，不是生产部署 |
 
 ## 8.2 四周收敛计划
 

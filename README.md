@@ -1,39 +1,29 @@
 # TestAgent
 
 这个仓库以 Monorepo 方式维护 Agent Runtime、Sandbox Gateway 和 Web Capability，
-用于不依赖 Agent 框架、从底层实现并验证一个开发者资料整理 Agent。
+用于不依赖 Agent 框架、从底层实现并验证一个个人助手 Agent。
 
-当前版本是 **V2：多工具 Agent + Sandbox Gateway**。模型可以自主选择 `read_file`、
-`run_code`、`analyze_spreadsheet`、`generate_business_briefing`、`web_search`、
-`web_fetch` 和 `browse_public_page`。Code、表格和 Browser 工具统一通过 Gateway，
-由 Gateway 在 AGSX/PPIO 间按能力和网络档位选择 Provider；Agent 不持有云厂商密钥。
+当前默认版本是 **V2：单进程多工具个人助手 Agent**。模型可以在对话中调用本地文件、
+代码沙箱、表格分析、公开网页、知识库和受控业务工作流。Code、表格和 Browser 工具在
+Agent 进程内直连腾讯 AGSX，搜索直连 Tavily，不需要启动本项目自己的 Gateway 或 Web
+Capability Service。两个服务及其 SDK 仍保留在仓库中，供多 Agent 复用或后续恢复服务化部署。
 
 ## 当前目录
 
 ```text
 .
-├── main.py                 # 命令行入口
-├── agent/
-│   └── loop.py             # 最小 Agent Loop
-├── llm/
-│   └── client.py           # 模型配置与调用封装
-├── tools/
-│   ├── read_file.py        # 限定在 workspace 内的读取工具
-│   ├── gateway_sandbox.py  # Agent → Gateway 的 Code/表格/Browser 工具
-│   ├── web_capability_client.py # 独立 Web 服务同步客户端
-│   ├── web_search.py       # 搜索网页的原子工具
-│   ├── web_fetch.py        # 静态网页抓取原子工具
-│   └── browse_public_page.py # 公开网页 Browser Agent 工具
-├── web-capability/         # Rust 搜索与静态抓取服务
-│   ├── Cargo.toml
-│   └── src/
-├── sandbox_runtime/
-│   ├── tencent_agsx.py     # AGSX Provider Adapter
-│   ├── artifact_store.py   # 本地 Artifact 归档与 SHA256 校验
-│   ├── spreadsheet_workflow.py # 通用 CSV/XLSX 沙箱分析
-│   ├── report_renderer.py  # 受控 PDF/PPTX 经营简报渲染
-│   ├── browser_workflow.py # 公开网页提取、截图、Receipt 与清理
-│   └── browser_security.py # Browser 输入边界与不可信内容标记
+├── apps/dev-agent/         # 默认单进程 Agent 与本地 Web UI
+├── services/
+│   ├── sandbox-gateway/    # FastAPI Gateway + Sandbox Runtime + Dockerfile
+│   └── web-capability/     # Rust Search/Fetch 服务 + Dockerfile
+├── packages/
+│   ├── sandbox-contracts/  # Gateway/Client 共用的稳定协议模型
+│   ├── sandbox-client/     # 可独立安装的同步/异步 Python SDK
+│   ├── rpa-agent-module/   # 受控的本地浏览器与 RPA 工作流
+│   └── web-capability-tools/ # Web Client、Tool schemas 与 handlers
+├── contracts/              # 两个服务的版本化 OpenAPI 契约
+├── deploy/compose.yaml     # 本地一键启动两个 Capability 服务
+├── main.py                 # Dev Agent 兼容启动入口
 ├── scripts/
 │   ├── agsx_smoke.py       # 最小 Code 云沙箱验证
 │   ├── agsx_code_report.py # Code/文件/网络/超时/清理报告
@@ -48,16 +38,19 @@
 │   ├── test_llm_client.py  # 模型客户端测试
 │   ├── test_read_file.py   # 文件工具与路径安全测试
 │   └── test_run_code.py    # AGSX 工具的离线生命周期测试
-├── workspace/              # 将来供 Agent 读取和写入文件
-├── sandbox_gateway/        # 面向多个 Agent 的 Provider-neutral REST Gateway
-├── sandbox_client/         # 同步/异步 Python SDK
+├── workspace/              # Dev Agent 读取和写入文件
 ├── examples/
 │   └── gateway_client_demo.py # 其他 Agent 的最小接入示例
 ├── .env.example            # 配置示例
-└── pyproject.toml          # Python 项目与依赖配置
+└── pyproject.toml          # uv Workspace 与统一开发依赖
 ```
 
-`memory/`、`observability/` 会在对应阶段真正需要时再创建，避免一开始只有目录、没有机制。
+模块化和发布边界详见[模块化架构与发布设计](doc/模块化架构与发布设计.md)。
+
+给其他 Agent 或开发者交付模块时，分别参见：
+
+- [Sandbox 模块下载与接入指南](doc/Sandbox_模块下载与接入指南.md)
+- [Web Search 模块下载与接入指南](doc/Web_Search_模块下载与接入指南.md)
 
 ## 安装
 
@@ -74,11 +67,33 @@ cp .env.example .env
 OPENAI_API_KEY=你的密钥
 OPENAI_MODEL=你的模型名
 AGENT_TIMEZONE=Asia/Shanghai
-WEB_CAPABILITY_BASE_URL=http://127.0.0.1:3020
-SANDBOX_GATEWAY_URL=http://127.0.0.1:8787
-SANDBOX_GATEWAY_API_KEY=与_Gateway_身份映射一致的本地_Token
-GATEWAY_API_KEYS=同一个本地_Token|demo-tenant|demo-agent
+TAVILY_API_KEY=你的_Tavily_密钥
+E2B_API_KEY=e2b_格式的_AGSX_密钥
+E2B_DOMAIN=ap-guangzhou.tencentags.com
+AGSX_TEMPLATE=你的_Code_Tool_名称
+AGSX_BROWSER_TEMPLATE=你的_Browser_Tool_名称
 ARTIFACT_TOOL_ROOT=/absolute/path/to/@oai/artifact-tool
+MEMORY_ENABLED=true
+MEMORY_AUTO_EXTRACT=true
+MEMORY_EPISODE_CONSOLIDATION_ENABLED=false
+MEMORY_BASE_URL=http://127.0.0.1:8080
+MEMORY_ENV_FILE=/absolute/path/to/lazytt-memory-system/.env
+MEMORY_USER_ID=semantic-demo
+MEMORY_RECALL_POLICY=adaptive
+CONVERSATION_DB_PATH=.local/conversations.sqlite3
+CONTEXT_MAX_CHARS=40000
+CONTEXT_HISTORY_MAX_CHARS=16000
+CONTEXT_TOOL_RESULT_MAX_CHARS=8000
+RAG_ENABLED=true
+RAG_BASE_URL=http://127.0.0.1:8082
+RAG_KNOWLEDGE_BASE_ID=你的_TestAgent_知识库_UUID
+RAG_ATTACHMENT_PDF_KNOWLEDGE_BASE_ID=你的_PDF附件知识库_UUID
+RAG_ATTACHMENT_OFFICE_KNOWLEDGE_BASE_ID=你的_Office附件知识库_UUID
+RAG_ATTACHMENT_IMAGE_KNOWLEDGE_BASE_ID=你的_图片附件知识库_UUID
+RAG_ATTACHMENT_MEDIA_KNOWLEDGE_BASE_ID=你的_音视频附件知识库_UUID
+RAG_BEARER_TOKEN_FILE=/absolute/path/to/dev_token_testagent.jwt
+RAG_RETRIEVAL_PROFILE=hybrid-default@1
+RAG_ATTACHMENT_MAX_BYTES=104857600
 ```
 
 如果使用 OpenAI 兼容服务，再配置：
@@ -89,20 +104,50 @@ OPENAI_BASE_URL=https://你的服务地址/v1
 
 ## 运行
 
-先在终端 1 启动 Gateway：
+默认 Agent 不依赖本项目的 `8787` 或 `3020` 服务，直接启动持续对话：
+
+启用记忆时，需要先在独立仓库启动 LazyTT Memory Service：
 
 ```bash
-UV_CACHE_DIR=/tmp/testagent-uv-cache uv run uvicorn sandbox_gateway.factory:app \
-  --host 127.0.0.1 --port 8787
+cd /absolute/path/to/TestAgent
+uv run python scripts/memory_backend.py up
+curl http://127.0.0.1:8080/health/ready
 ```
 
-再在终端 2 启动持续对话：
+该包装脚本从 TestAgent 的私有 `.env` 读取现有 Kimi `k3` 配置，只通过子进程环境传给
+Memory Service，不复制或输出密钥。停止服务且保留记忆数据时运行
+`uv run python scripts/memory_backend.py down`；不要使用 `down --volumes`。
+
+`MEMORY_RECALL_POLICY=adaptive` 会跳过明确的 Python、纯计算、指定文件/URL 等确定性任务，
+历史、偏好和项目连续性任务会获取并消费 Context Pack；无法明确分类的普通任务默认召回，
+避免漏掉相关记忆。`MEMORY_EPISODE_CONSOLIDATION_ENABLED=false` 时，回答成功后沿用旧的
+单条用户消息提取；设置为 `true` 后，旧提取会被替换为 Completed Turn：提交用户消息、
+可见最终回答、成功且受限的工具结果和 Outcome，并立即从完整轮次提取长期记忆。Web 使用
+`conversation_id` 作为稳定 Episode，CLI 在 `/clear` 后开始新 Episode。Memory Service 每
+10 个未排队轮次还会额外异步巩固跨轮经验，失败不影响本轮回答。记忆内容始终以
+`untrusted_memory_data` 注入，隐藏推理和失败工具日志
+不会写入 Completed Turn。
+
+RAG 是独立的文档证据系统，与 Memory 分工：Memory 保存用户偏好和项目连续性，
+RAG 保存可核验的文档原文。没有对话附件时，`search_knowledge_base` 检索长期知识库；
+当前对话存在已就绪附件时，PDF、Office/文本、图片和音视频会分别进入四个附件知识库，
+检索请求同时限定这些知识库 UUID 和当前 Conversation 的文档 UUID，避免跨对话读取临时
+文件。四个附件库必须使用同一个 JWT Scope 和 Embedding Profile，UUID 必须彼此不同且
+不能复用长期知识库，并且必须全部配置；缺少任意一个时网页附件入口保持禁用。上传和
+移除只能由用户在聊天框操作，不向模型暴露写能力。
+短期 JWT 过期后，在 RAG 仓库重新运行
+`tools/issue_dev_token.py` 覆盖 Token 文件即可；工具每次调用都会重新读取该文件。
+
+Web 对话由服务端 SQLite 保存，浏览器只保存 `conversation_id`。刷新页面会恢复当前对话；
+“清空对话”会删除该 Conversation 的短期消息，但不会删除 LazyTT 长期记忆。历史按完整
+user/assistant 轮次和字符预算裁剪，当前 Attempt 的 tool call/result 只在本轮存在。
 
 ```bash
 UV_CACHE_DIR=/tmp/testagent-uv-cache uv run python main.py
 ```
 
-无参数启动后可以连续追问；最近 20 条用户/助手消息会传给下一轮：
+无参数启动后可以连续追问；CLI 进程最多保留最近 20 条用户/助手消息，Agent 再按字符预算
+选择完整轮次：
 
 ```text
 /clear  清空当前上下文
@@ -130,12 +175,14 @@ UV_CACHE_DIR=/tmp/testagent-uv-cache uv run uvicorn web_agent.app:app \
 http://127.0.0.1:8000
 ```
 
-页面支持多轮文本上下文、三个演示快捷任务、模型/沙箱配置状态和可展开的工具执行轨迹。
-模型与 AGSX 密钥只保留在 Python 服务端，不会写入网页代码。当前聊天历史只保存在
-浏览器内存中，刷新页面后清空；这是本地演示界面，不应直接暴露到公网。
+页面支持流式回答、暂停保留、多会话历史、附件、结构化 Generation UI，以及可折叠的执行轨迹
+和产物来源。模型、AGSX、Tavily、Memory 与 RAG 配置只保留在 Agent Python 进程，不会写入
+网页代码。对话保存在服务端 SQLite 中，浏览器只保存当前 `conversation_id`；刷新页面或重启
+服务后可以恢复。被暂停的回答会保留问题和已生成内容，但不会进入后续 Agent 历史或长期记忆。
+这是本地个人助手界面，不应直接暴露到公网。
 
-Agent Runtime 对每次任务执行独立的工具硬预算：默认 `web_search` 最多 2 次、
-`web_fetch` 最多 3 次，其他工具也有与成本和风险相匹配的上限。相同工具和等价参数
+Agent Runtime 对每次任务执行独立的工具硬预算：默认 `web_search` 最多 2 次，
+其他工具也有与成本和风险相匹配的上限。相同工具和等价参数
 在一次任务中只真正执行一次，后续调用复用第一次结果且不消耗预算；达到上限后会向
 模型返回 `TOOL_BUDGET_EXCEEDED`。构造 `AgentLoop` 时可用 `tool_budgets` 显式覆盖。
 每次任务开始时还会按 `AGENT_TIMEZONE` 动态读取并注入当前日期时间，确保“今天、最近、
@@ -147,46 +194,12 @@ Agent Runtime 对每次任务执行独立的工具硬预算：默认 `web_search
 uv run pytest
 ```
 
-## Agent 集成演示
+## Agent 工具演示
 
-需要把 `web-capability/` 交付给其他 Agent 项目时，参见
-[Web Search Tool 交付与 Agent 接入指南](doc/Web_Search_Tool_交付接入指南.md)。
-
-先启动独立 Web Capability Service：
+让当前 Agent 先通过 Tavily 搜索，再用 AGSX Browser 核实网页正文：
 
 ```bash
-cd web-capability
-cp .env.example .env
-# 编辑 .env，默认填写 TAVILY_API_KEY；不填写时 web_fetch 仍可用。
-cargo run
-```
-
-服务默认只监听 `127.0.0.1:3020`。搜索供应商密钥只属于服务端，不传给 Agent。
-默认配置为 `WEB_SEARCH_PRIMARY_PROVIDER=tavily`；也可切换到 `brave` 或 `exa`，并通过
-`WEB_SEARCH_FALLBACK_PROVIDERS` 显式配置故障降级。SearchService 提供总时间预算、自动
-重试、进程内 TTL 缓存和结构化 usage 日志。本服务不会主动持久化搜索正文，但这不代表
-上游零留存；查询中不得包含密钥、个人信息、内部源码或客户机密。
-
-当前受管开发环境会把公网 DNS 映射到 `198.18.0.0/15`。仅在本机调试时，可以把
-`web-capability/.env` 中的 `WEB_CAPABILITY_ALLOW_BENCHMARK_DNS_PROXY` 改为
-`true`；该开关默认关闭、禁止用于生产，并且不会放行用户直接提交的该网段 IP。
-
-如果当前开发机提示 `cargo: command not found`，使用已安装的稳定工具链：
-
-```bash
-PATH="/Users/drb/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH" cargo run
-```
-
-另开一个终端，让当前 Agent 搜索并核实网页正文：
-
-```bash
-uv run python main.py "必须先调用 web_search 搜索 Rust 官方发布记录，再选择一个官方结果调用 web_fetch 核实正文，最后列出来源 URL。"
-```
-
-只测试静态抓取：
-
-```bash
-uv run python main.py "必须调用 web_fetch 读取 https://example.com，并告诉我状态码、标题和正文摘要。"
+uv run python main.py "必须先调用 web_search 搜索 Rust 官方发布记录，再选择一个官方结果调用 browse_public_page 核实正文，最后列出来源 URL。"
 ```
 
 通用表格分析 Agent：
@@ -207,31 +220,30 @@ uv run python main.py "必须调用 generate_business_briefing 分析 fixtures/s
 uv run python main.py "必须调用 browse_public_page 打开 https://example.com，告诉我状态码、标题、正文摘要、截图路径、内容信任级别，以及沙箱是否销毁。"
 ```
 
+只读检索 TestAgent 知识库：
+
+```bash
+uv run python main.py "必须调用 search_knowledge_base 查找合成 launch code，并标明文档名和页码。"
+```
+
 一次展示两个沙箱工具：
 
 ```bash
 uv run python main.py "先调用 analyze_spreadsheet 分析 fixtures/sales.csv，再调用 browse_public_page 打开 https://example.com；最后分别汇报结果、Artifact 和沙箱销毁状态。"
 ```
 
-`web_search` 只负责发现候选 URL，重要结论应继续用 `web_fetch` 核实正文；
-`web_fetch` 只接受安全的公开 HTTP/HTTPS URL，并在独立服务中执行 DNS/IP、
-逐跳重定向、内容类型和响应大小检查。静态抓取失败、页面必须执行 JavaScript，
-或明确需要截图时，才降级到 `browse_public_page`。
+`web_search` 在 Agent 进程内直接调用 Tavily，只负责发现候选 URL；重要结论继续用
+`browse_public_page` 在一次性 AGSX Browser 中核实正文。查询和网页正文都不得包含或
+诱导泄露密钥、个人信息、内部源码或客户机密。
 
 `analyze_spreadsheet` 和 `generate_business_briefing` 只允许读取 `workspace/` 或
 `fixtures/` 中的 CSV/XLSX。所有搜索结果
 和网页正文都是不可信数据；Browser 当前仅允许公开、低敏 POC，不支持登录、付款
 或后台系统操作。
 
-Rust 服务的单元与 API 契约测试：
-
-```bash
-PATH="/Users/drb/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH" \
-  cargo test --manifest-path web-capability/Cargo.toml --all-targets
-```
-
-`web_fetch` 已执行 `robots.txt` 检查，并在页面重定向到新源站时重新检查目标源站；
-仍需注意它是只读公开网页 MVP。详见 `web-capability/MVP_LIMITATIONS.md`。
+如果需要把 Sandbox 或 Web 能力交付给其他 Agent，仓库中保留的独立服务仍可按
+[Sandbox 接入指南](doc/沙箱网关接入指南.md)和
+[Web Search 接入指南](doc/Web_Search_模块下载与接入指南.md)部署；它们不是当前 Agent 的运行依赖。
 
 ## 第四周固定评测
 
