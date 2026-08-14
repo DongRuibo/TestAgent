@@ -1,0 +1,20 @@
+{
+  "name": "testagent-generation-ui-bridge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@lazyai/generation-ui-vue": "file:../../../生成式ui/lazyai-generation-ui-vue-0.5.2.tgz",
+    "@primeuix/themes": "^1.2.0",
+    "chart.js": "^4.4.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

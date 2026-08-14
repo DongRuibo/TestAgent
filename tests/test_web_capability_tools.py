@@ -7,14 +7,16 @@ import json
 import httpx
 import pytest
 
+from testagent_web_tools import WebCapabilityTools
+from testagent_web_tools.fetch import web_fetch
+from testagent_web_tools.search import web_search
+
 from tools.web_capability_client import (
     MAX_QUERY_CHARS,
     MAX_SERVICE_RESPONSE_BYTES,
     WebCapabilityClient,
     WebCapabilityConfig,
 )
-from tools.web_fetch import web_fetch
-from tools.web_search import web_search
 
 
 def _client(handler) -> WebCapabilityClient:
@@ -24,6 +26,32 @@ def _client(handler) -> WebCapabilityClient:
         WebCapabilityConfig(base_url="http://web-capability.test:3020"),
         http_client=http_client,
     )
+
+
+def test_tool_registry_exposes_stable_definitions_and_bound_handlers() -> None:
+    calls: list[tuple[str, str]] = []
+
+    class FakeClient:
+        def search(self, query: str):
+            calls.append(("search", query))
+            return {"success": True, "results": []}
+
+        def fetch(self, url: str):
+            calls.append(("fetch", url))
+            return {"success": True, "final_url": url}
+
+    tools = WebCapabilityTools(FakeClient())  # type: ignore[arg-type]
+
+    assert [item["function"]["name"] for item in tools.tool_definitions] == [
+        "web_search",
+        "web_fetch",
+    ]
+    assert tools.tool_handlers["web_search"]("Rust") == {"success": True, "results": []}
+    assert tools.tool_handlers["web_fetch"]("https://example.com") == {
+        "success": True,
+        "final_url": "https://example.com",
+    }
+    assert calls == [("search", "Rust"), ("fetch", "https://example.com")]
 
 
 def test_web_search_maps_query_to_service_and_returns_normalized_results() -> None:

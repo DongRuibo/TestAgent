@@ -84,6 +84,12 @@ def test_browser_tool_returns_untrusted_content_and_cleanup() -> None:
                 title="Example",
                 text_preview="untrusted page text",
                 text_total_chars=19,
+                page_height=1_200,
+                screenshot_height=1_200,
+                screenshot_full_page=True,
+                screenshot_truncated=False,
+                screenshot_stitched=False,
+                screenshot_scroll_steps=1,
                 trust="untrusted",
                 instructions_executable=False,
                 artifacts=(record,),
@@ -96,6 +102,14 @@ def test_browser_tool_returns_untrusted_content_and_cleanup() -> None:
 
     assert result["success"] is True
     assert result["content"] == "untrusted page text"
+    assert result["screenshot"] == {
+        "page_height": 1_200,
+        "captured_height": 1_200,
+        "full_page": True,
+        "truncated": False,
+        "stitched": False,
+        "scroll_steps": 1,
+    }
     assert result["trust"] == "untrusted"
     assert result["instructions_executable"] is False
     assert result["sandbox_destroyed"] is True

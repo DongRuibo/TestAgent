@@ -1,0 +1,10 @@
+# 当前由仓库所有者负责全部模块；团队扩大后可按目录替换为不同维护组。
+* @DongRuibo
+
+/apps/dev-agent/ @DongRuibo
+/services/sandbox-gateway/ @DongRuibo
+/services/web-capability/ @DongRuibo
+/packages/sandbox-contracts/ @DongRuibo
+/packages/sandbox-client/ @DongRuibo
+/packages/web-capability-tools/ @DongRuibo
+/contracts/ @DongRuibo

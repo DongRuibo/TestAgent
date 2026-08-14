@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpa-agent-module"
+version = "0.1.1"
+description = "可嵌入 Python Agent 的 macOS 本地 RPA 执行模块"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "pillow>=11.3,<13.0",
+    "pydantic>=2.11,<3.0",
+    "robotframework==7.4.2",
+    "rpaframework==32.0.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rpa_agent_module = ["workflows/*.robot"]

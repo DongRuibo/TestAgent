@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Mini Agent 本地网页演示" />
+    <title>Mini Agent</title>
+    <link rel="stylesheet" href="/static/app.css?v=20260814-9" />
+    <link rel="stylesheet" href="/static/generation-ui/generation-ui.css?v=0.5.2-upload1" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Agent 状态与对话操作">
+        <div class="brand-row">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true"><span></span></div>
+            <div>
+              <h1>Mini Agent</h1>
+            </div>
+          </div>
+          <button class="sidebar-close" id="sidebar-close" type="button" aria-label="关闭菜单">×</button>
+        </div>
+
+        <details class="status-card" aria-labelledby="status-title">
+          <summary class="status-heading">
+            <h2 id="status-title">服务与配置</h2>
+            <span class="status-pill" id="agent-status"><i></i> 检查中</span>
+            <span class="status-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <dl class="status-list">
+            <div><dt>Web 服务</dt><dd id="web-status">检查中</dd></div>
+            <div><dt>模型</dt><dd id="model-status">—</dd></div>
+            <div><dt>AGSX Code</dt><dd id="code-status">—</dd></div>
+            <div><dt>AGSX Browser</dt><dd id="browser-status">—</dd></div>
+            <div><dt>Tavily Search</dt><dd id="search-status">—</dd></div>
+            <div><dt>LazyTT Memory</dt><dd id="memory-status">—</dd></div>
+            <div><dt>LazyTT RAG</dt><dd id="rag-status">—</dd></div>
+          </dl>
+        </details>
+
+        <section class="conversation-history" aria-labelledby="history-title">
+          <div class="history-heading">
+            <h2 id="history-title">历史对话</h2>
+            <button class="history-new-button" id="new-chat" type="button">＋ 新对话</button>
+          </div>
+          <label class="sr-only" for="history-search">搜索历史对话</label>
+          <input class="history-search" id="history-search" type="search" placeholder="搜索历史对话" autocomplete="off" />
+          <div class="conversation-list" id="conversation-list" role="list"></div>
+          <p class="history-empty" id="history-empty">暂无历史对话</p>
+        </section>
+
+        <div class="sidebar-footer">
+          <div class="conversation-actions">
+            <button class="delete-chat-button" id="delete-chat" type="button">删除当前对话</button>
+            <details class="demo-tools">
+              <summary>演示工具</summary>
+              <button class="reset-owner-demo-button" id="reset-owner-demo" type="button">重置老板早报演示</button>
+            </details>
+          </div>
+        </div>
+      </aside>
+      <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="关闭菜单" tabindex="-1"></button>
+
+      <main class="chat-panel">
+        <header class="chat-header">
+          <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="打开侧栏">☰</button>
+          <button class="sidebar-collapse-button" id="sidebar-collapse" type="button" aria-controls="sidebar" aria-label="折叠左侧栏" aria-expanded="true" title="折叠左侧栏">‹</button>
+          <div class="chat-title">
+            <h2 id="chat-title" title="新对话">新对话</h2>
+          </div>
+          <div class="secure-note" title="密钥仅保留在 Agent 进程，不会写入网页代码"><span aria-hidden="true">●</span> 本地安全运行</div>
+          <div class="mobile-header-actions">
+            <span class="mobile-agent-status" id="mobile-agent-status"><i></i> 检查中</span>
+            <button id="mobile-new-chat" type="button">新对话</button>
+          </div>
+        </header>
+
+        <div class="page-notice" id="page-notice" role="status" hidden>
+          <span id="page-notice-text"></span>
+          <button id="retry-restore" type="button" hidden>重试恢复</button>
+        </div>
+
+        <section class="messages" id="messages" aria-live="polite">
+          <article class="welcome-card" id="welcome-card">
+            <div class="welcome-orbit" aria-hidden="true"><span></span></div>
+            <p class="eyebrow">READY TO WORK</p>
+            <h2>想让 Agent 帮你做什么？</h2>
+            <p>它可以调用本地文件、代码沙箱、通用表格分析、经营简报和公开网页工具，并按任务召回、每轮提取长期记忆。</p>
+            <div class="prompt-grid">
+              <button class="prompt-chip" data-prompt="必须调用 run_code 执行 Python：计算 123456789 的平方根，并告诉我沙箱是否销毁。">
+                <strong>运行 Python</strong><span>精确计算并验证清理</span>
+              </button>
+              <button class="prompt-chip" data-prompt="必须调用 generate_business_briefing 分析 fixtures/sales.csv，告诉我核心指标、异常，以及 JSON、图表、Markdown、PDF、PPTX 产物。">
+                <strong>生成经营简报</strong><span>CSV/XLSX → PDF 与 PPTX</span>
+              </button>
+              <button class="prompt-chip" data-prompt="必须调用 browse_public_page 打开 https://example.com，告诉我标题、正文摘要和截图路径。">
+                <strong>浏览公开网页</strong><span>提取内容并截图</span>
+              </button>
+              <button class="prompt-chip" data-prompt="必须调用 search_knowledge_base 查找合成 launch code，并标明文档名和页码。">
+                <strong>检索知识库</strong><span>读取原文并标明来源</span>
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <section class="composer-wrap">
+          <div class="attachment-list" id="attachment-list" aria-live="polite" hidden></div>
+          <form class="composer" id="chat-form">
+            <button class="attach-button" id="attach-button" type="button" aria-label="上传当前对话附件" title="上传当前对话附件">
+              <span aria-hidden="true">＋</span><b>附件</b>
+            </button>
+            <input
+              class="sr-only"
+              id="attachment-input"
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.html,.htm,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.aac,.flac,.ogg,.mp4,.mov,.mkv,.webm,.avi"
+            />
+            <label class="sr-only" for="message-input">输入消息</label>
+            <textarea id="message-input" rows="1" maxlength="20000" placeholder="给 Agent 一个任务…" required></textarea>
+            <button class="send-button" id="send-button" type="submit" aria-label="发送消息">
+              <span>发送</span><b aria-hidden="true">↗</b>
+            </button>
+            <button class="stop-button" id="stop-button" type="button" aria-label="停止生成" hidden>
+              <span>停止生成</span><b aria-hidden="true">■</b>
+            </button>
+          </form>
+          <div class="composer-meta">
+            <p class="attachment-guidance" id="attachment-guidance">附件支持 PDF、Office/文本、图片和音视频（≤100 MB）· 仅当前对话</p>
+            <span class="composer-meta-separator" aria-hidden="true">·</span>
+            <p class="composer-hint">Enter 发送 · Shift + Enter 换行</p>
+            <button class="data-disclosure-button" id="data-disclosure-button" type="button" aria-expanded="false" aria-controls="data-disclosure">数据去向</button>
+          </div>
+          <div class="data-disclosure" id="data-disclosure" hidden>
+            对话可能发送给所配置的模型；公开网页搜索使用 Tavily；代码、表格和浏览任务可能发送到 AGSX 沙箱；附件上传至当前对话限定的 LazyTT RAG。音视频经确认后，解析过程可能使用硅基流动。
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="conversation-rename-dialog" id="conversation-rename-dialog" role="dialog" aria-modal="true" aria-labelledby="conversation-rename-title" hidden>
+      <button class="conversation-rename-backdrop" id="conversation-rename-backdrop" type="button" aria-label="取消重命名"></button>
+      <form class="conversation-rename-panel" id="conversation-rename-form">
+        <h2 id="conversation-rename-title">重命名对话</h2>
+        <label for="conversation-rename-input">对话标题</label>
+        <input id="conversation-rename-input" type="text" maxlength="80" required autocomplete="off" />
+        <div class="conversation-rename-actions">
+          <button id="conversation-rename-cancel" type="button">取消</button>
+          <button type="submit">保存</button>
+        </div>
+      </form>
+    </div>
+    <script type="module" src="/static/app.js?v=20260814-8"></script>
+  </body>
+</html>

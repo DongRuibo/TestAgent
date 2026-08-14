@@ -1,0 +1,227 @@
+openapi: 3.1.0
+info:
+  title: TestAgent Sandbox Gateway
+  version: 0.1.0
+  description: Provider-neutral asynchronous execution API used by Agent runtimes.
+servers:
+  - url: http://127.0.0.1:8787
+paths:
+  /health:
+    get:
+      operationId: sandboxHealth
+      responses:
+        "200":
+          description: Gateway process is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, providers]
+                properties:
+                  status: {type: string, const: ok}
+                  providers:
+                    type: array
+                    items: {type: string}
+  /v1/files:
+    post:
+      operationId: uploadSandboxFile
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/FileUploadRequest"}
+      responses:
+        "201":
+          description: File accepted for the authenticated tenant and Agent.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/FileUploadView"}
+        "401": {$ref: "#/components/responses/Error"}
+  /v1/executions:
+    post:
+      operationId: createSandboxExecution
+      security: [{bearerAuth: []}]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: {type: string, maxLength: 128}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExecutionCreateRequest"}
+      responses:
+        "202":
+          description: Execution accepted.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExecutionView"}
+        "401": {$ref: "#/components/responses/Error"}
+        "403": {$ref: "#/components/responses/Error"}
+  /v1/executions/{execution_id}:
+    get:
+      operationId: getSandboxExecution
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/ExecutionId"
+      responses:
+        "200":
+          description: Current execution state.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExecutionView"}
+        "404": {$ref: "#/components/responses/Error"}
+  /v1/executions/{execution_id}/cancel:
+    post:
+      operationId: cancelSandboxExecution
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/ExecutionId"
+      responses:
+        "200":
+          description: Updated execution state.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExecutionView"}
+        "404": {$ref: "#/components/responses/Error"}
+  /v1/executions/{execution_id}/artifacts/{artifact_name}:
+    get:
+      operationId: downloadSandboxArtifact
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/ExecutionId"
+        - in: path
+          name: artifact_name
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: Artifact bytes produced by this execution.
+          content:
+            application/octet-stream:
+              schema: {type: string, format: binary}
+        "404": {$ref: "#/components/responses/Error"}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    ExecutionId:
+      in: path
+      name: execution_id
+      required: true
+      schema: {type: string}
+  responses:
+    Error:
+      description: Structured Gateway error.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                $ref: "#/components/schemas/ErrorDetail"
+  schemas:
+    ErrorDetail:
+      type: object
+      required: [error_type]
+      properties:
+        error_type: {type: string}
+        message: {type: string}
+    FileUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [name, content_base64]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 128}
+        media_type: {type: string, default: application/octet-stream}
+        content_base64: {type: string, minLength: 1}
+    FileUploadView:
+      type: object
+      required: [file_id, name, media_type, size_bytes, sha256]
+      properties:
+        file_id: {type: string}
+        name: {type: string}
+        media_type: {type: string}
+        size_bytes: {type: integer, minimum: 0}
+        sha256: {type: string}
+    InputFileRef:
+      type: object
+      additionalProperties: false
+      required: [file_id, remote_path]
+      properties:
+        file_id: {type: string}
+        remote_path: {type: string}
+    ExecutionLimits:
+      type: object
+      additionalProperties: false
+      properties:
+        ttl_seconds: {type: integer, minimum: 1, maximum: 86400, default: 300}
+        timeout_seconds: {type: number, exclusiveMinimum: 0, maximum: 3600, default: 30}
+        max_output_bytes: {type: integer, minimum: 1, maximum: 10485760, default: 1048576}
+    ExecutionCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [task_type]
+      properties:
+        task_type:
+          type: string
+          enum: [code, sales_analysis, spreadsheet_analysis, browser_public]
+        source: {type: [string, "null"], maxLength: 20000}
+        language: {type: string, default: python}
+        input_files:
+          type: array
+          maxItems: 20
+          items: {$ref: "#/components/schemas/InputFileRef"}
+        output_paths:
+          type: array
+          maxItems: 20
+          items: {type: string}
+        url: {type: [string, "null"], format: uri, maxLength: 2048}
+        max_text_chars: {type: integer, minimum: 1, maximum: 100000, default: 12000}
+        generate_briefing: {type: boolean, default: false}
+        network_profile:
+          type: string
+          enum: [provider_default, offline, public_readonly, vpc_restricted]
+          default: provider_default
+        provider_preference: {type: string, default: auto}
+        limits: {$ref: "#/components/schemas/ExecutionLimits"}
+    ArtifactView:
+      type: object
+      required: [name, relative_path, sha256, size_bytes, media_type]
+      properties:
+        name: {type: string}
+        relative_path: {type: string}
+        sha256: {type: string}
+        size_bytes: {type: integer}
+        media_type: {type: string}
+    ExecutionView:
+      type: object
+      required: [execution_id, tenant_id, agent_id, task_type, status, created_at, updated_at]
+      properties:
+        execution_id: {type: string}
+        tenant_id: {type: string}
+        agent_id: {type: string}
+        task_type:
+          type: string
+          enum: [code, sales_analysis, spreadsheet_analysis, browser_public]
+        status:
+          type: string
+          enum: [queued, policy_checked, creating, running, collecting, terminating, succeeded, failed, cancelled]
+        provider: {type: [string, "null"]}
+        sandbox_id: {type: [string, "null"]}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        started_at: {type: [string, "null"], format: date-time}
+        finished_at: {type: [string, "null"], format: date-time}
+        result: {type: [object, "null"], additionalProperties: true}
+        artifacts:
+          type: array
+          items: {$ref: "#/components/schemas/ArtifactView"}
+        receipt: {type: [object, "null"], additionalProperties: true}
+        error_type: {type: [string, "null"]}
+        error_message: {type: [string, "null"]}
+        cancellation_requested: {type: boolean}

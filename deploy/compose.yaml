@@ -1,0 +1,44 @@
+name: testagent-capabilities
+
+services:
+  sandbox-gateway:
+    build:
+      context: ..
+      dockerfile: services/sandbox-gateway/Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      SANDBOX_GATEWAY_HOST: 0.0.0.0
+      SANDBOX_GATEWAY_PORT: 8787
+      GATEWAY_DATA_ROOT: /data
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - sandbox-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web-capability:
+    build:
+      context: ../services/web-capability
+    env_file:
+      - ../services/web-capability/.env
+    environment:
+      WEB_CAPABILITY_BIND: 0.0.0.0:3020
+    ports:
+      - "127.0.0.1:3020:3020"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3020/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  sandbox-data:

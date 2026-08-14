@@ -1,0 +1,41 @@
+name: Capability container CI
+
+on:
+  pull_request:
+    paths:
+      - "services/sandbox-gateway/**"
+      - "services/web-capability/**"
+      - "packages/sandbox-contracts/**"
+      - ".github/workflows/container-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/sandbox-gateway/**"
+      - "services/web-capability/**"
+      - "packages/sandbox-contracts/**"
+      - ".github/workflows/container-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: sandbox-gateway
+            context: .
+            dockerfile: services/sandbox-gateway/Dockerfile
+          - name: web-capability
+            context: services/web-capability
+            dockerfile: services/web-capability/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: testagent/${{ matrix.name }}:ci

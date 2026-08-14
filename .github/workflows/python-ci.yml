@@ -1,0 +1,44 @@
+name: Python workspace CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/dev-agent/**"
+      - "packages/**"
+      - "services/sandbox-gateway/**"
+      - "tests/**"
+      - "evals/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/python-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/dev-agent/**"
+      - "packages/**"
+      - "services/sandbox-gateway/**"
+      - "tests/**"
+      - "evals/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/python-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.11
+      - run: uv sync --frozen
+      - run: uv run pytest
+      - run: uv build --package testagent-sandbox-contracts --out-dir dist/sandbox-contracts
+      - run: uv build --package testagent-sandbox-client --out-dir dist/sandbox-client
+      - run: uv build --package testagent-sandbox-gateway --out-dir dist/sandbox-gateway
+      - run: uv build --package testagent-web-tools --out-dir dist/web-tools
+      - run: uv build --package testagent-dev-agent --out-dir dist/dev-agent

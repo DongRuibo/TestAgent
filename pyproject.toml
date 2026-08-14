@@ -1,5 +1,5 @@
 [project]
-name = "mini-agent"
+name = "testagent-workspace"
 version = "0.1.0"
 description = "A from-scratch learning project for understanding agent internals"
 readme = "README.md"
@@ -13,6 +13,11 @@ dependencies = [
     "ppio-sandbox>=1.0.5,<2",
     "python-dotenv>=1.0,<2",
     "reportlab>=4.2,<5",
+    "testagent-sandbox-client>=0.1,<0.2",
+    "testagent-sandbox-contracts>=0.1,<0.2",
+    "testagent-sandbox-gateway>=0.1,<0.2",
+    "testagent-dev-agent>=0.1,<0.2",
+    "testagent-web-tools>=0.1,<0.2",
     "uvicorn>=0.30,<1",
 ]
 
@@ -23,4 +28,28 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [
+    ".",
+    "apps/dev-agent/src",
+    "services/sandbox-gateway/src",
+    "packages/sandbox-contracts/src",
+    "packages/sandbox-client/src",
+    "packages/web-capability-tools/src",
+]
+
+[tool.uv.workspace]
+members = [
+    "apps/dev-agent",
+    "services/sandbox-gateway",
+    "packages/sandbox-contracts",
+    "packages/sandbox-client",
+    "packages/rpa-agent-module",
+    "packages/web-capability-tools",
+]
+
+[tool.uv.sources]
+testagent-dev-agent = { workspace = true }
+testagent-sandbox-client = { workspace = true }
+testagent-sandbox-contracts = { workspace = true }
+testagent-sandbox-gateway = { workspace = true }
+testagent-web-tools = { workspace = true }

@@ -1,0 +1,26 @@
+{
+  "company_name": "柒昱美学设计公司",
+  "timezone": "Asia/Shanghai",
+  "attendance": {
+    "work_start": "09:00",
+    "late_grace_minutes": 5,
+    "allowed_location_status": "正常"
+  },
+  "customer": {
+    "followup_overdue_hours": 72,
+    "high_intent_overdue_hours": 48,
+    "high_intent_stages": ["方案沟通", "报价中"]
+  },
+  "project": {
+    "progress_gap_percent": 10
+  },
+  "finance": {
+    "receivable_red_days": 7,
+    "receivable_red_amount": 200000,
+    "complaint_escalation_hours": 24
+  },
+  "task": {
+    "reminder_interval_hours": 4,
+    "escalate_after_hours": 24
+  }
+}
