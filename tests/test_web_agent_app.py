@@ -209,7 +209,7 @@ def test_web_agent_serves_chat_page_and_static_assets(tmp_path) -> None:
     assert "LIVE DEMO" not in page.text
     assert "attachment-input" in page.text
     assert "generation-ui.css?v=0.5.2-upload1" in page.text
-    assert "app.css?v=20260814-9" in page.text
+    assert "app.css?v=20260814-10" in page.text
     assert "app.js?v=20260814-8" in page.text
     assert styles.status_code == 200
     assert "--accent" in styles.text
@@ -335,6 +335,8 @@ def test_web_agent_exposes_p1_p2_chat_controls_and_safe_markdown(tmp_path) -> No
     assert "javascript:" not in markdown
     assert "env(safe-area-inset-bottom)" in styles
     assert "body.sidebar-collapsed .app-shell" in styles
+    assert ".sidebar-collapse-button { position: absolute; z-index: 2; left: 14px;" in styles
+    assert "body.sidebar-collapsed .sidebar-collapse-button { left: 14px; }" in styles
     assert "--genui-workspace: #091512" in styles
     assert (
         ".chat-header h2 { overflow: hidden; margin: 0; color: var(--text); "
