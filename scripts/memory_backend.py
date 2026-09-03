@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""使用 TestAgent 的 Kimi 配置启动本地 LazyTT Memory cloud 后端。"""
+"""启动本地 Mem0-primary + Elasticsearch Memory 后端。"""
 
 from __future__ import annotations
 
-import os
 import stat
 import subprocess
 import sys
@@ -14,7 +13,11 @@ from dotenv import dotenv_values
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_ACTIONS = {"up", "down", "ps", "logs"}
-OFFICIAL_KIMI_BASE_URL = "https://api.kimi.com/coding/v1"
+COMPOSE_FILES = (
+    "compose.yaml",
+    "compose.elasticsearch.yaml",
+    "compose.elasticsearch-runtime.yaml",
+)
 
 
 def main() -> None:
@@ -29,37 +32,44 @@ def main() -> None:
     memory_env = Path(memory_env_file).expanduser()
     if not memory_env.is_absolute():
         raise SystemExit("MEMORY_ENV_FILE must be an absolute path")
-    _load_private_env(memory_env)
     memory_root = memory_env.parent
-    backend_script = memory_root / "scripts" / "backend-stack.sh"
-    if not backend_script.is_file():
+    compose_files = [memory_root / name for name in COMPOSE_FILES]
+    if not all(path.is_file() for path in compose_files):
         raise SystemExit("MEMORY_ENV_FILE does not belong to a LazyTT Memory checkout")
 
-    child_env = os.environ.copy()
+    command = ["docker", "compose", "--env-file", str(memory_env)]
+    for compose_file in compose_files:
+        command.extend(["-f", str(compose_file)])
     if action == "up":
-        api_key = str(agent_values.get("OPENAI_API_KEY") or "").strip()
-        base_url = str(agent_values.get("OPENAI_BASE_URL") or "").rstrip("/")
-        model = str(agent_values.get("OPENAI_MODEL") or "").strip()
-        if not api_key:
-            raise SystemExit("OPENAI_API_KEY is required for automatic memory extraction")
-        if base_url != OFFICIAL_KIMI_BASE_URL or model != "k3":
-            raise SystemExit(
-                "automatic memory extraction requires TestAgent OPENAI_BASE_URL="
-                f"{OFFICIAL_KIMI_BASE_URL} and OPENAI_MODEL=k3"
-            )
-        child_env.update(
-            {
-                "KIMI_EXTRACT_API_KEY": api_key,
-                "KIMI_EXTRACT_BASE_URL": base_url,
-                "KIMI_EXTRACT_MODEL": model,
-                "MEMORY_EXTRACT_MODE": "kimi",
-            }
+        command.extend(
+            [
+                "up",
+                "--build",
+                "-d",
+                "mem0-config-elasticsearch",
+                "memory-service-elasticsearch",
+            ]
+        )
+    elif action == "down":
+        command.append("down")
+    elif action == "ps":
+        command.extend(["ps", "-a"])
+    else:
+        command.extend(
+            [
+                "logs",
+                "--tail",
+                "200",
+                "memory-service-elasticsearch",
+                "mem0",
+                "elasticsearch",
+                "mem0-postgres",
+            ]
         )
 
     subprocess.run(
-        [str(backend_script), "cloud", action],
+        command,
         cwd=memory_root,
-        env=child_env,
         check=True,
     )
 

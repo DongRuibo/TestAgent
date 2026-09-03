@@ -75,9 +75,9 @@ AGSX_BROWSER_TEMPLATE=你的_Browser_Tool_名称
 ARTIFACT_TOOL_ROOT=/absolute/path/to/@oai/artifact-tool
 MEMORY_ENABLED=true
 MEMORY_AUTO_EXTRACT=true
-MEMORY_EPISODE_CONSOLIDATION_ENABLED=false
-MEMORY_BASE_URL=http://127.0.0.1:8080
+MEMORY_BASE_URL=http://127.0.0.1:18081
 MEMORY_ENV_FILE=/absolute/path/to/lazytt-memory-system/.env
+MEMORY_TENANT_ID=elasticsearch-poc-tenant
 MEMORY_USER_ID=semantic-demo
 MEMORY_RECALL_POLICY=adaptive
 CONVERSATION_DB_PATH=.local/conversations.sqlite3
@@ -111,22 +111,21 @@ OPENAI_BASE_URL=https://你的服务地址/v1
 ```bash
 cd /absolute/path/to/TestAgent
 uv run python scripts/memory_backend.py up
-curl http://127.0.0.1:8080/health/ready
+curl http://127.0.0.1:18081/health/ready
 ```
 
-该包装脚本从 TestAgent 的私有 `.env` 读取现有 Kimi `k3` 配置，只通过子进程环境传给
-Memory Service，不复制或输出密钥。停止服务且保留记忆数据时运行
+该包装脚本根据 `MEMORY_ENV_FILE` 定位 Memory 仓库并启动 B 模式：Mem0 负责记忆提取、
+更新和检索，Elasticsearch 保存向量；旧 governed PostgreSQL 后端不会启动。模型和
+embedding 配置继续由 Memory 仓库自己的 `.env` 管理。停止服务且保留记忆数据时运行
 `uv run python scripts/memory_backend.py down`；不要使用 `down --volumes`。
 
 `MEMORY_RECALL_POLICY=adaptive` 会跳过明确的 Python、纯计算、指定文件/URL 等确定性任务，
-历史、偏好和项目连续性任务会获取并消费 Context Pack；无法明确分类的普通任务默认召回，
-避免漏掉相关记忆。`MEMORY_EPISODE_CONSOLIDATION_ENABLED=false` 时，回答成功后沿用旧的
-单条用户消息提取；设置为 `true` 后，旧提取会被替换为 Completed Turn：提交用户消息、
-可见最终回答、成功且受限的工具结果和 Outcome，并立即从完整轮次提取长期记忆。Web 使用
-`conversation_id` 作为稳定 Episode，CLI 在 `/clear` 后开始新 Episode。Memory Service 每
-10 个未排队轮次还会额外异步巩固跨轮经验，失败不影响本轮回答。记忆内容始终以
-`untrusted_memory_data` 注入，隐藏推理和失败工具日志
-不会写入 Completed Turn。
+历史、偏好和项目连续性任务会调用 `/v1/runtime/memory/retrieve`；无法明确分类的普通任务
+默认召回，避免漏掉相关记忆。回答成功后，Agent 调用 `/v1/runtime/memory/extract`，提交
+用户消息、可见最终回答和成功且受限的工具结果，由 Mem0 自动提取并更新记忆。Web 使用
+`conversation_id` 作为稳定 session，CLI 在 `/clear` 后开始新 session。记忆内容始终以
+`untrusted_memory_data` 注入；隐藏推理、失败工具日志不会进入提取请求。召回或提取失败
+都不会阻断本轮回答。
 
 RAG 是独立的文档证据系统，与 Memory 分工：Memory 保存用户偏好和项目连续性，
 RAG 保存可核验的文档原文。没有对话附件时，`search_knowledge_base` 检索长期知识库；

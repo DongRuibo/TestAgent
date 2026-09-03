@@ -380,37 +380,22 @@ UI 工具成功后仍需根据同一 presentation.data 给出简短文字结论�
 
 
 class MemoryPort(Protocol):
-    @property
-    def episode_consolidation_enabled(self) -> bool: ...
-
     def acquire_context(
         self,
         *,
-        task_id: str,
-        attempt_id: str,
         query: str,
     ) -> Any: ...
 
     def extract_turn(
         self,
         *,
-        task_id: str,
-        attempt_id: str,
-        content: str,
-        occurred_at: datetime,
-    ) -> dict[str, int]: ...
-
-    def record_completed_turn(
-        self,
-        *,
         episode_id: str,
-        task_id: str,
         attempt_id: str,
         user_content: str,
         assistant_content: str,
         verified_tool_results: list[dict[str, str]],
         completed_at: datetime,
-    ) -> dict[str, Any]: ...
+    ) -> dict[str, int]: ...
 
 
 class AgentLoop:
@@ -516,10 +501,6 @@ class AgentLoop:
         current_datetime = self._current_datetime()
         memory_task_id = str(uuid4())
         memory_attempt_id = str(uuid4())
-        episode_consolidation_enabled = bool(
-            self.memory is not None
-            and getattr(self.memory, "episode_consolidation_enabled", False)
-        )
         if episode_id is not None:
             try:
                 UUID(episode_id)
@@ -569,11 +550,8 @@ class AgentLoop:
                 self._log("Memory: 召回本轮相关长期记忆")
                 try:
                     memory_context = self.memory.acquire_context(
-                        task_id=memory_task_id,
-                        attempt_id=memory_attempt_id,
                         query=task,
                     )
-                    receipt.context_pack_id = memory_context.context_pack_id
                     receipt.memory_item_count = len(memory_context.items)
                     prompt_data = memory_context.prompt_data()
                     if prompt_data is not None:
@@ -755,53 +733,25 @@ class AgentLoop:
                 ensure_running()
                 receipt.estimated_context_chars = estimate_messages_chars(messages[:-1])
                 if self.memory is not None and generation_ui_event is None:
-                    if episode_consolidation_enabled:
-                        self._log("Memory: 提交本轮 Completed Turn")
-                        try:
-                            completed_turn = self.memory.record_completed_turn(
-                                episode_id=memory_episode_id,
-                                task_id=memory_task_id,
-                                attempt_id=memory_attempt_id,
-                                user_content=task,
-                                assistant_content=message.content,
-                                verified_tool_results=verified_tool_results,
-                                completed_at=self._current_datetime(),
-                            )
-                            status = completed_turn.get("consolidation_status") or "未到阈值"
-                            extraction = completed_turn["per_turn_extraction"]
-                            self._log(
-                                "Memory: Completed Turn 已保存，"
-                                f"Episode 第 {completed_turn['sequence_no']} 轮，"
-                                f"即时提取候选 {extraction['candidate_count']} 条，"
-                                f"投影就绪 {extraction['ready_count']} 条，"
-                                f"仍待投影 {extraction['pending_count']} 条，"
-                                f"Consolidation={status}"
-                            )
-                        except Exception as exc:
-                            self._log(
-                                "Memory: Completed Turn 提交或即时提取失败，不影响本轮回答"
-                                f"（{type(exc).__name__}）"
-                            )
-                    else:
-                        self._log("Memory: 自动提取本轮用户消息")
-                        try:
-                            extraction = self.memory.extract_turn(
-                                task_id=memory_task_id,
-                                attempt_id=memory_attempt_id,
-                                content=task,
-                                occurred_at=current_datetime,
-                            )
-                            self._log(
-                                "Memory: 自动提取完成，"
-                                f"候选 {extraction['candidate_count']} 条，"
-                                f"投影就绪 {extraction['ready_count']} 条，"
-                                f"仍待投影 {extraction['pending_count']} 条"
-                            )
-                        except Exception as exc:
-                            self._log(
-                                "Memory: 自动提取失败，不影响本轮回答"
-                                f"（{type(exc).__name__}）"
-                            )
+                    self._log("Memory: 提交本轮对话给 Mem0 提取")
+                    try:
+                        extraction = self.memory.extract_turn(
+                            episode_id=memory_episode_id,
+                            attempt_id=memory_attempt_id,
+                            user_content=task,
+                            assistant_content=message.content,
+                            verified_tool_results=verified_tool_results,
+                            completed_at=self._current_datetime(),
+                        )
+                        self._log(
+                            "Memory: Mem0 提取完成，"
+                            f"返回 {extraction['memory_count']} 条记忆变更"
+                        )
+                    except Exception as exc:
+                        self._log(
+                            "Memory: Mem0 提取失败，不影响本轮回答"
+                            f"（{type(exc).__name__}）"
+                        )
                 return message.content
 
             if message.content and on_answer_reset is not None:

@@ -190,7 +190,6 @@ class ContextReceipt:
     history_omitted_count: int = 0
     memory_policy: str = "disabled"
     memory_reason: str = "Memory integration is disabled"
-    context_pack_id: str | None = None
     memory_item_count: int = 0
     tool_result_count: int = 0
     estimated_context_chars: int = 0

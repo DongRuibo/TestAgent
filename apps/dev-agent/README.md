@@ -2,13 +2,12 @@
 
 这是一个单进程开发 Agent。`run_code`、表格和 Browser 工具在进程内直连腾讯 AGSX，
 `web_search` 直连 Tavily；无需启动 Sandbox Gateway 或 Web Capability Service。
-可选的长期记忆通过 `MEMORY_BASE_URL` 连接独立 LazyTT Memory Service；启用
-`MEMORY_AUTO_EXTRACT` 后，每轮回答成功都会自动提取用户消息中的长期记忆候选。设置
-`MEMORY_EPISODE_CONSOLIDATION_ENABLED=true` 后会取代这条旧链路，改为提交包含可见回答和
-已验证工具结果的 Completed Turn，立即从完整轮次提取记忆，并由 Memory Service 每 10 轮
-额外进行一次 Episode 异步巩固。
+可选的长期记忆通过 `MEMORY_BASE_URL` 连接独立的 Mem0-primary Memory Service。
+回答前，Agent 调用 `/v1/runtime/memory/retrieve` 获取当前用户的相关记忆，并始终把它标记为
+`untrusted_memory_data`；回答成功后，Agent 调用 `/v1/runtime/memory/extract`，由 Mem0 从
+用户消息和最终回答中提取、更新记忆，再写入 Elasticsearch。
 默认 `MEMORY_RECALL_POLICY=adaptive`，明确的 Python/纯计算任务跳过召回。Web 短期对话
-保存在本地 SQLite，Agent 按完整轮次和字符预算组装历史，并返回脱敏 Context Receipt。
+保存在本地 SQLite，Agent 按完整轮次和字符预算组装历史；记忆服务失败不会阻断正常回答。
 可选的 `search_knowledge_base` 通过 `RAG_BASE_URL` 只读连接固定知识库。
 仓库仍保留两个独立服务，供其他 Agent 复用或后续恢复服务化部署。
 

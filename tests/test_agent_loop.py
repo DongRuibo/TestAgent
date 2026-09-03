@@ -80,31 +80,22 @@ class FakeStreamingLLMClient(FakeLLMClient):
 
 
 class FakeMemory:
-    def __init__(
-        self,
-        *,
-        fail: bool = False,
-        episode_consolidation_enabled: bool = False,
-    ) -> None:
+    def __init__(self, *, fail: bool = False) -> None:
         self.fail = fail
-        self.episode_consolidation_enabled = episode_consolidation_enabled
         self.recall_calls: list[dict[str, Any]] = []
         self.extract_calls: list[dict[str, Any]] = []
-        self.completed_turn_calls: list[dict[str, Any]] = []
 
     def acquire_context(self, **kwargs: Any) -> MemoryContext:
         self.recall_calls.append(kwargs)
         if self.fail:
             raise RuntimeError("memory unavailable")
         return MemoryContext(
-            context_pack_id="00000000-0000-0000-0000-000000000001",
             items=(
                 {
-                    "kind": "user_preference",
+                    "kind": "memory",
                     "text": "用户偏好中文回答。",
-                    "memory_record_id": "00000000-0000-0000-0000-000000000010",
-                    "memory_version_id": "00000000-0000-0000-0000-000000000011",
-                    "source_refs": ["conversation:1"],
+                    "memory_id": "00000000-0000-0000-0000-000000000010",
+                    "score": 0.9,
                     "trust": "untrusted_memory_data",
                 },
             ),
@@ -114,24 +105,7 @@ class FakeMemory:
         self.extract_calls.append(kwargs)
         if self.fail:
             raise RuntimeError("extract unavailable")
-        return {"candidate_count": 1, "ready_count": 1, "pending_count": 0}
-
-    def record_completed_turn(self, **kwargs: Any) -> dict[str, Any]:
-        self.completed_turn_calls.append(kwargs)
-        if self.fail:
-            raise RuntimeError("completed turn unavailable")
-        return {
-            "episode_id": kwargs["episode_id"],
-            "turn_id": kwargs["attempt_id"],
-            "sequence_no": 10,
-            "consolidation_id": "00000000-0000-0000-0000-000000000099",
-            "consolidation_status": "pending",
-            "per_turn_extraction": {
-                "candidate_count": 1,
-                "ready_count": 1,
-                "pending_count": 0,
-            },
-        }
+        return {"memory_count": 1}
 
 
 def make_tool_call(
@@ -308,7 +282,8 @@ def test_agent_recalls_before_model_and_extracts_user_turn_after_answer() -> Non
     assert len(memory.recall_calls) == 1
     assert memory.recall_calls[0]["query"] == "解释 Agent Loop"
     assert len(memory.extract_calls) == 1
-    assert memory.extract_calls[0]["content"] == "解释 Agent Loop"
+    assert memory.extract_calls[0]["user_content"] == "解释 Agent Loop"
+    assert memory.extract_calls[0]["assistant_content"] == "已按偏好回答。"
     assert "untrusted_memory_data" in client.requests[0][-2]["content"]
     assert client.requests[0][-1] == {"role": "user", "content": "解释 Agent Loop"}
 
@@ -329,7 +304,7 @@ def test_agent_skips_recall_for_python_but_still_extracts_after_answer() -> None
 
 def test_generation_ui_event_continues_without_memory_extraction() -> None:
     client = FakeLLMClient([FakeMessage("已完成计算。", tool_calls=None)])
-    memory = FakeMemory(episode_consolidation_enabled=True)
+    memory = FakeMemory()
     agent = AgentLoop(client, trace=None, memory=memory)
 
     answer = agent.run(
@@ -344,7 +319,6 @@ def test_generation_ui_event_continues_without_memory_extraction() -> None:
     assert answer == "已完成计算。"
     assert memory.recall_calls == []
     assert memory.extract_calls == []
-    assert memory.completed_turn_calls == []
     assert "untrusted_generation_ui_event_data" in client.requests[0][-1]["content"]
     assert '"paint_area":50' in client.requests[0][-1]["content"]
     assert agent.last_context_receipt is not None
@@ -355,7 +329,7 @@ def test_generation_ui_event_continues_without_memory_extraction() -> None:
     )
 
 
-def test_episode_flag_submits_completed_turn_and_skips_legacy_extraction() -> None:
+def test_agent_submits_full_turn_and_verified_tool_results_to_mem0() -> None:
     client = FakeLLMClient(
         [
             FakeMessage(
@@ -365,7 +339,7 @@ def test_episode_flag_submits_completed_turn_and_skips_legacy_extraction() -> No
             FakeMessage("文件内容已核实。", tool_calls=None),
         ]
     )
-    memory = FakeMemory(episode_consolidation_enabled=True)
+    memory = FakeMemory()
     trace: list[str] = []
     episode_id = "00000000-0000-0000-0000-000000000088"
     agent = AgentLoop(
@@ -384,21 +358,20 @@ def test_episode_flag_submits_completed_turn_and_skips_legacy_extraction() -> No
 
     assert agent.run("读取文件", episode_id=episode_id) == "文件内容已核实。"
 
-    assert memory.extract_calls == []
-    assert len(memory.completed_turn_calls) == 1
-    completed = memory.completed_turn_calls[0]
-    assert completed["episode_id"] == episode_id
-    assert completed["user_content"] == "读取文件"
-    assert completed["assistant_content"] == "文件内容已核实。"
-    assert completed["verified_tool_results"][0]["tool_call_id"] == "verified-read"
-    assert "_agent_execution" not in completed["verified_tool_results"][0]["content"]
-    assert any("即时提取候选 1 条" in item for item in trace)
+    assert len(memory.extract_calls) == 1
+    extracted = memory.extract_calls[0]
+    assert extracted["episode_id"] == episode_id
+    assert extracted["user_content"] == "读取文件"
+    assert extracted["assistant_content"] == "文件内容已核实。"
+    assert extracted["verified_tool_results"][0]["tool_call_id"] == "verified-read"
+    assert "_agent_execution" not in extracted["verified_tool_results"][0]["content"]
+    assert any("返回 1 条记忆变更" in item for item in trace)
 
 
-def test_completed_turn_preference_can_be_recalled_on_the_next_run() -> None:
-    class ImmediateCompletedTurnMemory(FakeMemory):
+def test_mem0_extracted_preference_can_be_recalled_on_the_next_run() -> None:
+    class ImmediateMem0Memory(FakeMemory):
         def __init__(self) -> None:
-            super().__init__(episode_consolidation_enabled=True)
+            super().__init__()
             self.learned = False
 
         def acquire_context(self, **kwargs: Any) -> MemoryContext:
@@ -406,11 +379,10 @@ def test_completed_turn_preference_can_be_recalled_on_the_next_run() -> None:
             items = (
                 (
                     {
-                        "kind": "user_preference",
+                        "kind": "memory",
                         "text": "用户偏好回答时先给结论，再讲细节。",
-                        "memory_record_id": "00000000-0000-0000-0000-000000000020",
-                        "memory_version_id": "00000000-0000-0000-0000-000000000021",
-                        "source_refs": ["episode:turn:1"],
+                        "memory_id": "00000000-0000-0000-0000-000000000020",
+                        "score": 0.95,
                         "trust": "untrusted_memory_data",
                     },
                 )
@@ -418,12 +390,11 @@ def test_completed_turn_preference_can_be_recalled_on_the_next_run() -> None:
                 else ()
             )
             return MemoryContext(
-                context_pack_id="00000000-0000-0000-0000-000000000002",
                 items=items,
             )
 
-        def record_completed_turn(self, **kwargs: Any) -> dict[str, Any]:
-            response = super().record_completed_turn(**kwargs)
+        def extract_turn(self, **kwargs: Any) -> dict[str, int]:
+            response = super().extract_turn(**kwargs)
             self.learned = True
             return response
 
@@ -433,7 +404,7 @@ def test_completed_turn_preference_can_be_recalled_on_the_next_run() -> None:
             FakeMessage("结论：Agent Loop 是代理执行循环。", tool_calls=None),
         ]
     )
-    memory = ImmediateCompletedTurnMemory()
+    memory = ImmediateMem0Memory()
     agent = AgentLoop(client, trace=None, memory=memory)
     episode_id = "00000000-0000-0000-0000-000000000088"
 
@@ -445,8 +416,7 @@ def test_completed_turn_preference_can_be_recalled_on_the_next_run() -> None:
         "用户偏好回答时先给结论" in message.get("content", "")
         for message in client.requests[1]
     )
-    assert len(memory.completed_turn_calls) == 2
-    assert memory.extract_calls == []
+    assert len(memory.extract_calls) == 2
 
 
 def test_agent_trims_history_by_complete_turn_budget() -> None:
@@ -489,7 +459,7 @@ def test_agent_degrades_when_memory_is_unavailable() -> None:
 
     assert agent.run("你好") == "无记忆也能回答。"
     assert any("召回失败，降级" in item for item in trace)
-    assert any("自动提取失败，不影响本轮回答" in item for item in trace)
+    assert any("Mem0 提取失败，不影响本轮回答" in item for item in trace)
 
 
 def test_agent_includes_completed_text_history_before_new_task() -> None:

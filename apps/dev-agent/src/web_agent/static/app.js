@@ -710,7 +710,6 @@ function contextTrace(context) {
     `Context: Memory ${context.memory_policy}，命中 ${context.memory_item_count} 条`,
     `Context: Tool Result ${context.tool_result_count} 条，估算 ${context.estimated_context_chars} 字符`,
   ];
-  if (context.context_pack_id) entries.push(`Context Pack: ${context.context_pack_id}`);
   return entries;
 }
 

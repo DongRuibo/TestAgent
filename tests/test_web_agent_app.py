@@ -44,7 +44,6 @@ class FakeReceipt:
             "history_omitted_count": 0,
             "memory_policy": "disabled",
             "memory_reason": "test",
-            "context_pack_id": None,
             "memory_item_count": 0,
             "tool_result_count": 0,
             "estimated_context_chars": 10,
