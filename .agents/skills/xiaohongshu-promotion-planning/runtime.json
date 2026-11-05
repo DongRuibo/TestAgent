@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "version": "0.3.0",
+  "aliases": ["小红书投流计划", "小红书投流方案", "14.8 投流计划", "生成投流方案"],
+  "allowed_tools": ["prepare_promotion_plan", "load_promotion_plan", "save_promotion_plan"],
+  "private_tools": ["prepare_promotion_plan", "load_promotion_plan", "save_promotion_plan"],
+  "tool_budgets": {"prepare_promotion_plan": 1, "load_promotion_plan": 12, "save_promotion_plan": 3},
+  "max_steps": 8,
+  "allow_memory": false,
+  "allow_attachments": false
+}

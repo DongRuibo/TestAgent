@@ -416,7 +416,7 @@ name = "fire"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "termcolor" },
+    { name = "termcolor", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c0/00/f8d10588d2019d6d6452653def1ee807353b21983db48550318424b5ff18/fire-0.7.1.tar.gz", hash = "sha256:3b208f05c736de98fb343310d090dcc4d8c78b2a89ea4f32b837c586270a9cbf", size = 88720, upload-time = "2025-08-16T20:20:24.175Z" }
 wheels = [
@@ -1615,7 +1615,7 @@ dependencies = [
     { name = "comtypes", marker = "sys_platform == 'win32'" },
     { name = "python-xlib", marker = "sys_platform == 'linux'" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
-    { name = "six" },
+    { name = "six", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2c/85/cc65e3b64e7473cc86c07f0b5c415d509402c03ef19dadc39c583835eb5f/pywinauto-0.6.9.tar.gz", hash = "sha256:94d710bfa796df245250f952ffa65d97233d9807bcd42e052b71b81af469b6de", size = 434734, upload-time = "2025-01-06T11:30:01.801Z" }
 wheels = [
@@ -1804,8 +1804,8 @@ name = "robotframework-sapguilibrary"
 version = "1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32" },
-    { name = "robotframework" },
+    { name = "pywin32", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
+    { name = "robotframework", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f0/35/235cee6cac6daf6d757df999b8f96b3e65a41d480077a6bd2cf8e533899f/robotframework-sapguilibrary-1.1.tar.gz", hash = "sha256:4b07f209f5e8bb9588b8993ad601c4bd9150635e914a0edb0c2496ca3d66373a", size = 9536, upload-time = "2019-01-25T07:43:48.848Z" }
 
@@ -1843,6 +1843,7 @@ name = "rpa-agent-module"
 version = "0.1.1"
 source = { editable = "packages/rpa-agent-module" }
 dependencies = [
+    { name = "openpyxl" },
     { name = "pillow" },
     { name = "pydantic" },
     { name = "robotframework" },
@@ -1851,6 +1852,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "openpyxl", specifier = ">=3.1.5,<4.0" },
     { name = "pillow", specifier = ">=11.3,<13.0" },
     { name = "pydantic", specifier = ">=2.11,<3.0" },
     { name = "robotframework", specifier = "==7.4.2" },
@@ -1965,14 +1967,14 @@ version = "11.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "comtypes", marker = "sys_platform == 'win32'" },
-    { name = "fire" },
+    { name = "fire", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
     { name = "psutil", marker = "sys_platform == 'win32'" },
-    { name = "pynput" },
+    { name = "pynput", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
-    { name = "robotframework" },
-    { name = "robotframework-pythonlibcore" },
-    { name = "rpaframework-core" },
-    { name = "uiautomation" },
+    { name = "robotframework", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
+    { name = "robotframework-pythonlibcore", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
+    { name = "rpaframework-core", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
+    { name = "uiautomation", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2c/288c81f7d15d4db6207bd15fa0256f952fec64b509c89f41a1cdd9a5fd40/rpaframework_windows-11.0.0.tar.gz", hash = "sha256:45d14684af1fe138130716d9fc33eb0ae4cf4268417f7564a00d7bedb86ff78f", size = 145414, upload-time = "2026-05-03T18:53:36.137Z" }
 wheels = [
@@ -2195,6 +2197,7 @@ dependencies = [
     { name = "mcp" },
     { name = "openai" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "rpa-agent-module" },
     { name = "testagent-sandbox-gateway" },
     { name = "uvicorn" },
@@ -2208,6 +2211,7 @@ requires-dist = [
     { name = "mcp", specifier = "==2.0.0" },
     { name = "openai", specifier = ">=1.0,<3" },
     { name = "python-dotenv", specifier = ">=1.0,<2" },
+    { name = "pyyaml", specifier = ">=6,<7" },
     { name = "rpa-agent-module", editable = "packages/rpa-agent-module" },
     { name = "testagent-sandbox-gateway", editable = "services/sandbox-gateway" },
     { name = "uvicorn", specifier = ">=0.30,<1" },
@@ -2437,7 +2441,7 @@ name = "uiautomation"
 version = "2.0.29"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "comtypes" },
+    { name = "comtypes", marker = "python_full_version < '3.12' or sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/bc/23/8238b5cb73e54c3618ce4d443c1830a2749264a0d61a9b61637096b8dc7a/uiautomation-2.0.29.tar.gz", hash = "sha256:3c169112043ce21065aead1d79c3baebdafc9cf03bd24ded02b2db11d423d88d", size = 203970, upload-time = "2025-08-05T05:14:41.194Z" }
 wheels = [

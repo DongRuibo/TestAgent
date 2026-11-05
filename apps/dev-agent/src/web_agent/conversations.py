@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import re
 import sqlite3
 import stat
 from collections.abc import Sequence
@@ -12,6 +14,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
+
+from tools.operation_goals import GOAL_SCENARIO, OperationGoalStore
+from tools.operation_goals_ui import build_operation_goal_ui
+from tools.content_topic_plan_ui import TOPIC_PLAN_SCENARIO, REVIEW_TOPIC_ACTION
 
 
 OWNER_REMINDER_INTERVAL_HOURS = 4
@@ -321,12 +327,15 @@ class SQLiteConversationStore:
         status: str = "stopped",
         trace: Sequence[str] = (),
         duration_ms: int | None = None,
+        context: dict[str, Any] | None = None,
     ) -> int | None:
         """结束未完成轮次；用户消息始终保留，部分回答按需保存。"""
         _validate_conversation_id(conversation_id)
         _validate_uuid(turn_id, "turn_id")
         if status not in {"stopped", "failed"}:
             raise ValueError("Incomplete turn status must be stopped or failed")
+        if context is not None and not isinstance(context, dict):
+            raise ValueError("Conversation execution context must be an object")
         serialized_trace = _serialize_trace(trace)
         now = _now()
         assistant_message_id: int | None = None
@@ -351,12 +360,12 @@ class SQLiteConversationStore:
                     (conversation_id, partial_answer, status, turn_id, now),
                 )
                 assistant_message_id = int(cursor.lastrowid)
-                if serialized_trace or duration_ms is not None:
+                if serialized_trace or duration_ms is not None or context is not None:
                     connection.execute(
                         """
                         INSERT INTO message_execution_details (
                             message_id, trace_json, duration_ms, context_json
-                        ) VALUES (?, ?, ?, NULL)
+                        ) VALUES (?, ?, ?, ?)
                         """,
                         (
                             assistant_message_id,
@@ -366,8 +375,15 @@ class SQLiteConversationStore:
                                 separators=(",", ":"),
                             ),
                             duration_ms,
+                            json.dumps(context, ensure_ascii=False) if context is not None else None,
                         ),
                     )
+            elif context is not None:
+                # 无部分回答时，把失败/取消回执关联到该轮用户消息，保留真实用量而不伪造回答。
+                message_id = connection.execute("SELECT message_id FROM messages WHERE conversation_id=? AND turn_id=? AND role='user'",
+                    (conversation_id, turn_id)).fetchone()[0]
+                connection.execute("INSERT INTO message_execution_details (message_id, trace_json, duration_ms, context_json) VALUES (?, ?, ?, ?)",
+                    (message_id, json.dumps(serialized_trace, ensure_ascii=False), duration_ms, json.dumps(context, ensure_ascii=False)))
             connection.execute(
                 "UPDATE conversations SET updated_at = ? WHERE conversation_id = ?",
                 (now, conversation_id),
@@ -904,6 +920,167 @@ class SQLiteConversationStore:
                     "结构化表单 Action 回执不存在。"
                 )
 
+    def confirm_operation_goal(
+        self, conversation_id: str, artifact_id: str, *, idempotency_key: str, user_turn_id: str | None = None,
+    ) -> dict[str, Any]:
+        """记录用户操作；保留历史工件绑定，不接受模型传来的确认状态。"""
+        _validate_conversation_id(conversation_id)
+        _validate_uuid(artifact_id, "artifact_id")
+        _validate_uuid(idempotency_key, "idempotency_key")
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = _generation_action_receipt(
+                connection, idempotency_key, conversation_id, artifact_id,
+                "confirm_operation_goal", {},
+            )
+            if existing is not None:
+                return existing
+            row = connection.execute(
+                "SELECT scenario, data_json FROM generation_ui_artifacts WHERE conversation_id = ? AND artifact_id = ?",
+                (conversation_id, artifact_id),
+            ).fetchone()
+            if row is None:
+                raise GenerationUiArtifactNotFoundError(artifact_id)
+            if row[0] != GOAL_SCENARIO:
+                raise GenerationUiActionConflictError("此卡片不是运营目标。")
+            latest = connection.execute(
+                "SELECT artifact_id FROM generation_ui_artifacts WHERE conversation_id = ? AND scenario = ? ORDER BY message_id DESC, rowid DESC LIMIT 1",
+                (conversation_id, GOAL_SCENARIO),
+            ).fetchone()
+            workflow = connection.execute("SELECT state_json FROM content_workflows WHERE conversation_id = ?", (conversation_id,)).fetchone()
+            if latest[0] != artifact_id or workflow:
+                raise GenerationUiActionConflictError("此目标已不是当前待确认版本，请查看对话中的最新目标。")
+            if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='business_tasks'").fetchone():
+                task = connection.execute("SELECT data_json FROM business_tasks WHERE conversation_id = ?", (conversation_id,)).fetchone()
+                if task and json.loads(task[0]).get("phase") in {"goal_running", "goal_input", "goal_failed"}:
+                    raise GenerationUiActionConflictError("目标正在补充或修改，请等待最新草案。")
+            data = _json_object(row[1], "data_json")
+            if user_turn_id is not None:
+                user = connection.execute("SELECT content FROM messages WHERE conversation_id = ? AND turn_id = ? AND role = 'user'",
+                    (conversation_id, user_turn_id)).fetchone()
+                from web_agent.business_intents import goal_confirmation
+                if not user or goal_confirmation(user[0]) not in {0, data["goal_ref"]["version"]}:
+                    raise GenerationUiActionConflictError("未找到用户对当前目标版本的明确确认消息。")
+            try:
+                handoff = OperationGoalStore().confirm(
+                    data["goal_ref"], conversation_id=conversation_id,
+                    ui_artifact_id=artifact_id, idempotency_key=idempotency_key,
+                    user_turn_id=user_turn_id,
+                )
+            except (OSError, ValueError, KeyError) as exc:
+                raise GenerationUiActionConflictError("目标版本无法确认，请重新加载最新目标。") from exc
+            ui = build_operation_goal_ui(handoff)
+            ui["data"]["text_reply"] = data.get("text_reply", False)
+            connection.execute(
+                "UPDATE generation_ui_artifacts SET data_json = ?, spec_json = ?, text = ? WHERE artifact_id = ?",
+                (json.dumps(ui["data"], ensure_ascii=False), json.dumps(ui["spec"], ensure_ascii=False), ui["text"], artifact_id),
+            )
+            response = {
+                "success": True, "status": "confirmed_in_conversation",
+                "message": "已记录此版本的目标确认，尚未开始研究。",
+                "data_patch": ui["data"], "spec_patch": ui["spec"], "form_patch": {},
+                "agent_message": "目标已确认；后续研究仍需显式指定此目标文件。",
+            }
+            _insert_generation_action(
+                connection, idempotency_key, conversation_id, artifact_id,
+                "confirm_operation_goal", {}, response, _now(),
+            )
+            return response
+
+    def review_content_topic(self, conversation_id, artifact_id, *, arguments, idempotency_key):
+        """只确认选题；与需要图片且可启动 RPA 的内容审核分开。"""
+        _validate_conversation_id(conversation_id)
+        _validate_uuid(artifact_id, "artifact_id")
+        _validate_uuid(idempotency_key, "idempotency_key")
+        decision = arguments.get("decision")
+        note = arguments.get("note", "").strip()
+        statuses = {"确认选题": ("approved", "选题已确认"),
+            "要求修改": ("revision_requested", "待修改"), "放弃选题": ("discarded", "已放弃")}
+        if decision not in statuses or (decision == "要求修改" and not note):
+            raise GenerationUiActionConflictError("审核决定无效，或缺少修改说明。")
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = _generation_action_receipt(connection, idempotency_key,
+                conversation_id, artifact_id, REVIEW_TOPIC_ACTION, arguments)
+            if existing is not None:
+                return existing
+            row = connection.execute(
+                "SELECT scenario, data_json FROM generation_ui_artifacts WHERE conversation_id = ? AND artifact_id = ?",
+                (conversation_id, artifact_id)).fetchone()
+            if row is None or row[0] != TOPIC_PLAN_SCENARIO:
+                raise GenerationUiActionConflictError("当前对话中没有该选题审核卡片。")
+            workflow = connection.execute("SELECT state_json FROM content_workflows WHERE conversation_id = ?", (conversation_id,)).fetchone()
+            state = json.loads(workflow[0]) if workflow else {}
+            if state and (state.get("status") != "plan_review" or state.get("plan_artifact_id") != artifact_id):
+                raise GenerationUiActionConflictError("此周计划已不是当前待审核版本。")
+            latest = connection.execute(
+                "SELECT artifact_id FROM generation_ui_artifacts WHERE conversation_id = ? AND scenario = ? ORDER BY message_id DESC, rowid DESC LIMIT 1",
+                (conversation_id, TOPIC_PLAN_SCENARIO),
+            ).fetchone()
+            if latest[0] != artifact_id:
+                raise GenerationUiActionConflictError("请在最新周计划中审核。")
+            data = _json_object(row[1], "data_json")
+            if data.get("approval_status") in {"confirmed_in_conversation", "discarded"}:
+                raise GenerationUiActionConflictError("本轮审核已完成，历史卡片只读。")
+            item = next((x for x in data["contents"] if x["content_id"] == arguments.get("content_id")), None)
+            if item is None:
+                raise GenerationUiActionConflictError("选题编号不存在。")
+            item.update(status=statuses[decision][0], status_label=statuses[decision][1],
+                review_note=note, reviewed_at=_now())
+            counts = {status: sum(x["status"] == status for x in data["contents"])
+                for status in ("approved", "discarded", "revision_requested", "pending_confirmation")}
+            data["metrics"] = {"content_count": len(data["contents"]),
+                "approved_count": counts["approved"], "discarded_count": counts["discarded"],
+                "pending_confirmation_count": counts["pending_confirmation"] + counts["revision_requested"]}
+            data["approval_status"] = (
+                "revision_requested" if counts["revision_requested"] else
+                "pending_confirmation" if counts["pending_confirmation"] else
+                "confirmed_in_conversation" if counts["approved"] else "discarded")
+            connection.execute("UPDATE generation_ui_artifacts SET data_json = ? WHERE artifact_id = ?",
+                (json.dumps(data, ensure_ascii=False), artifact_id))
+            response = {"success": True, "status": data["approval_status"],
+                "message": "已保存选题审核；未制作正文、未发布。", "data_patch": data,
+                "form_patch": {}, "spec_patch": {}, "agent_message": "选题审核已保存。"}
+            _insert_generation_action(connection, idempotency_key, conversation_id, artifact_id,
+                REVIEW_TOPIC_ACTION, arguments, response, _now())
+            return response
+
+    def content_workflow(self, conversation_id: str) -> dict[str, Any] | None:
+        _validate_conversation_id(conversation_id)
+        with self._connect() as connection:
+            if connection.execute("SELECT 1 FROM conversations WHERE conversation_id = ?", (conversation_id,)).fetchone() is None:
+                raise ConversationNotFoundError(conversation_id)
+            row = connection.execute("SELECT state_json FROM content_workflows WHERE conversation_id = ?", (conversation_id,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def save_content_workflow(self, conversation_id: str, state: dict[str, Any], *, expected_revision: int) -> dict[str, Any]:
+        """版本比较和写入在一个事务内，阻止重复点击及跨页面过期操作。"""
+        _validate_conversation_id(conversation_id)
+        updated = {**state, "revision": expected_revision + 1}
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute("SELECT state_json FROM content_workflows WHERE conversation_id = ?", (conversation_id,)).fetchone()
+            revision = json.loads(row[0])["revision"] if row else 0
+            if revision != expected_revision:
+                raise GenerationUiActionConflictError("流程已变化，请刷新后再操作。")
+            connection.execute(
+                "INSERT INTO content_workflows (conversation_id, state_json) VALUES (?, ?) "
+                "ON CONFLICT(conversation_id) DO UPDATE SET state_json = excluded.state_json",
+                (conversation_id, json.dumps(updated, ensure_ascii=False)))
+        return updated
+
+    def interrupt_content_workflows(self) -> None:
+        """单进程 Web 启动恢复：不自动重新执行可能已付费的研究。"""
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            for identifier, raw in connection.execute("SELECT conversation_id, state_json FROM content_workflows").fetchall():
+                state = json.loads(raw)
+                if state["status"] in {"research_running", "plan_running", "save_running"}:
+                    state.update(status="interrupted", revision=state["revision"] + 1,
+                        error="服务曾中断；优先恢复已保存结果。没有结果时，重试研究可能再次计费。")
+                    connection.execute("UPDATE content_workflows SET state_json = ? WHERE conversation_id = ?",
+                        (json.dumps(state, ensure_ascii=False), identifier))
+
     def review_content_plan(
         self,
         conversation_id: str,
@@ -971,7 +1148,7 @@ class SQLiteConversationStore:
             )
             if item is None:
                 raise GenerationUiActionConflictError("内容编号不存在。")
-            if item.get("rpa_status") in {"running", "draft_saved"}:
+            if item.get("rpa_status") in {"running", "needs_review", "draft_saved", "manually_confirmed"}:
                 raise GenerationUiActionConflictError(
                     "RPA 已开始或草稿已保存，不能再修改审核状态。"
                 )
@@ -987,6 +1164,8 @@ class SQLiteConversationStore:
                     "review_note": note.strip(),
                     "image_paths": image_paths if decision == "确认内容" else [],
                     "approved_at": now if decision == "确认内容" else "",
+                    "image_hashes": {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for path in image_paths}
+                        if decision == "确认内容" else {},
                 }
             )
             _refresh_content_metrics(data)
@@ -1080,14 +1259,24 @@ class SQLiteConversationStore:
                 raise GenerationUiActionConflictError("该内容的 RPA 正在执行。")
             if item.get("rpa_status") == "draft_saved":
                 raise GenerationUiActionConflictError("该内容已经保存到小红书草稿箱。")
+            if item.get("rpa_status") == "manually_confirmed":
+                raise GenerationUiActionConflictError("用户已确认草稿存在，不能重复保存。")
+            if item.get("rpa_status") == "needs_review":
+                raise GenerationUiActionConflictError("原草稿结果未确认，请先核对原任务，不能重复保存。")
             image_paths = item.get("image_paths")
             if not isinstance(image_paths, list) or not image_paths:
                 raise GenerationUiActionConflictError("已审核内容缺少图片。")
+            hashes = item.get("image_hashes", {})
+            if set(hashes) != set(image_paths) or any(not Path(path).is_file() or hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest
+                for path, digest in hashes.items()):
+                raise GenerationUiActionConflictError("图片快照缺失或内容已变化，请重新确认内容。")
             item.update(
                 {
                     "rpa_status": "running",
                     "rpa_status_label": "执行中",
                     "rpa_job_id": "",
+                    "rpa_execution_id": str(uuid4()),
+                    "rpa_idempotency_key": idempotency_key,
                     "rpa_message": "正在启动小红书专用 Chrome。",
                 }
             )
@@ -1101,7 +1290,78 @@ class SQLiteConversationStore:
                 "body": str(item.get("body", "")),
                 "tags": list(item.get("tags", [])),
                 "image_paths": list(image_paths),
+                "execution_id": item["rpa_execution_id"],
             }
+
+    def attach_content_xiaohongshu_job(self, conversation_id, artifact_id, content_id, execution_id, job_id):
+        """Job外部动作开始前保存业务关联；旧未知任务只标待核验，不重放。"""
+        with self._connect() as connection:
+            row = connection.execute("SELECT data_json FROM generation_ui_artifacts WHERE conversation_id=? AND artifact_id=?",
+                (conversation_id, artifact_id)).fetchone()
+            if not row:
+                raise GenerationUiArtifactNotFoundError(artifact_id)
+            data = json.loads(row[0])
+            item = next(item for item in data["contents"] if item["content_id"] == content_id)
+            if item.get("rpa_execution_id") != execution_id:
+                raise GenerationUiActionConflictError("执行关联已变化。")
+            item["rpa_job_id"] = job_id
+            connection.execute("UPDATE generation_ui_artifacts SET data_json=? WHERE artifact_id=?", (json.dumps(data, ensure_ascii=False), artifact_id))
+
+    def unresolved_content_xiaohongshu(self, conversation_id):
+        pending = []
+        with self._connect() as connection:
+            rows = connection.execute("SELECT artifact_id,data_json,spec_json FROM generation_ui_artifacts WHERE conversation_id=? AND scenario='content_weekly_plan'",
+                (conversation_id,)).fetchall()
+            for artifact_id, raw, spec_raw in rows:
+                data = json.loads(raw)
+                changed = False
+                for item in data.get("contents", []):
+                    if item.get("rpa_status") not in {"running", "needs_review", "needs_user_action"}:
+                        continue
+                    if not item.get("rpa_execution_id") or not item.get("rpa_idempotency_key"):
+                        item.update(rpa_status="needs_review", rpa_status_label="待人工核验",
+                            rpa_message="旧执行没有完整关联，请人工核对草稿箱；不会重复保存。")
+                        changed = True
+                    else:
+                        pending.append((artifact_id, item.copy()))
+                if any(item.get("rpa_status") == "needs_review" for item in data.get("contents", [])):
+                    from tools.content_operations_ui import with_content_recovery
+                    connection.execute("UPDATE generation_ui_artifacts SET spec_json=? WHERE artifact_id=?",
+                        (json.dumps(with_content_recovery(json.loads(spec_raw)), ensure_ascii=False), artifact_id))
+                if changed:
+                    connection.execute("UPDATE generation_ui_artifacts SET data_json=? WHERE artifact_id=?", (json.dumps(data, ensure_ascii=False), artifact_id))
+        return pending
+
+    def resolve_content_xiaohongshu(self, conversation_id, artifact_id, arguments, idempotency_key):
+        """保留旧执行审计，以明确人工结论解除未知状态，不自动重复保存。"""
+        with self._connect() as connection:
+            existing = _generation_action_receipt(connection, idempotency_key, conversation_id, artifact_id,
+                "resolve_xiaohongshu_draft", arguments)
+            if existing:
+                return existing
+            row = connection.execute("SELECT data_json FROM generation_ui_artifacts WHERE conversation_id=? AND artifact_id=? AND scenario='content_weekly_plan'",
+                (conversation_id, artifact_id)).fetchone()
+            if not row:
+                raise GenerationUiArtifactNotFoundError(artifact_id)
+            data = json.loads(row[0])
+            item = next((item for item in data["contents"] if item["content_id"] == arguments["content_id"]), None)
+            if not item or item.get("rpa_status") != "needs_review" or not arguments.get("note", "").strip():
+                raise GenerationUiActionConflictError("仅待核验任务可记录人工结论，必须填写核验说明。")
+            history = item.setdefault("rpa_history", [])
+            history.append({key: value for key, value in item.items() if key.startswith("rpa_") and key != "rpa_history"})
+            history[-1]["human_resolution"] = {**arguments, "recorded_at": _now()}
+            if arguments["resolution"] == "人工确认存在":
+                item.update(rpa_status="manually_confirmed", rpa_status_label="人工确认存在", rpa_message="人工确认草稿存在，未代表机器完整核验。")
+            else:
+                item.update(rpa_status="not_started", rpa_status_label="待重新审核", status="pending_review", status_label="待审核",
+                    approved_at="", image_hashes={}, rpa_job_id="", rpa_execution_id="", rpa_idempotency_key="",
+                    rpa_message="人工核验未保存；请重新审核，再明确决定是否创建新任务。")
+            _refresh_content_metrics(data)
+            connection.execute("UPDATE generation_ui_artifacts SET data_json=? WHERE artifact_id=?", (json.dumps(data, ensure_ascii=False), artifact_id))
+            response = {"success": True, "status": item["rpa_status"], "message": item["rpa_message"],
+                "data_patch": {"contents": data["contents"], "metrics": data["metrics"]}, "form_patch": {}, "spec_patch": {}, "agent_message": item["rpa_message"]}
+            _insert_generation_action(connection, idempotency_key, conversation_id, artifact_id, "resolve_xiaohongshu_draft", arguments, response, _now())
+            return response
 
     def finish_content_xiaohongshu_rpa(
         self,
@@ -1111,6 +1371,7 @@ class SQLiteConversationStore:
         arguments: dict[str, Any],
         idempotency_key: str,
         rpa_result: dict[str, Any],
+        reconcile: bool = False,
     ) -> dict[str, Any]:
         """把小红书草稿 RPA 的终态写回卡片和 Action 审计。"""
 
@@ -1125,7 +1386,7 @@ class SQLiteConversationStore:
                 "save_xiaohongshu_draft",
                 arguments,
             )
-            if existing is not None:
+            if existing is not None and not reconcile:
                 return existing
             row = connection.execute(
                 """
@@ -1153,6 +1414,10 @@ class SQLiteConversationStore:
                 rpa_status, rpa_label = "draft_saved", "草稿已保存"
             elif rpa_result.get("needs_user_action") is True:
                 rpa_status, rpa_label = "needs_user_action", "需要人工处理"
+            elif rpa_result.get("status") in {"queued", "running"}:
+                rpa_status, rpa_label = "running", "执行中"
+            elif rpa_result.get("needs_review") is True:
+                rpa_status, rpa_label = "needs_review", "待人工核验"
             else:
                 rpa_status, rpa_label = "failed", "执行失败"
             item.update(
@@ -1180,6 +1445,10 @@ class SQLiteConversationStore:
                     "没有执行最终发布。"
                 ),
             }
+            if existing is not None:
+                connection.execute("UPDATE generation_ui_actions SET response_json=? WHERE idempotency_key=?",
+                    (json.dumps(response, ensure_ascii=False), idempotency_key))
+                return response
             _insert_generation_action(
                 connection,
                 idempotency_key,
@@ -1846,6 +2115,11 @@ class SQLiteConversationStore:
                     custom_title TEXT,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS content_workflows (
+                    conversation_id TEXT PRIMARY KEY REFERENCES conversations(conversation_id)
+                        ON DELETE CASCADE,
+                    state_json TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS messages (
                     message_id INTEGER PRIMARY KEY AUTOINCREMENT,

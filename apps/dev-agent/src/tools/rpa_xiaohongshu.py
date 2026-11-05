@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,8 @@ from rpa_agent_module import (
     RpaModuleError,
     RpaModuleConfig,
 )
+from rpa_agent_module.database import JobRepository
+from rpa_agent_module.models import verified_draft_result
 
 from testagent_dev_agent.paths import REPOSITORY_ROOT
 
@@ -112,6 +115,8 @@ def save_xiaohongshu_draft(
     tags: list[str],
     image_paths: list[str],
     module_factory: Any = RpaExecutionModule,
+    execution_id: str | None = None,
+    on_job_created: Any = None,
 ) -> dict[str, Any]:
     """同步等待一个受控 RPA 任务；成功只代表草稿箱核验通过。"""
 
@@ -131,15 +136,14 @@ def save_xiaohongshu_draft(
                 return _error("RPA_CHROME_UNAVAILABLE", "未检测到 Google Chrome。")
             if not health.database_ready:
                 return _error("RPA_DATABASE_UNAVAILABLE", "RPA 任务数据库未就绪。")
-            job = rpa.submit(
-                "xiaohongshu_draft",
-                {
+            payload = {
                     "title": title,
                     "body": body,
                     "tags": tags,
                     "image_paths": image_paths,
-                },
-            )
+                }
+            options = {"execution_id": execution_id, "on_job_created": on_job_created} if execution_id is not None or on_job_created is not None else {}
+            job = rpa.submit("xiaohongshu_draft", payload, **options)
             job_id = job.id
             try:
                 completed = rpa.wait(job.id, timeout=RPA_XHS_WAIT_TIMEOUT_SECONDS)
@@ -151,7 +155,8 @@ def save_xiaohongshu_draft(
                     "RPA_TIMEOUT",
                     "等待小红书草稿任务超时，任务已停止；不会自动重复提交。",
                     job_id=current.id,
-                    status=current.status,
+                    status="needs_review",
+                    needs_review=True,
                 )
     except JobInputError as exc:
         return _error("RPA_INVALID_INPUT", str(exc), job_id=job_id)
@@ -170,7 +175,38 @@ def save_xiaohongshu_draft(
             "RPA_EXECUTION_ERROR",
             "小红书 RPA 出现未预期错误，请查看本机任务日志。",
             job_id=job_id,
+            status="needs_review" if job_id or execution_id else "failed",
+            needs_review=bool(job_id or execution_id),
         )
+
+    return _draft_job_result(completed)
+
+
+def query_xiaohongshu_draft(*, execution_id: str, job_id: str | None = None) -> dict[str, Any]:
+    """只读核对原任务，不创建模块、浏览器或新的保存动作。"""
+
+    database = RPA_XHS_DATA_DIR / "jobs.db"
+    job = JobRepository(database).get_by_execution_id(execution_id) if database.is_file() else None
+    if job is None or (job_id is not None and job.id != job_id):
+        return _error("RPA_RESULT_UNKNOWN", "未找到匹配的原执行任务，请人工核验；不会自动再次保存。", job_id=job_id,
+                      status="needs_review", needs_review=True)
+    if job.status in {"queued", "running"}:
+        lock_path = RPA_XHS_DATA_DIR / ".module.lock"
+        if lock_path.is_file():
+            with lock_path.open("rb") as lock_file:
+                try:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    return _error("RPA_RUNNING", "原任务仍由本机模块持有，请稍后查询。", job_id=job.id, status=job.status)
+                else:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        return _error("RPA_INTERRUPTED", "原任务已失去执行实例，请人工核验草稿现场。", job_id=job.id,
+                      status="needs_review", needs_review=True)
+    return _draft_job_result(job)
+
+
+def _draft_job_result(completed: Any) -> dict[str, Any]:
+    """统一保存与只读查询的结果口径，旧的标题回执不能升级为完整成功。"""
 
     if completed.status == "needs_user_action":
         return _error(
@@ -180,13 +216,15 @@ def save_xiaohongshu_draft(
             status=completed.status,
             needs_user_action=True,
         )
-    if completed.status != "succeeded" or not isinstance(completed.result, dict):
-        return _error(
+    if completed.status != "succeeded" or not verified_draft_result(completed.result, completed.input):
+        uncertain = completed.status in {"succeeded", "needs_review", "stopped"} or completed.error_code == "module_interrupted"
+        return {**_error(
             completed.error_code or "RPA_JOB_FAILED",
             completed.error_message or "小红书草稿任务未成功完成。",
             job_id=completed.id,
-            status=completed.status,
-        )
+            status="needs_review" if uncertain else completed.status,
+            needs_review=uncertain,
+        ), "result": completed.result}
     result = completed.result
     return {
         "success": True,
@@ -196,6 +234,8 @@ def save_xiaohongshu_draft(
         "result_type": result.get("result_type"),
         "draft_url": result.get("url"),
         "image_count": result.get("image_count"),
+        "verification": result["verification"],
+        "result": result,
         "message": result.get("message") or "小红书草稿已保存并完成草稿箱核验。",
         "final_publish_performed": False,
     }
@@ -209,7 +249,10 @@ def _error(
     status: str = "failed",
     retryable: bool = False,
     needs_user_action: bool = False,
+    needs_review: bool = False,
 ) -> dict[str, Any]:
+    if job_id and status == "failed":
+        status, needs_review = "needs_review", True
     return {
         "success": False,
         "error_type": error_type,
@@ -218,6 +261,7 @@ def _error(
         "status": status,
         "retryable": retryable,
         "needs_user_action": needs_user_action,
+        "needs_review": needs_review,
         "final_publish_performed": False,
     }
 
@@ -227,6 +271,7 @@ __all__ = [
     "RPA_XHS_IMAGE_ROOT",
     "CONTENT_IMAGE_MAX_BYTES",
     "save_xiaohongshu_draft",
+    "query_xiaohongshu_draft",
     "store_content_image",
     "validate_content_image_paths",
 ]

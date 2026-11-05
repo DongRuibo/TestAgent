@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="TestAgent 长期知识库管理" />
+    <title>长期知识库 · Mini Agent</title>
+    <link rel="stylesheet" href="/static/knowledge-base.css?v=20260904-1" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="back-link" href="/">← 返回对话</a>
+      <div class="brand"><span aria-hidden="true"></span><strong>Mini Agent</strong></div>
+      <p>本地管理页面 · JWT 仅保留在服务端</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">LONG-TERM KNOWLEDGE</p>
+        <h1>长期知识库</h1>
+        <p>这里的资料会跨对话保留。没有对话附件时，Agent 会从这个知识库检索原文。</p>
+      </section>
+
+      <div class="notice" id="notice" role="status" hidden></div>
+
+      <section class="summary-card" aria-labelledby="summary-title">
+        <div>
+          <p class="section-label">当前知识库</p>
+          <h2 id="summary-title">正在读取…</h2>
+          <p id="summary-description">—</p>
+        </div>
+        <dl>
+          <div><dt>状态</dt><dd id="summary-status">—</dd></div>
+          <div><dt>文档</dt><dd id="summary-count">—</dd></div>
+          <div><dt>检索配置</dt><dd id="summary-profile">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="upload-card" aria-labelledby="upload-title">
+        <div>
+          <p class="section-label">添加资料</p>
+          <h2 id="upload-title">上传长期文档</h2>
+          <p>支持 PDF、Office/文本、图片和音视频，单文件最大 100 MB。上传后自动解析。</p>
+        </div>
+        <form id="upload-form">
+          <label class="file-picker" for="file-input">
+            <input id="file-input" type="file" required
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.html,.htm,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.aac,.flac,.ogg,.mp4,.mov,.mkv,.webm,.avi" />
+            <span id="file-label">选择文件</span>
+          </label>
+          <label class="media-consent" id="media-consent" hidden>
+            <input id="media-consent-input" type="checkbox" />
+            <span>我确认将该音视频发送至硅基流动进行解析</span>
+          </label>
+          <button class="primary-button" id="upload-button" type="submit">上传并解析</button>
+        </form>
+      </section>
+
+      <section class="documents-card" aria-labelledby="documents-title">
+        <div class="documents-heading">
+          <div>
+            <p class="section-label">文档管理</p>
+            <h2 id="documents-title">长期文档</h2>
+          </div>
+          <button class="secondary-button" id="refresh-button" type="button">刷新</button>
+        </div>
+        <div class="document-list" id="document-list"></div>
+        <p class="empty-state" id="empty-state" hidden>长期知识库中还没有文档。</p>
+        <div class="pagination" id="pagination" hidden>
+          <button id="previous-page" type="button">上一页</button>
+          <span id="page-label">第 1 页</span>
+          <button id="next-page" type="button">下一页</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/static/knowledge-base.js?v=20260904-1"></script>
+  </body>
+</html>

@@ -74,12 +74,14 @@ class FakeWebAgent:
         history=None,
         episode_id=None,
         generation_ui_event=None,
+        skill_name=None,
     ) -> str:
         if generation_ui_event is None:
-            self.calls.append((task, history, episode_id))
+            call = (task, history, episode_id)
         else:
-            self.calls.append((task, history, episode_id, generation_ui_event))
+            call = (task, history, episode_id, generation_ui_event)
             self.generation_ui_artifacts = []
+        self.calls.append(call if skill_name is None else (*call, skill_name))
         self.trace("Step 1: 调用模型")
         if self.error:
             raise RuntimeError(self.error)
@@ -155,11 +157,73 @@ class FakeAttachmentGateway:
         return {"success": True, "job_id": "c1d66b91-701a-4e33-9f66-877244fae693"}
 
 
+class FakeKnowledgeBaseGateway:
+    document_id = "d1d66b91-701a-4e33-9f66-877244fae693"
+    job_id = "e1d66b91-701a-4e33-9f66-877244fae693"
+
+    def __init__(self) -> None:
+        self.uploads = []
+        self.retried = []
+        self.deleted = []
+
+    def close(self) -> None:
+        pass
+
+    def get_knowledge_base_summary(self):
+        return {
+            "success": True,
+            "name": "Synthetic long-term knowledge",
+            "description": "Synthetic only",
+            "status": "READY",
+            "retrieval_profile": "hybrid-default@1",
+            "document_count": 1,
+        }
+
+    def list_documents(self, *, page, page_size):
+        assert (page, page_size) == (1, 50)
+        return {
+            "success": True,
+            "documents": [
+                {
+                    "document_id": self.document_id,
+                    "filename": "synthetic.md",
+                    "content_type": "text/markdown",
+                    "size_bytes": 12,
+                    "status": "READY",
+                    "progress": 1,
+                    "chunk_count": 1,
+                    "token_count": 4,
+                    "updated_at": "2026-09-04T00:00:00Z",
+                    "error_code": None,
+                }
+            ],
+            "meta": {"page": 1, "page_size": 50, "total": 1},
+        }
+
+    def upload_managed_document(self, file, **kwargs):
+        self.uploads.append((file.read(), kwargs))
+        return {
+            "success": True,
+            "document_id": self.document_id,
+            "job_id": self.job_id,
+            "status": "RECEIVED",
+        }
+
+    def retry_managed_document(self, document_id):
+        self.retried.append(document_id)
+        return {"success": True, "job_id": self.job_id, "status": "PENDING"}
+
+    def delete_managed_document(self, document_id):
+        self.deleted.append(document_id)
+        return {"success": True, "job_id": self.job_id, "status": "PENDING"}
+
+
 def _client(
     tmp_path: Path,
     *,
     error: str | None = None,
     gateway: FakeAttachmentGateway | None = None,
+    knowledge_gateway: FakeKnowledgeBaseGateway | None = None,
     scopes: list[
         tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]
     ] | None = None,
@@ -192,6 +256,9 @@ def _client(
         attachment_gateway_factory=(
             lambda kind: gateway.for_kind(kind)
         ) if gateway is not None else None,
+        knowledge_base_gateway_factory=(
+            lambda: knowledge_gateway
+        ) if knowledge_gateway is not None else None,
     )
     return TestClient(app), calls
 
@@ -207,9 +274,12 @@ def test_web_agent_serves_chat_page_and_static_assets(tmp_path) -> None:
     assert 'id="chat-title"' in page.text
     assert "LIVE DEMO" not in page.text
     assert "attachment-input" in page.text
-    assert "generation-ui.css?v=0.5.2-upload1" in page.text
-    assert "app.css?v=20260814-10" in page.text
-    assert "app.js?v=20260814-8" in page.text
+    assert 'id="task-progress-toggle"' in page.text
+    assert 'id="skill-select"' not in page.text
+    assert "generation-ui.css?v=20260910-task1" in page.text
+    assert "app.css?v=20260911-save1" in page.text
+    assert 'href="/knowledge-base"' in page.text
+    assert "app.js?v=20260918-colloquial1" in page.text
     assert styles.status_code == 200
     assert "--accent" in styles.text
     assert generation_ui_script.status_code == 200
@@ -223,11 +293,93 @@ def test_web_agent_serves_chat_page_and_static_assets(tmp_path) -> None:
 
     app_script = client.get("/static/app.js")
     assert app_script.status_code == 200
-    assert 'generation-ui.js?v=0.5.2-ux1' in app_script.text
+    assert 'generation-ui.js?v=20260910-task1' in app_script.text
+    assert "本期核心指标" in generation_ui_script.text
+    assert "保存此选题审核" in generation_ui_script.text
     assert 'fetch(\n    `/api/content-assets/images?filename=' in app_script.text
     assert 'button.textContent = "选择/上传图片"' in app_script.text
     assert "picker.multiple = true" in app_script.text
     assert "instance.patchForm({ image_paths_text:" in app_script.text
+
+
+def test_welcome_guides_to_current_task_without_demo_execution(tmp_path) -> None:
+    client, calls = _client(tmp_path)
+    page = client.get("/").text
+    welcome = page.split('<article class="welcome-card" id="welcome-card">', 1)[1].split("</article>", 1)[0]
+    assert "从经营目标开始，" in welcome
+    assert "推进本期运营" in welcome
+    assert welcome.count("<dt>") == welcome.count("<dd>") == 4
+    for title in ("企业资料", "运营目标", "周计划准备", "计划交付"):
+        assert title in welcome
+    assert "<button" not in welcome
+    assert 'id="welcome-current-task"' not in welcome
+    assert 'href="/enterprise"' in welcome
+    assert "研究需单独确认" in welcome
+    assert "不会自动发布或投流" in welcome
+    assert "$skill-name" in welcome
+    for removed in ("data-prompt", "prompt-chip", "READY TO WORK", "必须调用", "fixtures/sales.csv"):
+        assert removed not in welcome
+    script = client.get("/static/app.js").text
+    assert "setTaskView" not in script
+    assert "dataset.prompt" not in script
+    assert not calls
+
+
+def test_long_term_knowledge_base_admin_page_and_lifecycle(tmp_path) -> None:
+    gateway = FakeKnowledgeBaseGateway()
+    client, _calls = _client(tmp_path, knowledge_gateway=gateway)
+
+    page = client.get("/knowledge-base")
+    summary = client.get("/api/knowledge-base")
+    documents = client.get("/api/knowledge-base/documents")
+    uploaded = client.post(
+        "/api/knowledge-base/documents",
+        params={"filename": "synthetic.md"},
+        content=b"# synthetic",
+        headers={"Content-Type": "text/markdown"},
+    )
+    retried = client.post(
+        f"/api/knowledge-base/documents/{gateway.document_id}/retry"
+    )
+    deleted = client.delete(
+        f"/api/knowledge-base/documents/{gateway.document_id}"
+    )
+
+    assert page.status_code == 200
+    assert "长期知识库" in page.text
+    assert ".pagination[hidden]" in client.get(
+        "/static/knowledge-base.css"
+    ).text
+    assert summary.json()["name"] == "Synthetic long-term knowledge"
+    assert documents.json()["documents"][0]["filename"] == "synthetic.md"
+    assert uploaded.status_code == 202
+    assert uploaded.json()["document_id"] == gateway.document_id
+    assert gateway.uploads == [
+        (
+            b"# synthetic",
+            {"filename": "synthetic.md", "content_type": "text/markdown"},
+        )
+    ]
+    assert retried.status_code == 202
+    assert gateway.retried == [gateway.document_id]
+    assert deleted.status_code == 202
+    assert gateway.deleted == [gateway.document_id]
+
+
+def test_long_term_media_upload_requires_explicit_consent(tmp_path) -> None:
+    gateway = FakeKnowledgeBaseGateway()
+    client, _calls = _client(tmp_path, knowledge_gateway=gateway)
+
+    response = client.post(
+        "/api/knowledge-base/documents",
+        params={"filename": "synthetic.wav"},
+        content=b"synthetic audio",
+        headers={"Content-Type": "audio/wav"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["error_type"] == "MEDIA_CONSENT_REQUIRED"
+    assert gateway.uploads == []
 
 
 def test_web_agent_keeps_shell_fixed_and_clears_input_before_request(tmp_path) -> None:
@@ -355,6 +507,29 @@ def test_web_agent_exposes_p1_p2_chat_controls_and_safe_markdown(tmp_path) -> No
     assert "服务异常" in script
 
 
+def test_web_agent_uses_automatic_routing_and_one_business_action_area(tmp_path) -> None:
+    client, _calls = _client(tmp_path)
+
+    page = client.get("/").text
+    styles = client.get("/static/app.css").text
+    script = client.get("/static/app.js").text
+
+    assert 'id="skill-select"' not in page
+    assert 'id="recommend-skill"' not in page
+    assert 'href="/enterprise"' in page
+    assert ".task-view" not in styles
+    assert 'id="show-current-task"' not in page
+    assert 'id="show-history"' not in page
+    drawer = page.split('<aside class="task-progress"', 1)[1].split("</aside>", 1)[0]
+    assert 'id="task-progress-close"' in drawer
+    assert "<input" not in drawer and "<form" not in drawer
+    assert 'aria-expanded="false"' in page
+    assert 'fetch("/api/skills")' not in script
+    assert "requestBody.task_reply = taskReply" in script
+    assert "canOperateArtifact(artifact, taskPayload)" in script
+    assert "businessCards" in script
+
+
 def test_web_agent_compacts_chat_output_and_transient_new_chat_notice(tmp_path) -> None:
     client, _calls = _client(tmp_path)
 
@@ -424,6 +599,32 @@ def test_web_agent_lists_conversation_summaries_by_recent_activity(tmp_path) -> 
     assert summaries[1]["title"] == "新对话"
     assert summaries[1]["message_count"] == 0
     assert summaries[1]["updated_at"]
+
+
+def test_web_agent_lists_loaded_skills_and_accepts_explicit_skill(tmp_path) -> None:
+    client, calls = _client(tmp_path)
+
+    listed = client.get("/api/skills")
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "制定运营目标",
+            "skill_name": "operation-goal-setting",
+        },
+    )
+
+    assert listed.status_code == 200
+    skills = {item["name"]: item for item in listed.json()["skills"]}
+    assert set(skills) == {
+        "enterprise-weekly-operation-plan",
+        "network-research-and-topic-selection",
+        "operation-goal-setting",
+        "xiaohongshu-promotion-planning",
+    }
+    assert skills["operation-goal-setting"]["version"] == "0.6.0"
+    assert skills["xiaohongshu-promotion-planning"]["version"] == "0.3.0"
+    assert response.status_code == 200
+    assert calls[0][-1] == "operation-goal-setting"
 
 
 def test_web_agent_validates_conversation_summary_limit(tmp_path) -> None:
@@ -519,11 +720,15 @@ def test_web_agent_persists_history_and_restores_it_by_conversation_id(tmp_path)
 def test_web_agent_streams_status_and_result_without_breaking_json_api(
     tmp_path,
 ) -> None:
-    client, _calls = _client(tmp_path)
+    client, calls = _client(tmp_path)
 
     response = client.post(
         "/api/chat/stream",
-        json={"request_id": str(uuid4()), "message": "你好"},
+        json={
+            "request_id": str(uuid4()),
+            "message": "你好",
+            "skill_name": "operation-goal-setting",
+        },
     )
 
     assert response.status_code == 200
@@ -537,6 +742,7 @@ def test_web_agent_streams_status_and_result_without_breaking_json_api(
     assert events[-1]["type"] == "result"
     assert events[-1]["data"]["answer"] == "网页回答"
     assert events[-1]["data"]["conversation_id"]
+    assert calls[0][-1] == "operation-goal-setting"
 
 
 def test_web_agent_streams_answer_before_final_result(tmp_path) -> None:

@@ -3,6 +3,7 @@ function appendText(parent, value) {
 }
 
 function safeHttpUrl(value) {
+  if (/^\/api\/conversations\/[0-9a-f-]{36}\/weekly-plan(?:\?version=[1-9]\d*)?$/i.test(value)) return value;
   try {
     const url = new URL(value);
     if (!["http:", "https:"].includes(url.protocol)) return null;
@@ -187,7 +188,12 @@ export function renderMarkdown(container, markdown) {
       const current = lines[index];
       if (
         paragraph.length
-        && (/^```/.test(current) || /^(#{1,4})\s+/.test(current))
+        && (
+          /^```/.test(current)
+          || /^(#{1,4})\s+/.test(current)
+          || /^\s*(?:[-*+]|\d+\.)\s+.+$/.test(current)
+          || (index + 1 < lines.length && current.includes("|") && isTableSeparator(lines[index + 1]))
+        )
       ) break;
       paragraph.push(current.trim());
       index += 1;

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="UTF-8"><title>本地合成创作后台</title>
+<style>body{font:16px sans-serif;max-width:700px;margin:30px auto}.preview{width:60px}.draft-drawer{border:1px solid #ccc;padding:12px}.tiptap{min-height:120px;border:1px solid #aaa}input{display:block;margin:10px 0}</style>
+<div class="user-info">合成测试账号</div>
+<input class="upload-input" type="file" multiple accept="image/*">
+<div id="images"></div>
+<input placeholder="填写标题会有更多赞哦">
+<div class="tiptap ProseMirror" contenteditable="true"></div>
+<div class="permission-info"></div>
+<button class="header-draft">草稿箱</button>
+<div class="draft-drawer" hidden><div class="tab-item"><span>图文笔记(1)</span></div><div id="drafts"></div></div>
+<script>
+// 仅用于本地合成回归；不加载外部脚本，也不包含最终发布动作。
+const mode = new URL(location.href).searchParams.get("mode") || "normal";
+const title = document.querySelector("input[placeholder]");
+const body = document.querySelector(".tiptap");
+let count = 0;
+function editorText(element) {
+  // 模拟编辑器按文档节点保存正文；innerText的布局换行会重复计算空DIV。
+  return Array.from(element.childNodes).map((node,index)=>{
+    if(node.nodeType===Node.TEXT_NODE)return node.textContent;
+    if(node.nodeName==="BR")return "\n";
+    const text=editorText(node);
+    if(node.nodeName==="DIV"||node.nodeName==="P"){
+      const emptyLine=node.childNodes.length===1&&node.firstChild.nodeName==="BR";
+      return (index>0?"\n":"")+(emptyLine?"":text);
+    }
+    return text;
+  }).join("");
+}
+function previews(amount) {
+  document.querySelector("#images").replaceChildren();
+  for (let i=0;i<amount;i++) {
+    const img=document.createElement("img"); img.className="img preview";
+    img.alt="合成图片"; img.src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='grey'/%3E%3C/svg%3E";
+    document.querySelector("#images").append(img);
+  }
+}
+function save() {
+  if (mode === "save_timeout") return;
+  const text=editorText(body);
+  localStorage.setItem("synthetic-draft",JSON.stringify({title:title.value,
+    body:mode==="missing_body"?"":mode==="missing_tags"?text.split("\n\n#")[0]:text,
+    images:mode==="missing_image"?Math.max(0,count-1):count}));
+  document.querySelector(".permission-info").textContent="编辑于 本地合成时间";
+}
+document.querySelector(".upload-input").onchange=event=>{count=event.target.files.length;previews(count);save();};
+title.oninput=save;body.oninput=save;body.onblur=save;
+document.querySelector(".header-draft").onclick=()=>{
+  document.querySelector(".draft-drawer").hidden=false;
+  const saved=JSON.parse(localStorage.getItem("synthetic-draft")||"null");
+  const list=document.querySelector("#drafts");list.replaceChildren();
+  if(!saved)return;
+  for(let i=0;i<(mode==="same_title"?2:1);i++){
+    const item=document.createElement("button");item.className="draft-title-text has-title";item.textContent=saved.title;
+    item.onclick=()=>{title.value=saved.title;body.innerText=saved.body;count=saved.images;previews(count);document.querySelector(".draft-drawer").hidden=true;};
+    list.append(item);
+  }
+};
+if(mode==="selector_changed")document.querySelector(".tiptap").className="changed-editor";
+</script></html>

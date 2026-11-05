@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "version": "0.6.0",
+  "allowed_tools": ["read_file", "search_knowledge_base", "load_operation_goal", "save_operation_goal"],
+  "private_tools": ["load_operation_goal", "save_operation_goal"],
+  "tool_budgets": {"read_file": 5, "search_knowledge_base": 2, "load_operation_goal": 2, "save_operation_goal": 2},
+  "max_steps": 6,
+  "allow_memory": true,
+  "allow_attachments": true
+}

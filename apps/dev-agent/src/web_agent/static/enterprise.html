@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>企业资料 · Mini Agent</title>
+<link rel="stylesheet" href="/static/enterprise.css?v=1"></head>
+<body><main>
+  <header><a href="/">← 返回 Agent</a><h1>企业资料</h1><p>维护一次，后续对话默认复用。当前部署服务一家企业。</p></header>
+  <p id="notice" role="status" hidden></p>
+  <section><h2>已确认的企业档案 <small id="version">尚未建档</small></h2>
+    <p>档案保存在本机，并会作为业务背景提供给模型。不要填写密码、Token 或客户隐私；本月目标和临时预算请留在任务中。</p>
+    <form id="profile-form">
+      <label>企业名称<input id="company-name" maxlength="200" required></label>
+      <label>企业背景与基本资料<textarea id="company-profile" rows="12" maxlength="6000" required placeholder="主营产品与服务、服务区域、目标客户、核心优势、品牌定位、稳定资源、表达边界，以及已知竞品主页链接（如有）。"></textarea></label>
+      <label class="check"><input id="profile-confirm" type="checkbox" required>我已核实以上资料，确认作为 Agent 默认使用的企业档案</label>
+      <button id="save-profile" type="submit">确认并保存档案</button>
+    </form>
+    <p>更新只影响新任务，已经开始的运营任务保留原版本。文档上传和生成草稿不会自动覆盖这里的已确认内容。</p>
+  </section>
+  <section><h2>企业参考文档</h2>
+    <p>文档上传至已配置的 LazyTT 长期知识库并解析，可能产生解析费用。仅“已可用”的文档可关联到档案；Agent 按需检索，不把全文重复塞进每轮对话。</p>
+    <form id="upload-form"><label>选择文档<input id="document-file" type="file" accept=".pdf,.docx,.txt,.md" required></label><button id="upload-document">上传并解析</button></form>
+    <p id="document-status" role="status"></p><div id="documents"></div>
+    <div class="actions"><button id="refresh-documents" type="button">刷新文档状态</button><button id="document-draft" type="button">将所选文档片段填入草稿</button><a href="/knowledge-base">管理全部长期文档</a></div>
+    <p>这里显示最近返回的前 100 份文档，最多关联 10 份。提取的是相关片段，不是全文总结；请整理并核实后再保存。</p>
+  </section>
+</main><script type="module" src="/static/enterprise.js?v=1"></script></body></html>

@@ -2,16 +2,68 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
-WorkflowName = Literal["xiaohongshu_draft", "csv_archive"]
-JobStatus = Literal["queued", "running", "succeeded", "failed", "needs_user_action", "stopped"]
+WorkflowName = Literal["xiaohongshu_draft", "csv_archive", "xiaohongshu_metrics"]
+JobStatus = Literal["queued", "running", "succeeded", "failed", "needs_user_action", "needs_review", "stopped"]
 XiaohongshuBrowserState = Literal["closed", "managed_ready", "occupied_external"]
-TERMINAL_STATUSES = {"succeeded", "failed", "needs_user_action", "stopped"}
+TERMINAL_STATUSES = {"succeeded", "failed", "needs_user_action", "needs_review", "stopped"}
+
+
+def verified_draft_result(result: Any, post: dict[str, Any]) -> bool:
+    """只接受与任务快照一致的完整读回回执，不把标题命中当成草稿成功。"""
+
+    if not isinstance(result, dict) or result.get("final_publish_performed") is not False:
+        return False
+    verification = result.get("verification", {})
+    if not isinstance(verification, dict):
+        return False
+    fields = verification.get("fields", {})
+    if verification.get("draft_reopened") is not True or not isinstance(fields, dict):
+        return False
+    tags = [tag if tag.startswith("#") else "#" + tag for tag in post.get("tags", [])]
+    body = str(post["body"]).strip()
+    expected = {"title": str(post["title"]).strip(), "body": body + ("\n\n" + " ".join(tags) if tags else ""),
+                "image_count": len(post["image_paths"]), "tags": tags}
+    return all(isinstance(fields.get(name), dict)
+               and fields[name].get("matched") is True
+               and fields[name].get("expected") == value
+               and type(fields[name].get("actual")) is type(value)
+               and fields[name].get("actual") == value for name, value in expected.items())
+
+
+class XiaohongshuMetricsAccount(BaseModel):
+    """部署时绑定公开主页与小红书号，模型调用不能更换账号。"""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    user_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{24}$")
+    red_id: str = Field(pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    nickname: str = Field(min_length=1, max_length=100)
+
+
+class XiaohongshuMetricsRequest(BaseModel):
+    """日期指笔记首发日期，单次最多保留 31 天内的 50 篇笔记。"""
+
+    model_config = ConfigDict(extra="forbid")
+    start_date: date
+    end_date: date
+    max_posts: int = Field(default=20, ge=1, le=50, strict=True)
+
+    @field_validator("end_date")
+    @classmethod
+    def validate_window(cls, value: date, info: ValidationInfo) -> date:
+        start = info.data.get("start_date")
+        today = datetime.now(ZoneInfo("Asia/Shanghai")).date()
+        if start and (value < start or (value - start).days > 30):
+            raise ValueError("首发日期范围须为 1 至 31 天")
+        if value > today or (start and (today - start).days > 180):
+            raise ValueError("只能采集最近 180 天内发布的笔记")
+        return value
 
 
 class XiaohongshuDraftRequest(BaseModel):
@@ -95,6 +147,7 @@ class JobRecord(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     id: str
+    execution_id: str | None = None
     workflow: WorkflowName
     status: JobStatus
     current_step: str

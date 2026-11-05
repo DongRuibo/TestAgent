@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .exceptions import ConfigurationError
+from .models import XiaohongshuMetricsAccount
 
 
 def _default_data_dir() -> Path:
@@ -101,6 +102,7 @@ class RpaModuleConfig:
     csv_target_url: str = "http://127.0.0.1:8041/data-query"
     csv_output_dir: Path = field(default_factory=_default_output_dir)
     xiaohongshu_enabled: bool = False
+    xiaohongshu_metrics_account: XiaohongshuMetricsAccount | None = None
     xiaohongshu_creator_url: str = (
         "https://creator.xiaohongshu.com/publish/publish"
         "?source=official&from=tab_switch&target=image"
@@ -111,6 +113,11 @@ class RpaModuleConfig:
         """把路径和 URL 转为稳定形式，并拒绝空图片根目录。"""
 
         data_dir = _normalize_absolute_path(self.data_dir, "data_dir")
+        if self.xiaohongshu_metrics_account is not None:
+            object.__setattr__(
+                self, "xiaohongshu_metrics_account",
+                XiaohongshuMetricsAccount.model_validate(self.xiaohongshu_metrics_account),
+            )
         output_dir = _normalize_absolute_path(self.csv_output_dir, "csv_output_dir")
         configured_roots = self.allowed_image_roots or (data_dir / "inputs",)
         roots = tuple(_normalize_absolute_path(path, "allowed_image_roots") for path in configured_roots)

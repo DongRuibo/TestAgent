@@ -319,6 +319,158 @@ class KnowledgeBaseClient:
             "status": data["status"],
         }
 
+    def get_knowledge_base_summary(self) -> dict[str, Any]:
+        """读取当前知识库可展示的概况，不暴露内部 Dataset 标识。"""
+        try:
+            response = self._client.get(
+                f"v1/knowledge-bases/{self.config.knowledge_base_id}",
+                headers=self._headers(),
+            )
+        except httpx.TimeoutException:
+            return _error("RAG_TIMEOUT", "RAG 知识库查询超时。", retryable=True)
+        except httpx.RequestError as exc:
+            return _error(
+                "RAG_UNAVAILABLE",
+                f"RAG 知识库查询失败：{type(exc).__name__}",
+                retryable=True,
+            )
+        payload, response_error = self._payload(response)
+        if response_error is not None:
+            return response_error
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict) or not all(
+            isinstance(data.get(name), str) for name in ("name", "status")
+        ):
+            return _error("INVALID_RAG_RESPONSE", "RAG 知识库响应结构无效。")
+        return {
+            "success": True,
+            "name": data["name"],
+            "description": data.get("description"),
+            "status": data["status"],
+            "retrieval_profile": data.get("retrieval_profile"),
+            "document_count": data.get("document_count"),
+            "updated_at": data.get("updated_at"),
+        }
+
+    def list_documents(self, *, page: int = 1, page_size: int = 100) -> dict[str, Any]:
+        """分页读取当前知识库文档的安全管理字段。"""
+        if not 1 <= page or not 1 <= page_size <= 100:
+            return _error("INVALID_ARGUMENTS", "page 和 page_size 超出允许范围。")
+        try:
+            response = self._client.get(
+                f"v1/knowledge-bases/{self.config.knowledge_base_id}/documents",
+                params={"page": page, "page_size": page_size},
+                headers=self._headers(),
+            )
+        except httpx.TimeoutException:
+            return _error("RAG_TIMEOUT", "RAG 文档列表查询超时。", retryable=True)
+        except httpx.RequestError as exc:
+            return _error(
+                "RAG_UNAVAILABLE",
+                f"RAG 文档列表查询失败：{type(exc).__name__}",
+                retryable=True,
+            )
+        payload, response_error = self._payload(response)
+        if response_error is not None:
+            return response_error
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, list):
+            return _error("INVALID_RAG_RESPONSE", "RAG 文档列表响应结构无效。")
+        documents = [
+            normalized
+            for item in data
+            if (normalized := _normalize_managed_document(item)) is not None
+        ]
+        meta = payload.get("meta")
+        return {
+            "success": True,
+            "documents": documents,
+            "meta": meta if isinstance(meta, dict) else {},
+        }
+
+    def upload_managed_document(
+        self,
+        file: BinaryIO,
+        *,
+        filename: str,
+        content_type: str,
+    ) -> dict[str, Any]:
+        """把用户主动选择的文件上传到当前长期知识库。"""
+        operation_id = str(uuid4())
+        try:
+            response = self._client.post(
+                f"v1/knowledge-bases/{self.config.knowledge_base_id}/documents",
+                headers=self._headers(
+                    idempotency_key=f"managed-document-upload-{operation_id}"
+                ),
+                data={
+                    "external_id": operation_id,
+                    "metadata": json.dumps(
+                        {"source": "testagent_long_term_knowledge"},
+                        separators=(",", ":"),
+                    ),
+                    "auto_parse": "true",
+                },
+                files={"file": (filename, file, content_type)},
+            )
+        except httpx.TimeoutException:
+            return _error("RAG_TIMEOUT", "RAG 长期文档上传超时。", retryable=True)
+        except httpx.RequestError as exc:
+            return _error(
+                "RAG_UNAVAILABLE",
+                f"RAG 长期文档上传失败：{type(exc).__name__}",
+                retryable=True,
+            )
+        return self._accepted_document_action(response, "上传")
+
+    def retry_managed_document(self, document_id: str) -> dict[str, Any]:
+        """重试当前知识库中的失败文档。"""
+        ownership_error = self._managed_document_ownership_error(document_id)
+        if ownership_error is not None:
+            return ownership_error
+        return self._post_document_action(document_id, "retry", "重试")
+
+    def delete_managed_document(self, document_id: str) -> dict[str, Any]:
+        """异步删除当前知识库文档及其索引。"""
+        ownership_error = self._managed_document_ownership_error(document_id)
+        if ownership_error is not None:
+            return ownership_error
+        try:
+            response = self._client.delete(
+                f"v1/documents/{_uuid(document_id, 'document_id')}",
+                params={"cancel_active": "true"},
+                headers=self._headers(
+                    idempotency_key=f"managed-document-delete-{uuid4()}"
+                ),
+            )
+        except (TypeError, ValueError):
+            return _error("INVALID_ARGUMENTS", "document_id 必须是 UUID。")
+        except httpx.TimeoutException:
+            return _error("RAG_TIMEOUT", "RAG 长期文档删除超时。", retryable=True)
+        except httpx.RequestError as exc:
+            return _error(
+                "RAG_UNAVAILABLE",
+                f"RAG 长期文档删除失败：{type(exc).__name__}",
+                retryable=True,
+            )
+        if response.status_code == 404:
+            return {"success": True, "already_deleted": True}
+        return self._accepted_document_action(response, "删除")
+
+    def _managed_document_ownership_error(
+        self, document_id: str
+    ) -> dict[str, Any] | None:
+        try:
+            normalized_id = _uuid(document_id, "document_id")
+        except (TypeError, ValueError):
+            return _error("INVALID_ARGUMENTS", "document_id 必须是 UUID。")
+        document = self.get_document(normalized_id)
+        if not document.get("success"):
+            return document
+        if document.get("data", {}).get("knowledge_base_id") != self.knowledge_base_id:
+            return _error("RAG_RESOURCE_NOT_FOUND", "长期知识库中不存在该文档。")
+        return None
+
     def get_job(self, job_id: str) -> dict[str, Any]:
         """读取附件解析 Job 的安全状态字段。"""
         return self._get_resource(f"v1/jobs/{_uuid(job_id, 'job_id')}", "job")
@@ -356,6 +508,45 @@ class KnowledgeBaseClient:
         return {
             "success": True,
             "request_id": payload.get("request_id"),
+            "job_id": data["job_id"],
+            "status": data.get("status"),
+        }
+
+    def _post_document_action(
+        self, document_id: str, action: str, label: str
+    ) -> dict[str, Any]:
+        try:
+            response = self._client.post(
+                f"v1/documents/{_uuid(document_id, 'document_id')}/{action}",
+                headers=self._headers(
+                    idempotency_key=f"managed-document-{action}-{uuid4()}"
+                ),
+            )
+        except (TypeError, ValueError):
+            return _error("INVALID_ARGUMENTS", "document_id 必须是 UUID。")
+        except httpx.TimeoutException:
+            return _error("RAG_TIMEOUT", f"RAG 长期文档{label}超时。", retryable=True)
+        except httpx.RequestError as exc:
+            return _error(
+                "RAG_UNAVAILABLE",
+                f"RAG 长期文档{label}失败：{type(exc).__name__}",
+                retryable=True,
+            )
+        return self._accepted_document_action(response, label)
+
+    def _accepted_document_action(
+        self, response: httpx.Response, label: str
+    ) -> dict[str, Any]:
+        payload, response_error = self._payload(response)
+        if response_error is not None:
+            return response_error
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict) or not isinstance(data.get("job_id"), str):
+            return _error("INVALID_RAG_RESPONSE", f"RAG 长期文档{label}响应结构无效。")
+        return {
+            "success": True,
+            "request_id": payload.get("request_id"),
+            "document_id": data.get("document_id"),
             "job_id": data["job_id"],
             "status": data.get("status"),
         }
@@ -505,6 +696,35 @@ def _normalize_candidate(item: Any) -> dict[str, Any] | None:
         "pages": pages,
         "content": content[:MAX_CONTENT_CHARS],
         "score": score if isinstance(score, int | float) and not isinstance(score, bool) else None,
+    }
+
+
+def _normalize_managed_document(item: Any) -> dict[str, Any] | None:
+    if not isinstance(item, dict):
+        return None
+    document_id = item.get("id")
+    filename = item.get("filename")
+    status = item.get("status")
+    if not all(isinstance(value, str) for value in (document_id, filename, status)):
+        return None
+    try:
+        normalized_id = str(UUID(document_id))
+    except ValueError:
+        return None
+    last_error = item.get("last_error")
+    return {
+        "document_id": normalized_id,
+        "filename": filename,
+        "content_type": item.get("mime_type"),
+        "size_bytes": item.get("file_size_bytes"),
+        "status": status,
+        "progress": item.get("progress"),
+        "chunk_count": item.get("chunk_count"),
+        "token_count": item.get("token_count"),
+        "updated_at": item.get("updated_at"),
+        "error_code": (
+            last_error.get("code") if isinstance(last_error, dict) else None
+        ),
     }
 
 

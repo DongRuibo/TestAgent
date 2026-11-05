@@ -1,7 +1,8 @@
 # 本流程使用专用 Chrome 填写并验证小红书草稿；任何情况下都不执行最终发布。
 *** Settings ***
-Documentation       上传 Agent 已审核图文，等待自动保存，刷新后在草稿箱验证标题。
-Library             RPA.Browser.Selenium    auto_close=${FALSE}
+Documentation       上传已审核图文，刷新草稿箱并重新打开，读回核验标题、正文、图片和标签。
+# Selenium默认失败钩子会截取整页；关闭它，仅保留正文区域的显式取证。
+Library             RPA.Browser.Selenium    auto_close=${FALSE}    run_on_failure=${NONE}
 Library             rpa_agent_module.workflows.xhs_keywords.XhsWorkflowLibrary    ${INPUT_FILE}    ${RESULT_FILE}
 Test Teardown       保存失败现场
 
@@ -84,10 +85,15 @@ Test Teardown       保存失败现场
     点击可见的图文草稿页签    ${draft_image_tab_selector}
     Update Job Step    verifying_draft_box
     Wait Until Page Contains Element    ${draft_title_selector}    20s
-    Element Should Contain    ${draft_title_selector}    ${title}
-    Capture Page Screenshot    ${OUTPUT DIR}${/}draft-box.png
+    Open Exact Draft    ${draft_title_selector}
+    Wait Until Element Is Visible    ${title_selector}    20s
+    ${actual_title}=    Get Element Attribute    ${title_selector}    value
+    ${actual_body}=    Get Text    ${body_selector}
+    ${actual_image_count}=    Get Element Count    ${upload_done_selector}
+    Capture Redacted Evidence
     ${current_url}=    Get Location
-    Mark Draft Saved    ${current_url}
+    ${verified}=    Mark Draft Saved    ${current_url}    ${actual_title}    ${actual_body}    ${actual_image_count}
+    Should Be True    ${verified}    草稿保存结果不一致，已进入待人工核验。
 
 点击可见的图文草稿页签
     [Documentation]    等待抽屉动画结束，并重试点击当前可见的图文页签。
@@ -111,5 +117,5 @@ Test Teardown       保存失败现场
 保存失败现场
     [Documentation]    失败时截图；专用 Chrome 由模块管理并跨任务复用。
     IF    '${TEST STATUS}' == 'FAIL'
-        Run Keyword And Ignore Error    Capture Page Screenshot    ${OUTPUT DIR}${/}failure.png
+        Run Keyword And Ignore Error    Capture Redacted Evidence
     END

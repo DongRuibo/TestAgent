@@ -16,6 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .exceptions import ConfigurationError, JobUnavailableError
+from .environment import subprocess_environment
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ class XiaohongshuBrowserSessionManager:
         session = self._read_session()
         if session is not None and self._session_is_healthy(session):
             return self._ensure_managed_page(session)
-        if self._profile_is_locked():
+        if self._profile_is_locked() and not self._lock_is_from_exited_managed_browser(session):
             raise JobUnavailableError(
                 "小红书专用 Profile 已被非托管 Chrome 占用；"
                 "请关闭该窗口后重试，不要删除 SingletonLock"
@@ -64,7 +65,7 @@ class XiaohongshuBrowserSessionManager:
         session = self._read_session()
         if session is not None and self._session_is_healthy(session):
             return "managed_ready"
-        if self._profile_is_locked():
+        if self._profile_is_locked() and not self._lock_is_from_exited_managed_browser(session):
             return "occupied_external"
         return "closed"
 
@@ -88,6 +89,7 @@ class XiaohongshuBrowserSessionManager:
         try:
             process = subprocess.Popen(
                 command,
+                env=subprocess_environment(),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=True,
@@ -151,6 +153,17 @@ class XiaohongshuBrowserSessionManager:
         lock = self.profile_dir / "SingletonLock"
         return lock.exists() or lock.is_symlink()
 
+    def _lock_is_from_exited_managed_browser(self, session: ManagedBrowserSession | None) -> bool:
+        """仅放行本机已退出托管进程的残留锁，由 Chrome 自己回收，绝不删除锁。"""
+
+        if session is None or session.profile_dir != self.profile_dir or self._pid_is_alive(session.pid):
+            return False
+        try:
+            host, pid = str((self.profile_dir / "SingletonLock").readlink()).rsplit("-", 1)
+        except (OSError, ValueError):
+            return False
+        return host == socket.gethostname() and pid == str(session.pid)
+
     def _probe_debug_endpoint(self, port: int) -> bool:
         payload = self._request_json(port, "/json/version")
         return isinstance(payload, dict) and str(payload.get("webSocketDebuggerUrl", "")).startswith(
@@ -196,8 +209,10 @@ class XiaohongshuBrowserSessionManager:
     def _pid_is_alive(self, pid: int) -> bool:
         try:
             os.kill(pid, 0)
-        except (ProcessLookupError, PermissionError):
+        except ProcessLookupError:
             return False
+        except PermissionError:
+            return True
         return True
 
     def _terminate_started_process(self, process: subprocess.Popen[bytes]) -> None:

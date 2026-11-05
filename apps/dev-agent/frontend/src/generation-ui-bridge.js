@@ -5,6 +5,8 @@ import Aura from "@primeuix/themes/aura";
 import "primeicons/primeicons.css";
 import { GenerationUiRenderer } from "@lazyai/generation-ui-vue";
 import "@lazyai/generation-ui-vue/style.css";
+import { OperationCards, hasOperationCard } from "./operation-cards.js";
+import "./operation-cards.css";
 
 const TestAgentPreset = definePreset(Aura, {
   semantic: {
@@ -92,9 +94,33 @@ export function mountGenerationUi(container, artifact, options = {}) {
     form: clone(artifact.spec.form_defaults ?? {}),
     busyAction: null,
   });
+  async function performAction(event, values = state.form) {
+    const actionRequired = { required: new Set(event.action.arguments_schema?.required ?? []), labels: requiredState.labels };
+    if (state.busyAction || missingRequiredFields(actionRequired, values).length) return false;
+    if (event.action.confirm && !window.confirm(`确认执行“${event.action.label}”吗？`)) return false;
+    state.busyAction = event.actionId;
+    try {
+      const properties = event.action.arguments_schema?.properties;
+      const argumentsToSend = properties ? Object.fromEntries(Object.entries(values).filter(([key]) => key in properties)) : values;
+      const result = await options.onAction?.(clone(event), clone(argumentsToSend));
+      applyPatch(state.data, result?.data_patch);
+      applyPatch(state.form, result?.form_patch);
+      applyPatch(state.spec, result?.spec_patch);
+      return true;
+    } catch (error) {
+      options.onError?.(error);
+      return false;
+    } finally {
+      state.busyAction = null;
+    }
+  }
   const Root = {
     setup() {
       return () => {
+        if (hasOperationCard(artifact.scenario)) {
+          return h(OperationCards, { scenario: artifact.scenario, spec: state.spec,
+            data: state.data, busyAction: state.busyAction, performAction });
+        }
         const missing = missingRequiredFields(requiredState, state.form);
         const summary = actionSummary(state.spec, state.form);
         const disabledAction = state.busyAction || (missing.length ? "form-invalid" : null);
@@ -108,25 +134,7 @@ export function mountGenerationUi(container, artifact, options = {}) {
             "onUpdate:form": (form) => {
               state.form = clone(form);
             },
-            onAction: async (event) => {
-              if (state.busyAction || missingRequiredFields(requiredState, state.form).length) {
-                return;
-              }
-              if (event.action.confirm && !window.confirm(`确认执行“${event.action.label}”吗？`)) {
-                return;
-              }
-              state.busyAction = event.actionId;
-              try {
-                const result = await options.onAction?.(clone(event), clone(state.form));
-                applyPatch(state.data, result?.data_patch);
-                applyPatch(state.form, result?.form_patch);
-                applyPatch(state.spec, result?.spec_patch);
-              } catch (error) {
-                options.onError?.(error);
-              } finally {
-                state.busyAction = null;
-              }
-            },
+            onAction: performAction,
           }),
           state.spec.interaction_mode === "host_action"
             ? h("footer", { class: "generation-ui-host-footer" }, [
@@ -160,6 +168,12 @@ export function mountGenerationUi(container, artifact, options = {}) {
 
   let destroyed = false;
   return {
+    updateArtifact(next) {
+      if (destroyed || state.busyAction) return;
+      assertArtifact(container, next);
+      state.spec = clone(next.spec);
+      state.data = clone(next.data);
+    },
     patchForm(patch) {
       if (destroyed) return;
       applyPatch(state.form, patch);

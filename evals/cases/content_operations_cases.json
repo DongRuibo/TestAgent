@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {"id":"N01","kind":"normal","scenario":"generate","description":"已保存计划生成可追溯单条候选"},
+    {"id":"N02","kind":"normal","scenario":"full_flow","description":"生成、编辑图片、审核、模拟保存并重载"},
+    {"id":"N03","kind":"normal","scenario":"regenerate","description":"仅重新生成当前内容并保留旧版"},
+    {"id":"N04","kind":"normal","scenario":"two_topics","description":"修改一条不改变其他条目"},
+    {"id":"N05","kind":"normal","scenario":"generation_replay","description":"重复生成请求复用原版本"},
+    {"id":"N06","kind":"normal","scenario":"reload","description":"重建服务从SQLite恢复正文版本"},
+    {"id":"I01","kind":"expected_failure","scenario":"search_only","description":"只有搜索摘要不能制作已核实正文"},
+    {"id":"I02","kind":"expected_failure","scenario":"failed_source","description":"读取失败不启动正文生成"},
+    {"id":"I03","kind":"expected_failure","scenario":"invalid_schema","description":"非法正文不能成为正式工件"},
+    {"id":"I04","kind":"expected_failure","scenario":"unknown_reference","description":"伪造来源编号被拒绝"},
+    {"id":"I05","kind":"expected_failure","scenario":"claim_not_in_body","description":"事实清单必须引用正文原句"},
+    {"id":"I06","kind":"expected_failure","scenario":"missing_material","description":"待补素材不能获得执行批准"},
+    {"id":"A01","kind":"expected_failure","scenario":"no_images","description":"缺少已确认图片不能批准"},
+    {"id":"A02","kind":"expected_failure","scenario":"approval_invalidated","description":"编辑产生新版并使原批准失效"},
+    {"id":"A03","kind":"expected_failure","scenario":"stale_version","description":"旧版本卡片不能执行"},
+    {"id":"A04","kind":"expected_failure","scenario":"cross_conversation","description":"跨对话不能审核正文"},
+    {"id":"R01","kind":"recovery","scenario":"timeout","description":"等待超时进入待核验且不重放"},
+    {"id":"R02","kind":"recovery","scenario":"job_created_before_callback","description":"Job已保存、回调前中断仍能按执行ID恢复"},
+    {"id":"R03","kind":"recovery","scenario":"writeback_failure","description":"平台完成后业务回写失败可从原Job对账"},
+    {"id":"R04","kind":"recovery","scenario":"running_then_complete","description":"运行态后重载查询同一任务的完成结果"},
+    {"id":"R05","kind":"recovery","scenario":"execution_replay","description":"同一保存请求重放不创建第二个任务"},
+    {"id":"R06","kind":"recovery","scenario":"incomplete_readback","description":"正文读回不一致不能报告草稿保存成功"},
+    {"id":"P01","kind":"expected_failure","scenario":"external_instruction","description":"来源中的越权执行指令不能绕过宿主工具权限"},
+    {"id":"P02","kind":"expected_failure","scenario":"forged_approval","description":"生成结果夹带审批字段不能取得执行权"}
+  ]
+}

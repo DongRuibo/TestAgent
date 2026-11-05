@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from pathlib import Path
 from types import SimpleNamespace
 
 import testagent_dev_agent.cli as cli_app
@@ -114,3 +115,43 @@ def test_cli_merges_namespaced_mcp_tool(monkeypatch, capsys) -> None:
     assert "calculate_material_quantities" not in captured["tool_handlers"]
     assert captured["tool_budgets"] == {tool_name: 1}
     assert capsys.readouterr().out.strip() == "Assistant: 完成"
+
+
+def test_cli_lists_skills_without_initializing_model(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    skill_dir = tmp_path / ".agents" / "skills" / "simple-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        """---
+name: simple-skill
+description: 一个普通的本地 Skill。
+metadata:
+  version: "1.2.3"
+---
+
+# 普通 Skill
+
+按用户要求回答。
+""",
+        "utf-8",
+    )
+    monkeypatch.setattr(cli_app, "REPOSITORY_ROOT", tmp_path)
+    monkeypatch.setattr(
+        cli_app,
+        "parse_args",
+        lambda: Namespace(task=None, skill=None, list_skills=True),
+    )
+    monkeypatch.setattr(
+        cli_app.LLMClient,
+        "from_env",
+        classmethod(lambda cls: (_ for _ in ()).throw(AssertionError("not called"))),
+    )
+
+    cli_app.main()
+
+    assert capsys.readouterr().out.strip() == (
+        "simple-skill\t1.2.3\t一个普通的本地 Skill。"
+    )

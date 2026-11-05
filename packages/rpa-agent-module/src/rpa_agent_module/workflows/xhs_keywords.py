@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from rpa_agent_module.database import JobRepository
 
@@ -135,18 +137,54 @@ class XhsWorkflowLibrary:
             }
         )
 
-    def mark_draft_saved(self, current_url: str) -> None:
-        """仅在草稿箱验证通过后写入成功结果，绝不代表最终发布。"""
+    def open_exact_draft(self, selector: str) -> None:
+        """精确选择唯一同标题草稿；存在歧义时停止，防止误认旧草稿。"""
 
-        self._write_result(
-            {
-                "status": "succeeded",
-                "result_type": "xiaohongshu_draft",
-                "message": "小红书草稿已保存并在草稿箱中确认，专用 Chrome 可继续复用",
-                "url": current_url,
-                "image_count": len(self.get_image_paths()),
-            }
-        )
+        from robot.libraries.BuiltIn import BuiltIn
+        browser = BuiltIn().get_library_instance("RPA.Browser.Selenium")
+        matches = [element for element in browser.get_webelements(selector)
+                   if element.is_displayed() and element.text.strip() == self.get_post_title()]
+        if len(matches) != 1:
+            raise AssertionError("草稿箱未找到唯一匹配标题，请人工核验，不能直接重试保存")
+        browser.click_element(matches[0])
+
+    def mark_draft_saved(self, current_url: str, actual_title: str, actual_body: str, actual_image_count: int) -> bool:
+        """只根据重新打开后的页面读值核验，保存预期、实际值及差异。"""
+
+        title = str(actual_title).strip()
+        body = str(actual_body).replace("\r\n", "\n").strip()
+        tags = [tag if tag.startswith("#") else "#" + tag for tag in self.payload["post"].get("tags", [])]
+        actual_tags = [tag for tag in tags if re.search(re.escape(tag) + r"(?=\s|$)", body)]
+        expected = {"title": self.get_post_title(), "body": self.get_post_body(),
+                    "image_count": len(self.payload["image_paths"]), "tags": tags}
+        actual = {"title": title, "body": body, "image_count": int(actual_image_count), "tags": actual_tags}
+        fields = {name: {"expected": value, "actual": actual[name], "matched": value == actual[name]}
+                  for name, value in expected.items()}
+        matched = all(field["matched"] for field in fields.values())
+        parts = urlsplit(current_url)
+        self._write_result({
+            "status": "succeeded" if matched else "needs_review",
+            "result_type": "xiaohongshu_draft",
+            "message": "草稿重新打开后标题、正文、图片数量与标签均已核验" if matched else "草稿读回内容不一致，请人工核验；不会自动再次保存",
+            "url": urlunsplit((parts.scheme, parts.netloc, parts.path, "", "")),
+            "image_count": actual["image_count"],
+            "verification": {"draft_reopened": True, "fields": fields},
+            "tag_mode": "body_hashtags",
+            "evidence_path": str(self.result_file.parent / "draft-body.png") if (self.result_file.parent / "draft-body.png").is_file() else None,
+            "final_publish_performed": False,
+        })
+        return matched
+
+    def capture_redacted_evidence(self) -> str:
+        """仅截取正文编辑区域，不保存账号、登录二维码或页面认证信息。"""
+
+        from robot.libraries.BuiltIn import BuiltIn
+        browser = BuiltIn().get_library_instance("RPA.Browser.Selenium")
+        path = self.result_file.parent / "draft-body.png"
+        if browser.get_element_count(self.get_selector("body")):
+            browser.capture_element_screenshot(self.get_selector("body"), str(path))
+            return str(path)
+        return ""
 
     def _write_result(self, result: dict[str, Any]) -> None:
         """原子替换任务结果 JSON，避免运行器读取半写入内容。"""

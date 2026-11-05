@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "version": "1.1.0",
+  "aliases": [
+    "企业周运营计划"
+  ],
+  "allowed_tools": [
+    "load_weekly_plan_inputs",
+    "choose_weekly_research",
+    "save_weekly_plan"
+  ],
+  "private_tools": [
+    "load_weekly_plan_inputs",
+    "choose_weekly_research",
+    "save_weekly_plan"
+  ],
+  "tool_budgets": {
+    "load_weekly_plan_inputs": 2,
+    "choose_weekly_research": 1,
+    "save_weekly_plan": 3
+  },
+  "max_steps": 8,
+  "allow_memory": false,
+  "allow_attachments": false
+}

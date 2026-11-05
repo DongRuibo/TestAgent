@@ -17,16 +17,9 @@ from .browser_session import XiaohongshuBrowserSessionManager
 from .config import RpaModuleConfig
 from .database import JobRepository
 from .exceptions import JobConflictError, JobInputError, JobNotFoundError, JobUnavailableError
+from .environment import subprocess_environment
 from .images import validate_image_paths
-from .models import CsvArchiveRequest, JobRecord, XiaohongshuDraftRequest
-
-SENSITIVE_ENVIRONMENT_KEYS = (
-    "ANTHROPIC_API_KEY",
-    "DASHSCOPE_API_KEY",
-    "LLM_API_KEY",
-    "OPENAI_API_KEY",
-    "PEXELS_API_KEY",
-)
+from .models import CsvArchiveRequest, JobRecord, XiaohongshuDraftRequest, XiaohongshuMetricsRequest, verified_draft_result
 
 
 class JobManager:
@@ -72,7 +65,7 @@ class JobManager:
             self._start_thread(job_id, "csv_archive.robot", input_file, result_file, job_dir)
             return job
 
-    def create_xiaohongshu_job(self, payload: XiaohongshuDraftRequest) -> JobRecord:
+    def create_xiaohongshu_job(self, payload: XiaohongshuDraftRequest, *, execution_id=None, on_job_created=None) -> JobRecord:
         """创建小红书草稿任务，并验证 Agent 提供的图片绝对路径。"""
 
         if not self.config.xiaohongshu_enabled:
@@ -83,10 +76,25 @@ class JobManager:
             raise JobInputError("读取任务图片失败") from exc
 
         with self._lock:
-            self._require_idle()
-            browser = self.xiaohongshu_browser.ensure()
-            job_id, job_dir, input_file, result_file = self._create_job_files()
             public_input = payload.model_dump(mode="json")
+            existing = self.repository.get_by_execution_id(execution_id) if execution_id else None
+            if existing is not None:
+                if existing.workflow != "xiaohongshu_draft" or existing.input != public_input:
+                    raise JobConflictError("同一执行编号不能更换草稿内容")
+                if on_job_created is not None:
+                    on_job_created(existing.id)
+                return existing
+            self._require_idle()
+            job_id, job_dir, input_file, result_file = self._create_job_files()
+            job = self.repository.create(job_id, "xiaohongshu_draft", public_input, execution_id=execution_id)
+            # 先落盘业务关联并通知宿主，再启动任何浏览器动作。
+            try:
+                if on_job_created is not None:
+                    on_job_created(job_id)
+                browser = self.xiaohongshu_browser.ensure()
+            except Exception:
+                self.repository.fail(job_id, "job_preparation_failed", "浏览器启动前准备失败，尚未启动草稿工作流")
+                raise
             robot_input = {
                 "job_id": job_id,
                 "post": {
@@ -103,8 +111,30 @@ class JobManager:
                 "selectors": self.config.xiaohongshu_selectors.as_dict(),
             }
             self._write_json(input_file, robot_input)
-            job = self.repository.create(job_id, "xiaohongshu_draft", public_input)
             self._start_thread(job_id, "xiaohongshu_draft.robot", input_file, result_file, job_dir)
+            return job
+
+    def create_xiaohongshu_metrics_job(self, payload: XiaohongshuMetricsRequest) -> JobRecord:
+        """在已绑定账号的专用 Chrome 中启动固定只读流程。"""
+
+        account = self.config.xiaohongshu_metrics_account
+        if not self.config.xiaohongshu_enabled or account is None:
+            raise JobUnavailableError("请先启用小红书并绑定采集账号")
+        with self._lock:
+            self._require_idle()
+            browser = self.xiaohongshu_browser.ensure()
+            job_id, job_dir, input_file, result_file = self._create_job_files()
+            public_input = payload.model_dump(mode="json")
+            self._write_json(input_file, {
+                "job_id": job_id,
+                "query": public_input,
+                "account": account.model_dump(),
+                "database_path": str(self.repository.database_path),
+                "debug_port": browser.port,
+                "debug_target_id": browser.target_id,
+            })
+            job = self.repository.create(job_id, "xiaohongshu_metrics", public_input)
+            self._start_thread(job_id, "xiaohongshu_metrics.robot", input_file, result_file, job_dir)
             return job
 
     def get_job(self, job_id: str) -> JobRecord:
@@ -249,17 +279,12 @@ class JobManager:
         ]
 
     def _build_subprocess_environment(self) -> dict[str, str]:
-        """移除常见 API Key，并确保 Robot 能导入当前已安装包。"""
+        """只传入系统白名单和模块自行生成的 Robot 导入路径。"""
 
-        environment = os.environ.copy()
-        for key in SENSITIVE_ENVIRONMENT_KEYS:
-            environment.pop(key, None)
+        environment = subprocess_environment()
         environment["ROBOCORP_HOME"] = str(self.config.data_dir / "robocorp")
-        package_source_root = str(Path(__file__).resolve().parents[1])
-        existing_python_path = environment.get("PYTHONPATH", "")
-        environment["PYTHONPATH"] = os.pathsep.join(
-            value for value in (package_source_root, existing_python_path) if value
-        )
+        environment["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+        environment["PYTHONNOUSERSITE"] = "1"
         return environment
 
     def _finalize_robot_result(
@@ -282,6 +307,20 @@ class JobManager:
         if result and result.get("status") == "needs_user_action":
             message = str(result.get("message") or "需要用户在专用 Chrome 中完成操作")
             self.repository.needs_user_action(job_id, message, result)
+        elif robot_name == "xiaohongshu_draft.robot" and (
+            return_code != 0 or not verified_draft_result(result, current.input)
+        ):
+            result = {**(result or {}), "current_step": current.current_step,
+                      "evidence_path": str(result_file.parent / "draft-body.png") if (result_file.parent / "draft-body.png").is_file() else None,
+                      "final_publish_performed": False}
+            self.repository.needs_review(job_id,
+                str((result or {}).get("message") or "草稿执行结果未完整核验，请人工检查后决定是否重试"), result or {})
+        elif result and result.get("status") == "failed":
+            self.repository.fail(
+                job_id,
+                str(result.get("error_code") or "robot_execution_failed"),
+                str(result.get("message") or "自动化执行失败"),
+            )
         elif return_code == 0 and result:
             self.repository.complete(job_id, result)
         else:

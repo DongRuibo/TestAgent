@@ -1,0 +1,22 @@
+{
+  "company_name": "离线样例设计企业",
+  "company_profile": "模拟企业：上海家装设计，服务小户型翻新；仅用于离线测试。",
+  "operation_goal": {
+    "summary": "测试目标：一周内验证小红书小户型翻新内容能否带来有效咨询。",
+    "period": {"start": "2026-09-07", "end": "2026-09-13"},
+    "platform": "xiaohongshu",
+    "business_direction": "模拟的小户型翻新咨询",
+    "target_users": ["上海有小户型翻新需求的业主"],
+    "metrics": [{
+      "name": "有效咨询", "definition": "去重后明确说明上海房屋及翻新意向的咨询人数。",
+      "baseline": null, "target": "试运行目标 3-5 人，不代表保证。",
+      "data_source": "小红书私信与模拟销售登记表", "review_frequency": "每日记录，周末复核"
+    }],
+    "resources": ["模拟配置：1 位内容人员，每周 3 篇图文"],
+    "constraints": ["案例须获得授权"],
+    "budget_statement": "离线测试，不批准广告或取数费用。",
+    "evidence": ["fixture：固定测试输入，不是经营实绩"],
+    "assumptions": ["没有历史基线，测试目标仍待验证"],
+    "risks": ["咨询量不能等同于成交量"]
+  }
+}

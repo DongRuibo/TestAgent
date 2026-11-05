@@ -61,6 +61,7 @@ def test_weekly_plan_builds_five_reviewable_items_and_trusted_card() -> None:
     assert [item["id"] for item in artifact["spec"]["actions"]] == [
         "review_content_plan",
         "save_xiaohongshu_draft",
+        "resolve_xiaohongshu_draft",
     ]
     assert "最终发布" not in {item["id"] for item in artifact["spec"]["actions"]}
     assert len(serialized) <= DEFAULT_TOOL_RESULT_MAX_CHARS
@@ -252,11 +253,19 @@ def test_xiaohongshu_runner_only_reports_verified_draft() -> None:
             return SimpleNamespace(
                 id=job_id,
                 status="succeeded",
+                input=captured["payload"],
                 result={
                     "result_type": "xiaohongshu_draft",
                     "url": "https://creator.xiaohongshu.com/draft",
                     "image_count": 1,
                     "message": "草稿箱已核验。",
+                    "final_publish_performed": False,
+                    "verification": {
+                        "draft_reopened": True,
+                        "fields": {name: {"expected": value, "actual": value, "matched": True}
+                            for name, value in {"title": "标题", "body": "正文\n\n#杭州装修",
+                                "image_count": 1, "tags": ["#杭州装修"]}.items()},
+                    },
                 },
                 error_code=None,
                 error_message=None,

@@ -8,6 +8,7 @@ import shutil
 import time
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from .config import RpaModuleConfig
 from .database import JobRepository
@@ -20,6 +21,7 @@ from .models import (
     WorkflowCapability,
     WorkflowName,
     XiaohongshuDraftRequest,
+    XiaohongshuMetricsRequest,
 )
 
 
@@ -57,11 +59,20 @@ class RpaExecutionModule:
         )
 
     def capabilities(self) -> tuple[WorkflowCapability, ...]:
-        """描述当前实例可提交的两条固定工作流和限制。"""
+        """描述当前实例可提交的固定工作流和限制。"""
 
         self._require_open()
         chrome_available = self._chrome_available()
         return (
+            WorkflowCapability(
+                name="xiaohongshu_metrics",
+                available=chrome_available and self.config.xiaohongshu_enabled
+                and self.config.xiaohongshu_metrics_account is not None,
+                summary="核对绑定账号并导出创作者后台笔记表现数据",
+                requires_user_review=False,
+                may_need_user_action=True,
+                limitations=("仅只读采集", "首发日期筛选不代表流量统计周期", "不采集私信或执行投流"),
+            ),
             WorkflowCapability(
                 name="xiaohongshu_draft",
                 available=chrome_available and self.config.xiaohongshu_enabled,
@@ -80,16 +91,21 @@ class RpaExecutionModule:
             ),
         )
 
-    def submit(self, workflow: WorkflowName | str, payload: dict[str, Any] | Any) -> JobRecord:
+    def submit(self, workflow: WorkflowName | str, payload: dict[str, Any] | Any, *, execution_id: str | None = None, on_job_created=None) -> JobRecord:
         """校验工作流和输入，异步提交唯一的本机 RPA 任务。"""
 
         self._require_open()
         if not self._chrome_available():
             raise ConfigurationError("未检测到 Google Chrome，无法执行网页自动化")
         try:
+            if workflow == "xiaohongshu_metrics":
+                request = XiaohongshuMetricsRequest.model_validate(payload)
+                return self.manager.create_xiaohongshu_metrics_job(request)
             if workflow == "xiaohongshu_draft":
+                if execution_id is not None:
+                    execution_id = str(UUID(execution_id))
                 request = XiaohongshuDraftRequest.model_validate(payload)
-                return self.manager.create_xiaohongshu_job(request)
+                return self.manager.create_xiaohongshu_job(request, execution_id=execution_id, on_job_created=on_job_created)
             if workflow == "csv_archive":
                 request = CsvArchiveRequest.model_validate(payload)
                 return self.manager.create_csv_job(request)

@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="zh-CN">
   <head>
+    <link rel="icon" href="data:," />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Mini Agent 本地网页演示" />
     <title>Mini Agent</title>
-    <link rel="stylesheet" href="/static/app.css?v=20260814-10" />
-    <link rel="stylesheet" href="/static/generation-ui/generation-ui.css?v=0.5.2-upload1" />
+    <link rel="stylesheet" href="/static/app.css?v=20260911-save1" />
+    <link rel="stylesheet" href="/static/generation-ui/generation-ui.css?v=20260910-task1" />
   </head>
   <body>
     <div class="app-shell">
@@ -50,6 +51,14 @@
         </section>
 
         <div class="sidebar-footer">
+          <a class="knowledge-base-link" href="/enterprise">
+            <span aria-hidden="true">▣</span>
+            <span><strong>企业资料</strong><small>维护一次，各任务默认使用</small></span>
+          </a>
+          <a class="knowledge-base-link" href="/knowledge-base">
+            <span aria-hidden="true">▤</span>
+            <span><strong>长期知识库</strong><small>上传和管理长期资料</small></span>
+          </a>
           <div class="conversation-actions">
             <button class="delete-chat-button" id="delete-chat" type="button">删除当前对话</button>
             <details class="demo-tools">
@@ -69,6 +78,7 @@
             <h2 id="chat-title" title="新对话">新对话</h2>
           </div>
           <div class="secure-note" title="密钥仅保留在 Agent 进程，不会写入网页代码"><span aria-hidden="true">●</span> 本地安全运行</div>
+          <button class="task-progress-toggle" id="task-progress-toggle" type="button" aria-controls="task-progress" aria-expanded="false">任务进度</button>
           <div class="mobile-header-actions">
             <span class="mobile-agent-status" id="mobile-agent-status"><i></i> 检查中</span>
             <button id="mobile-new-chat" type="button">新对话</button>
@@ -80,30 +90,44 @@
           <button id="retry-restore" type="button" hidden>重试恢复</button>
         </div>
 
+        <aside class="task-progress" id="task-progress" aria-labelledby="task-progress-title" hidden>
+          <header><h2 id="task-progress-title">任务进度</h2><button id="task-progress-close" type="button" aria-label="收起任务进度">×</button></header>
+          <div class="task-progress-body" aria-live="polite"></div>
+        </aside>
+
         <section class="messages" id="messages" aria-live="polite">
           <article class="welcome-card" id="welcome-card">
-            <div class="welcome-orbit" aria-hidden="true"><span></span></div>
-            <p class="eyebrow">READY TO WORK</p>
-            <h2>想让 Agent 帮你做什么？</h2>
-            <p>它可以调用本地文件、代码沙箱、通用表格分析、经营简报和公开网页工具，并按任务召回、每轮提取长期记忆。</p>
-            <div class="prompt-grid">
-              <button class="prompt-chip" data-prompt="必须调用 run_code 执行 Python：计算 123456789 的平方根，并告诉我沙箱是否销毁。">
-                <strong>运行 Python</strong><span>精确计算并验证清理</span>
-              </button>
-              <button class="prompt-chip" data-prompt="必须调用 generate_business_briefing 分析 fixtures/sales.csv，告诉我核心指标、异常，以及 JSON、图表、Markdown、PDF、PPTX 产物。">
-                <strong>生成经营简报</strong><span>CSV/XLSX → PDF 与 PPTX</span>
-              </button>
-              <button class="prompt-chip" data-prompt="必须调用 browse_public_page 打开 https://example.com，告诉我标题、正文摘要和截图路径。">
-                <strong>浏览公开网页</strong><span>提取内容并截图</span>
-              </button>
-              <button class="prompt-chip" data-prompt="必须调用 search_knowledge_base 查找合成 launch code，并标明文档名和页码。">
-                <strong>检索知识库</strong><span>读取原文并标明来源</span>
-              </button>
+            <p class="eyebrow">小红书运营助手</p>
+            <h2><span>从经营目标开始，</span><span>推进本期运营</span></h2>
+            <p>企业资料维护一次，Agent 按任务匹配 Skill。直接在对话中补充信息、查看结果并确认；侧栏只展示任务进度。</p>
+            <div class="welcome-actions">
+              <a href="/enterprise">维护企业资料 <span aria-hidden="true">→</span></a>
             </div>
+            <dl class="welcome-capabilities" aria-label="运营能力与使用顺序">
+              <div>
+                <dt><span aria-hidden="true">01</span>企业资料</dt>
+                <dd>维护企业背景和文档，供各任务默认使用。</dd>
+              </div>
+              <div>
+                <dt><span aria-hidden="true">02</span>运营目标</dt>
+                <dd>结合本期诉求制定目标，由你确认。</dd>
+              </div>
+              <div>
+                <dt><span aria-hidden="true">03</span>周计划准备</dt>
+                <dd>提供人员职责和本周要求，先检查已有研究。</dd>
+              </div>
+              <div>
+                <dt><span aria-hidden="true">04</span>计划交付</dt>
+                <dd>必要时授权调研，继续生成可下载、可修改的周计划。</dd>
+              </div>
+            </dl>
+            <p class="welcome-boundary">研究需单独确认，可能产生数据接口和模型费用；不会自动发布或投流。</p>
+            <p class="welcome-chat-hint">也可以在下方直接描述任务，或用 <code>$skill-name</code> 指定 Skill。</p>
           </article>
         </section>
 
         <section class="composer-wrap">
+          <div class="task-reply-context" id="task-reply-context" hidden><span id="task-reply-label"></span><button id="task-reply-toggle" type="button">普通提问</button></div>
           <div class="attachment-list" id="attachment-list" aria-live="polite" hidden></div>
           <form class="composer" id="chat-form">
             <button class="attach-button" id="attach-button" type="button" aria-label="上传当前对话附件" title="上传当前对话附件">
@@ -117,7 +141,7 @@
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.html,.htm,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.aac,.flac,.ogg,.mp4,.mov,.mkv,.webm,.avi"
             />
             <label class="sr-only" for="message-input">输入消息</label>
-            <textarea id="message-input" rows="1" maxlength="20000" placeholder="给 Agent 一个任务…" required></textarea>
+            <textarea id="message-input" rows="1" maxlength="20000" placeholder="说出任务，Agent 自动选择 Skill；也可用 $skill-name 指定" required></textarea>
             <button class="send-button" id="send-button" type="submit" aria-label="发送消息">
               <span>发送</span><b aria-hidden="true">↗</b>
             </button>
@@ -149,6 +173,6 @@
         </div>
       </form>
     </div>
-    <script type="module" src="/static/app.js?v=20260814-8"></script>
+    <script type="module" src="/static/app.js?v=20260918-colloquial1"></script>
   </body>
 </html>

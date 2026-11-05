@@ -1,0 +1,42 @@
+{
+  "enabled": true,
+  "version": "0.3.0",
+  "aliases": [
+    "14.2 网络数据研究与选题",
+    "网络数据研究与选题",
+    "小红书研究选题"
+  ],
+  "allowed_tools": [
+    "load_operation_goal",
+    "social_search_posts",
+    "social_get_post_detail",
+    "social_get_comments",
+    "social_get_creator_posts",
+    "social_get_creator_stats",
+    "analyze_research_images",
+    "save_content_research_result"
+  ],
+  "private_tools": [
+    "load_operation_goal",
+    "social_search_posts",
+    "social_get_post_detail",
+    "social_get_comments",
+    "social_get_creator_posts",
+    "social_get_creator_stats",
+    "analyze_research_images",
+    "save_content_research_result"
+  ],
+  "tool_budgets": {
+    "load_operation_goal": 2,
+    "social_search_posts": 6,
+    "social_get_post_detail": 5,
+    "social_get_comments": 5,
+    "social_get_creator_posts": 3,
+    "social_get_creator_stats": 3,
+    "save_content_research_result": 3,
+    "analyze_research_images": 2
+  },
+  "max_steps": 8,
+  "allow_memory": false,
+  "allow_attachments": false
+}

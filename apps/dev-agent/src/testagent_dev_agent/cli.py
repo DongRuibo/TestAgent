@@ -10,9 +10,12 @@ from uuid import uuid4
 from dotenv import load_dotenv
 
 from agent.loop import AgentLoop, DEFAULT_TOOL_HANDLERS, TOOL_DEFINITIONS
+from agent.skill_tools import register_skill_tools
+from agent.skills import SkillCatalog, SkillConfigurationError
 from llm.client import LLMClient
 from memory.client import build_memory_client_from_env
 from tools.lazytt_mcp import LazyTtMcpError, build_lazytt_mcp_tools_from_env
+from testagent_dev_agent.paths import REPOSITORY_ROOT
 
 
 MAX_HISTORY_MESSAGES = 20
@@ -41,6 +44,12 @@ def parse_args() -> argparse.Namespace:
         nargs="?",
         help="Message to send. If omitted, the program prompts for it.",
     )
+    parser.add_argument("--skill", help="Explicitly activate one loaded Skill.")
+    parser.add_argument(
+        "--list-skills",
+        action="store_true",
+        help="List loaded Skills and exit.",
+    )
     return parser.parse_args()
 
 
@@ -49,6 +58,18 @@ def main() -> None:
     # 从项目根目录的 .env 文件加载模型密钥、模型名和可选的服务地址。
     load_dotenv()
     args = parse_args()
+    try:
+        skill_catalog = SkillCatalog.from_directory(
+            REPOSITORY_ROOT / ".agents" / "skills"
+        )
+    except SkillConfigurationError as exc:
+        raise SystemExit(f"Skill configuration error: {exc}") from exc
+    if getattr(args, "list_skills", False):
+        for skill in skill_catalog.skills:
+            print(f"{skill.name}\t{skill.version}\t{skill.description}")
+        return
+    if getattr(args, "skill", None) and args.task is None:
+        raise SystemExit("--skill requires a task.")
 
     # 把配置错误转换成简洁的命令行提示，避免用户看到冗长的异常堆栈。
     try:
@@ -62,7 +83,7 @@ def main() -> None:
     except RuntimeError as exc:
         raise SystemExit(f"Memory configuration error: {exc}") from exc
     definitions = dict(TOOL_DEFINITIONS)
-    handlers = dict(DEFAULT_TOOL_HANDLERS)
+    handlers = register_skill_tools(DEFAULT_TOOL_HANDLERS, skill_catalog)
     try:
         mcp_tools = build_lazytt_mcp_tools_from_env()
     except LazyTtMcpError as exc:
@@ -88,12 +109,20 @@ def main() -> None:
         tool_definitions=definitions,
         tool_handlers=handlers,
         tool_budgets=mcp_budgets,
+        skill_catalog=skill_catalog,
     )
     if args.task is not None:
         task = args.task.strip()
         if not task:
             raise SystemExit("Task cannot be empty.")
-        answer = agent.run(task, episode_id=str(uuid4()))
+        try:
+            answer = agent.run(
+                task,
+                episode_id=str(uuid4()),
+                skill_name=getattr(args, "skill", None),
+            )
+        except SkillConfigurationError as exc:
+            raise SystemExit(f"Skill activation error: {exc}") from exc
         print(f"Assistant: {answer}")
         return
 

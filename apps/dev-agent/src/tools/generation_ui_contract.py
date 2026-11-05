@@ -90,6 +90,7 @@ def default_generation_ui_contract(
             }
         )
     if scenario == "content_weekly_plan":
+        from tools.content_operations_ui import LEGACY_RECOVERY_SCHEMA
         content_ids = [
             item.get("content_id")
             for item in data.get("contents", [])
@@ -134,6 +135,8 @@ def default_generation_ui_contract(
                 },
             ]
         )
+        actions.append({"id": "resolve_xiaohongshu_draft", "event_type": "confirm", "external_side_effect": False,
+            "arguments_schema": deepcopy(LEGACY_RECOVERY_SCHEMA)})
     if scenario == "renovation_project_create":
         actions.append(
             {

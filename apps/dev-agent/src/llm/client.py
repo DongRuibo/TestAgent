@@ -99,6 +99,7 @@ class LLMClient:
     def __init__(self, config: LLMConfig, sdk_client: Any | None = None) -> None:
         """创建客户端；sdk_client 参数用于在测试中注入假客户端。"""
         self.config = config
+        self.last_call_receipt: dict[str, Any] | None = None
 
         # 生产运行时创建真实 SDK 客户端，测试时则使用传入的假对象，避免联网。
         self._client = sdk_client or OpenAI(
@@ -144,11 +145,25 @@ class LLMClient:
             request["tools"] = list(tools)
 
         response = self._create_completion(request)
+        self._record_usage(getattr(response, "usage", None))
         return response.choices[0].message
+
+    def _record_usage(self, usage: Any) -> None:
+        """只保留服务端实际返回的用量；缺失不转换成零或估算。"""
+        if usage is None or self.last_call_receipt is None:
+            return
+        values = {name: getattr(usage, name, None)
+                  for name in ("prompt_tokens", "completion_tokens", "total_tokens")}
+        if all(value is None or (type(value) is int and value >= 0) for value in values.values()):
+            self.last_call_receipt["usage"] = values if any(value is not None for value in values.values()) else None
 
     def _create_completion(self, request: dict[str, Any]) -> Any:
         """仅重试尚未产生模型输出的连接或超时错误。"""
+        self.last_call_receipt = {"model": self.config.model, "sdk_attempts": 0,
+                                  "duration_ms": 0.0, "usage": None}
+        started = time.perf_counter()
         for attempt in range(_MODEL_CONNECTION_ATTEMPTS):
+            self.last_call_receipt["sdk_attempts"] += 1
             try:
                 return self._client.chat.completions.create(**request)
             except (APIConnectionError, APITimeoutError) as exc:
@@ -157,6 +172,8 @@ class LLMClient:
                         "模型服务暂时无法连接，已自动重试 2 次，请稍后重新执行。"
                     ) from exc
                 time.sleep(_MODEL_CONNECTION_RETRY_BASE_SECONDS * (2**attempt))
+            finally:
+                self.last_call_receipt["duration_ms"] = (time.perf_counter() - started) * 1000
         raise AssertionError("unreachable")
 
     def stream_complete(
@@ -177,10 +194,12 @@ class LLMClient:
             request["tools"] = list(tools)
 
         stream = self._create_completion(request)
+        stream_started = time.perf_counter()
         content_parts: list[str] = []
         tool_parts: dict[int, dict[str, str]] = {}
         try:
             for chunk in stream:
+                self._record_usage(getattr(chunk, "usage", None))
                 if is_cancelled is not None and is_cancelled():
                     raise LLMStreamCancelled("Model stream cancelled")
                 choices = getattr(chunk, "choices", None) or []
@@ -224,6 +243,7 @@ class LLMClient:
                 "模型回答传输中断，请重新执行本次任务。"
             ) from exc
         finally:
+            self.last_call_receipt["duration_ms"] += (time.perf_counter() - stream_started) * 1000
             close = getattr(stream, "close", None)
             if callable(close):
                 close()

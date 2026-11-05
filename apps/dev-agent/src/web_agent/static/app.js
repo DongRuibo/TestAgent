@@ -1,5 +1,6 @@
-import { mountGenerationUi } from "./generation-ui/generation-ui.js?v=0.5.2-ux1";
-import { isSafeResourceHref, renderMarkdown } from "./markdown.js";
+import { mountGenerationUi } from "./generation-ui/generation-ui.js?v=20260910-task1";
+import { isSafeResourceHref, renderMarkdown } from "./markdown.js?v=20260918-blocks1";
+import { mountContentWorkflow, isBusinessArtifact, canOperateArtifact, artifactForTask } from "./content-workflow.js?v=20260918-colloquial1";
 
 const form = document.querySelector("#chat-form");
 const input = document.querySelector("#message-input");
@@ -59,6 +60,48 @@ let stopRequested = false;
 let attachmentRetry = null;
 let noticeTimer = null;
 const generationUiInstances = new Map();
+const businessCards = new Map();
+let taskPayload = null, ordinaryQuestion = false, replyPhase = "", restoredDraft = "";
+const replyContext = document.querySelector("#task-reply-context");
+const replyLabel = document.querySelector("#task-reply-label");
+const replyToggle = document.querySelector("#task-reply-toggle");
+let workflowBusy = false;
+const contentWorkflow = mountContentWorkflow(document.querySelector("#task-progress"), {
+  messages,
+  sendChat: (message) => sendMessage(message),
+  reloadConversation: () => loadConversation(),
+  onState(payload, busy) {
+    taskPayload = payload;
+    for (const entry of businessCards.values()) {
+      if (entry.artifact.artifact_id === payload?.artifact?.artifact_id) entry.artifact = payload.artifact;
+      entry.instance.updateArtifact(artifactForTask(entry.artifact, payload, busy));
+    }
+    updateReplyContext();
+  },
+  setBusy(value) {
+    workflowBusy = value;
+    input.disabled = pending || value;
+    sendButton.disabled = pending || value;
+    updateConversationActions();
+  },
+});
+
+function updateReplyContext() {
+  const phase = taskPayload?.phase || "";
+  const draftKey = `${conversationId}:${taskPayload?.draft || ""}`;
+  if (phase === "goal_failed" && taskPayload.draft && restoredDraft !== draftKey) {
+    if (!input.value.trim()) input.value = taskPayload.draft;
+    restoredDraft = draftKey;
+  }
+  if (replyPhase !== phase) { ordinaryQuestion = false; replyPhase = phase; }
+  const replying = ["goal_input", "goal_failed", "goal_review"].includes(phase);
+  replyContext.hidden = !replying;
+  replyLabel.textContent = ordinaryQuestion ? "普通提问 · 不作为目标补充" : phase === "goal_review"
+    ? "目标待确认 · 回复“确认第 N 版目标”，或直接说明修改要求" : "正在补充目标信息 · 直接回答上方问题";
+  replyToggle.textContent = ordinaryQuestion ? "继续补充目标" : "普通提问";
+  input.placeholder = replying && !ordinaryQuestion ? "回答上方问题，或说明目标需要怎样修改…" : "说出任务，Agent 自动选择 Skill；也可用 $skill-name 指定";
+}
+replyToggle.addEventListener("click", () => { ordinaryQuestion = !ordinaryQuestion; updateReplyContext(); input.focus(); });
 
 function showNotice(
   message,
@@ -93,6 +136,7 @@ function removeStoredConversationId() {
 function clearRenderedConversation() {
   generationUiInstances.forEach((instance) => instance.destroy());
   generationUiInstances.clear();
+  businessCards.clear();
   messages.querySelectorAll(".message-row").forEach((node) => node.remove());
 }
 
@@ -102,7 +146,8 @@ function cancelAttachmentPoll() {
 }
 
 function updateConversationActions() {
-  const busy = pending || initializing || uploading;
+  const busy = pending || initializing || uploading || workflowBusy;
+  contentWorkflow.update(conversationId, busy);
   newChatButton.disabled = busy;
   mobileNewChatButton.disabled = busy;
   deleteChatButton.disabled = busy || !conversationId;
@@ -519,6 +564,7 @@ async function loadConversation() {
     hideNotice();
     renderConversationHistory();
     updateConversationActions();
+    void contentWorkflow.refresh();
     return true;
   } catch (_) {
     conversation = [];
@@ -767,17 +813,30 @@ function makeMessage(role, content, options = {}) {
     body.append(retryButton);
   }
   if (role === "assistant" && Array.isArray(options.artifacts)) {
-    options.artifacts.forEach((artifact) => {
+    options.artifacts.filter(artifact => artifact.scenario !== "operation_goal_confirmation").forEach((artifact) => {
       const mountPoint = document.createElement("div");
       mountPoint.className = "generation-ui-mount";
       mountPoint.dataset.artifactId = artifact.artifact_id;
       mountPoint.dataset.scenario = artifact.scenario;
       body.append(mountPoint);
       queueMicrotask(() => {
+        if (!mountPoint.isConnected) return;
         try {
-          const instance = mountGenerationUi(mountPoint, artifact, {
+          const business = isBusinessArtifact(artifact);
+          const instance = mountGenerationUi(mountPoint, business ? artifactForTask(artifact, taskPayload, pending || workflowBusy) : artifact, {
             async onAction(event, formValues) {
-              return submitGenerationUiEvent(artifact, event, formValues);
+              if (!business) return submitGenerationUiEvent(artifact, event, formValues);
+              if (pending || workflowBusy) throw new Error("请等待当前操作完成。");
+              if (!await contentWorkflow.refresh() || !canOperateArtifact(artifact, taskPayload)) {
+                throw new Error("此卡片已不是当前待处理版本，请查看最新结果。");
+              }
+              workflowBusy = true; updateConversationActions();
+              try { return await submitGenerationUiEvent(artifact, event, formValues); }
+              finally {
+                workflowBusy = false; updateConversationActions();
+                // 等 Vue 完成此次 Action，再把最新状态应用到原卡片，保留其他选题草稿。
+                setTimeout(() => { void contentWorkflow.refresh(); }, 0);
+              }
             },
             onError(error) {
               console.error("Generation UI 渲染失败", error);
@@ -793,6 +852,7 @@ function makeMessage(role, content, options = {}) {
             },
           });
           generationUiInstances.set(artifact.artifact_id, instance);
+          if (business) businessCards.set(artifact.artifact_id, { artifact, instance });
           attachContentImageUpload(mountPoint, artifact, instance);
           restoreStructuredInputState(mountPoint, artifact);
           window.requestAnimationFrame(() => {
@@ -1069,16 +1129,23 @@ async function submitGenerationUiEvent(artifact, event, formValues) {
   generationUiActionRequests.set(requestKey, request);
   try {
     const payload = await request;
+    void contentWorkflow.refresh();
     if (host) showInlineGenerationUiNotice(host, payload.message, "success");
     if (payload.continuation) {
       disableGenerationUiAction(host, event.action?.label);
       appendCompletedAgentResponse(payload.continuation);
+    }
+    if (artifact.scenario === "content_draft" && ["edit_content_draft", "regenerate_content_draft", "resolve_content_draft"].includes(event.actionId)) {
+      setTimeout(() => { void loadConversation(); }, 0);
     }
     return payload;
   } catch (error) {
     generationUiActionRequests.delete(requestKey);
     if (host) showInlineGenerationUiNotice(host, `处理失败：${error.message}`, "error");
     throw error;
+  } finally {
+    // 选题审核可修改决定：只合并正在进行的重复点击，不复用旧审核结果。
+    if (["content_topic_plan", "content_draft", "content_weekly_plan"].includes(artifact.scenario)) generationUiActionRequests.delete(requestKey);
   }
 }
 
@@ -1122,9 +1189,9 @@ async function stopCurrentRequest() {
   }
 }
 
-async function sendMessage(text) {
+async function sendMessage(text, { taskReply = false, goalTask = false } = {}) {
   const message = text.trim();
-  if (pending || initializing || !message) return;
+  if (pending || initializing || workflowBusy || !message) return;
   hideNotice();
   if (attachments.some((item) => ["UPLOADING", "PROCESSING"].includes(item.status))) {
     makeMessage("assistant", "附件仍在解析，请等待状态变为“已可用”后再提问。", { error: true });
@@ -1139,6 +1206,7 @@ async function sendMessage(text) {
   makeMessage("user", message);
   const process = makeProcessMessage();
   let streamedAnswer = null;
+  let succeeded = false;
   activeRequestId = crypto.randomUUID();
   activeResponseController = new AbortController();
   sendButton.disabled = true;
@@ -1154,14 +1222,17 @@ async function sendMessage(text) {
     let payload = null;
     let streamError = null;
     let cancelled = false;
+    const requestBody = {
+      request_id: activeRequestId,
+      message,
+      conversation_id: conversationId,
+    };
+    requestBody.task_reply = taskReply;
+    if (goalTask) requestBody.skill_name = "operation-goal-setting";
     const response = await fetch("/api/chat/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        request_id: activeRequestId,
-        message,
-        conversation_id: conversationId,
-      }),
+      body: JSON.stringify(requestBody),
       signal: activeResponseController.signal,
     });
     if (!response.ok) {
@@ -1221,6 +1292,7 @@ async function sendMessage(text) {
     if (!payload) throw new Error("Agent 没有返回完整结果。");
     process.row.remove();
     appendCompletedAgentResponse(payload);
+    succeeded = true;
   } catch (error) {
     if (stopRequested || error.name === "AbortError") {
       if (streamedAnswer) {
@@ -1256,8 +1328,10 @@ async function sendMessage(text) {
     attachButton.disabled = !attachmentsConfigured;
     updateConversationActions();
     renderAttachments();
+    void contentWorkflow.refresh();
     input.focus();
   }
+  return succeeded;
 }
 
 function resizeInput() {
@@ -1401,7 +1475,8 @@ async function resetOwnerBriefingDemo() {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  sendMessage(input.value);
+  const taskReply = !ordinaryQuestion && ["goal_input", "goal_failed", "goal_review"].includes(taskPayload?.phase);
+  sendMessage(input.value, { taskReply });
 });
 
 input.addEventListener("keydown", (event) => {
@@ -1411,10 +1486,8 @@ input.addEventListener("keydown", (event) => {
     form.requestSubmit();
   }
 });
-input.addEventListener("input", resizeInput);
-
-document.querySelectorAll(".prompt-chip").forEach((button) => {
-  button.addEventListener("click", () => sendMessage(button.dataset.prompt || ""));
+input.addEventListener("input", () => {
+  resizeInput();
 });
 
 attachButton.addEventListener("click", () => {
@@ -1550,7 +1623,12 @@ async function initialize() {
   input.disabled = true;
   sendButton.disabled = true;
   attachButton.disabled = true;
-  await Promise.all([loadHealth(), loadConversation(), refreshConversationHistory()]);
+  await Promise.all([
+    contentWorkflow.refresh(),
+    loadHealth(),
+    loadConversation(),
+    refreshConversationHistory(),
+  ]);
   initializing = false;
   input.disabled = false;
   sendButton.disabled = false;
@@ -1564,3 +1642,19 @@ initialize();
 window.addEventListener("beforeunload", () => {
   activeResponseController?.abort();
 });
+
+const progressToggle = document.querySelector("#task-progress-toggle");
+const progressDrawer = document.querySelector("#task-progress");
+const progressClose = document.querySelector("#task-progress-close");
+function setProgressOpen(open) {
+  progressDrawer.hidden = !open;
+  document.body.classList.toggle("progress-open", open);
+  progressToggle.setAttribute("aria-expanded", String(open));
+  (open ? progressClose : progressToggle).focus();
+}
+progressToggle.addEventListener("click", () => setProgressOpen(progressDrawer.hidden));
+progressClose.addEventListener("click", () => setProgressOpen(false));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !progressDrawer.hidden) setProgressOpen(false);
+});
+window.addEventListener("pageshow", () => { void contentWorkflow.refresh(); });

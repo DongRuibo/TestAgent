@@ -41,6 +41,7 @@ class JobRepository:
                 """
                 CREATE TABLE IF NOT EXISTS jobs (
                     id TEXT PRIMARY KEY,
+                    execution_id TEXT,
                     workflow TEXT NOT NULL,
                     status TEXT NOT NULL,
                     current_step TEXT NOT NULL,
@@ -55,18 +56,22 @@ class JobRepository:
                 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
                 """
             )
+            # 老数据库保留原任务，只增加可空关联字段。
+            if "execution_id" not in {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}:
+                connection.execute("ALTER TABLE jobs ADD COLUMN execution_id TEXT")
+            connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_execution ON jobs(execution_id) WHERE execution_id IS NOT NULL")
 
-    def create(self, job_id: str, workflow: WorkflowName, payload: dict[str, Any]) -> JobRecord:
+    def create(self, job_id: str, workflow: WorkflowName, payload: dict[str, Any], *, execution_id: str | None = None) -> JobRecord:
         """新增 queued 任务并返回不含部署配置的任务快照。"""
 
         created_at = utc_now()
         with self.connect() as connection:
             connection.execute(
                 """
-                INSERT INTO jobs (id, workflow, status, current_step, input_json, created_at)
-                VALUES (?, ?, 'queued', 'queued', ?, ?)
+                INSERT INTO jobs (id, execution_id, workflow, status, current_step, input_json, created_at)
+                VALUES (?, ?, ?, 'queued', 'queued', ?, ?)
                 """,
-                (job_id, workflow, json.dumps(payload, ensure_ascii=False), created_at),
+                (job_id, execution_id, workflow, json.dumps(payload, ensure_ascii=False), created_at),
             )
         job = self.get(job_id)
         if job is None:
@@ -80,6 +85,18 @@ class JobRepository:
             row = connection.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
         return self._decode_row(row) if row else None
 
+    def get_by_execution_id(self, execution_id: str) -> JobRecord | None:
+        """只读查找业务执行对应任务，旧版数据库尚无关联列时返回空。"""
+
+        if not self.database_path.is_file():
+            return None
+        with sqlite3.connect(f"{self.database_path.as_uri()}?mode=ro", uri=True) as connection:
+            connection.row_factory = sqlite3.Row
+            if "execution_id" not in {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}:
+                return None
+            row = connection.execute("SELECT * FROM jobs WHERE execution_id = ?", (execution_id,)).fetchone()
+        return self._decode_row(row) if row else None
+
     def get_active_job(self) -> JobRecord | None:
         """返回当前 queued 或 running 任务，模块第一版最多存在一个。"""
 
@@ -90,13 +107,14 @@ class JobRepository:
         return self._decode_row(row) if row else None
 
     def recover_interrupted_jobs(self) -> int:
-        """把上次异常退出遗留的活动任务转为失败，避免永久阻塞。"""
+        """中断的草稿任务须人工核验，不能把可能已保存误作安全失败。"""
 
         with self.connect() as connection:
             cursor = connection.execute(
                 """
                 UPDATE jobs
-                SET status = 'failed', current_step = 'failed',
+                SET status = CASE WHEN workflow = 'xiaohongshu_draft' THEN 'needs_review' ELSE 'failed' END,
+                    current_step = 'interrupted',
                     error_code = 'module_interrupted',
                     error_message = '模块上次运行中断，请确认现场后重新创建任务',
                     finished_at = ?
@@ -105,6 +123,17 @@ class JobRepository:
                 (utc_now(),),
             )
         return cursor.rowcount
+
+    def needs_review(self, job_id: str, message: str, result: dict[str, Any]) -> None:
+        """保存未能完整核验的结果，供业务层对账，不自动再次执行。"""
+
+        with self.connect() as connection:
+            connection.execute(
+                "UPDATE jobs SET status = 'needs_review', current_step = 'needs_review', result_json = ?, "
+                "error_code = 'draft_verification_incomplete', error_message = ?, finished_at = ? "
+                "WHERE id = ? AND status IN ('queued', 'running')",
+                (json.dumps(result, ensure_ascii=False), message, utc_now(), job_id),
+            )
 
     def update_running(self, job_id: str, current_step: str = "starting_browser") -> None:
         """把排队任务转为运行中并记录实际开始时间。"""

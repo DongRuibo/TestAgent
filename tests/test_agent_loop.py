@@ -459,7 +459,7 @@ def test_agent_degrades_when_memory_is_unavailable() -> None:
 
     assert agent.run("你好") == "无记忆也能回答。"
     assert any("召回失败，降级" in item for item in trace)
-    assert any("Mem0 提取失败，不影响本轮回答" in item for item in trace)
+    assert any("完整对话提交失败，不影响本轮回答" in item for item in trace)
 
 
 def test_agent_includes_completed_text_history_before_new_task() -> None:
@@ -1123,3 +1123,98 @@ def test_agent_rejects_invalid_injected_tool_arguments_before_handler() -> None:
     assert '"error_type": "INVALID_ARGUMENTS"' in tool_result
     assert "缺少参数：rooms" in tool_result
     assert "未知参数：unexpected" in tool_result
+
+
+@pytest.mark.parametrize("failure", [None, 403, 409, "timeout"])
+def test_governed_loop_consumes_before_prompt_and_keeps_execution_receipt(failure):
+    import json
+    from uuid import uuid4
+
+    import httpx
+    from memory.client import MemoryHttpClient
+    from test_memory_client import governed_config, governed_exchange
+
+    exchanges = []
+    requests = []
+    episode_id = str(uuid4())
+    trace = []
+
+    def handler(request):
+        requests.append(request)
+        body = json.loads(request.content)
+        if request.url.path == "/v1/memory/context-packs":
+            exchanges.extend(governed_exchange(body))
+            return httpx.Response(201, json=exchanges[0])
+        if request.url.path.endswith("/consume"):
+            if failure == "timeout":
+                raise httpx.ReadTimeout("synthetic", request=request)
+            if failure is not None:
+                return httpx.Response(failure, text="sensitive diagnostic")
+            return httpx.Response(200, json=exchanges[1])
+        assert request.url.path == f"/v1/memory/episodes/{episode_id}/turns"
+        assert body["task_id"] == exchanges[0]["task_id"]
+        assert body["attempt_id"] == exchanges[0]["attempt_id"]
+        assert body["turn_id"] == exchanges[0]["attempt_id"]
+        assert body["timezone"] == "UTC"
+        assert body["assistant_content"] == "合成回答"
+        return httpx.Response(202, json={"episode_id": episode_id, "turn_id": body["turn_id"], "sequence_no": 1,
+                                          "per_turn_extraction": {"candidate_count": 0, "candidates": []}})
+
+    memory = MemoryHttpClient(governed_config(), http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    model = FakeLLMClient([FakeMessage("合成回答")])
+    agent = AgentLoop(model, memory=memory, trace=trace.append, timezone_name="UTC")
+    assert agent.run("记得上次的偏好吗", episode_id=episode_id) == "合成回答"
+    prompt = json.dumps(model.requests[0], ensure_ascii=False)
+    receipt = agent.last_context_receipt
+    assert receipt.task_id == exchanges[0]["task_id"]
+    assert receipt.attempt_id == exchanges[0]["attempt_id"]
+    assert len(requests) == 3
+    assert any("返回 0 条候选，不代表已生效记忆数" in line for line in trace)
+    if failure is None:
+        assert "合成用户偏好中文。" in prompt
+        assert receipt.memory_context_pack_id == exchanges[0]["context_pack_id"]
+        assert receipt.memory_record_versions == ({
+            "memory_record_id": exchanges[1]["sections"][0]["items"][0]["memory_record_id"],
+            "memory_version_id": exchanges[1]["sections"][0]["items"][0]["memory_version_id"],
+        },)
+    else:
+        assert "合成用户偏好中文。" not in prompt
+        assert "sensitive diagnostic" not in prompt
+        assert receipt.memory_context_pack_id is None
+        assert receipt.memory_record_versions == ()
+
+
+def test_governed_next_attempt_never_reuses_previous_consumed_text():
+    import json
+    from uuid import uuid4
+
+    import httpx
+    from memory.client import MemoryHttpClient
+    from test_memory_client import governed_config, governed_exchange
+
+    exchanges = []
+    consume_count = 0
+
+    def handler(request):
+        nonlocal consume_count
+        body = json.loads(request.content)
+        if request.url.path == "/v1/memory/context-packs":
+            manifest, pack = governed_exchange(body)
+            exchanges.append((manifest, pack))
+            return httpx.Response(201, json=manifest)
+        if request.url.path.endswith("/consume"):
+            consume_count += 1
+            return httpx.Response(200, json=exchanges[-1][1]) if consume_count == 1 else httpx.Response(409)
+        return httpx.Response(202, json={"episode_id": request.url.path.split("/")[-2], "turn_id": body["turn_id"], "sequence_no": 1,
+                                          "per_turn_extraction": {"candidate_count": 0, "candidates": []}})
+
+    memory = MemoryHttpClient(governed_config(), http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    model = FakeLLMClient([FakeMessage("第一次回答"), FakeMessage("第二次回答")])
+    agent = AgentLoop(model, memory=memory, trace=None)
+    episode_id = str(uuid4())
+    agent.run("记得上次", episode_id=episode_id)
+    assert "合成用户偏好中文。" in json.dumps(model.requests[0], ensure_ascii=False)
+    agent.run("记得上次", episode_id=episode_id)
+    assert "合成用户偏好中文。" not in json.dumps(model.requests[1], ensure_ascii=False)
+    assert exchanges[0][0]["attempt_id"] != exchanges[1][0]["attempt_id"]
+    assert agent.last_context_receipt.memory_context_pack_id is None

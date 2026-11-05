@@ -8,6 +8,28 @@ from uuid import uuid4
 
 
 CONTENT_UI_SCENARIOS = {"content_weekly_plan", "content_performance_review"}
+LEGACY_RECOVERY_SCHEMA = {"type": "object", "properties": {
+    "content_id": {"type": "string", "minLength": 1, "maxLength": 100},
+    "resolution": {"type": "string", "enum": ["人工确认存在", "人工确认未保存"]},
+    "note": {"type": "string", "minLength": 1, "maxLength": 2000}},
+    "required": ["content_id", "resolution"], "additionalProperties": False}
+
+
+def with_content_recovery(spec):
+    """为新旧卡片加入宿主固定的人工核验入口，不授予模型执行权限。"""
+    spec = deepcopy(spec)
+    if any(action["id"] == "resolve_xiaohongshu_draft" for action in spec.get("actions", [])):
+        return spec
+    spec["actions"].append({"id": "resolve_xiaohongshu_draft", "tool": "resolve_xiaohongshu_draft",
+        "label": "保存人工草稿核验", "event_type": "confirm", "confirm": True, "tone": "primary",
+        "arguments_schema": deepcopy(LEGACY_RECOVERY_SCHEMA)})
+    spec["form_defaults"]["resolution"] = "人工确认存在"
+    spec["root"]["children"].append(_card("结果不明时人工核验", {"id": "content-recovery-form", "type": "Form",
+        "props": {"title": "先人工打开草稿箱核对。确认未保存后仅解除原任务并重新待审核，不自动执行。"}, "children": [
+            _select("recovery-resolution", "人工核验结论", "resolution", ["人工确认存在", "人工确认未保存"]),
+            _textarea("recovery-note", "核验说明（必填）", "note"),
+            _button("recovery-submit", "resolve_xiaohongshu_draft", "保存人工草稿核验")]}))
+    return spec
 
 
 def build_content_operations_ui_artifact(
@@ -170,7 +192,7 @@ def _weekly_plan_spec(
         for action_id in ("review_content_plan", "save_xiaohongshu_draft")
     ]
     return (
-        _spec(
+        with_content_recovery(_spec(
             "content_weekly_plan",
             title,
             summary,
@@ -182,7 +204,7 @@ def _weekly_plan_spec(
                 "note": "",
                 "image_paths_text": "",
             },
-        ),
+        )),
         summary,
     )
 

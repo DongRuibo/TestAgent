@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
 
 from testagent_dev_agent.paths import REPOSITORY_ROOT
+from tools.content_research import load_content_research_artifact
 from tools.direct_spreadsheet import _resolve_spreadsheet
 
 
@@ -68,6 +69,14 @@ GENERATE_CONTENT_WEEKLY_PLAN_TOOL = _tool(
                 "additionalProperties": False,
             },
         },
+        "research_artifact_path": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": (
+                "可选的 14.2 研究 JSON 工件绝对路径。提供后只生成待确认的 14.3 周计划，"
+                "不会制作正文或启动 RPA。"
+            ),
+        },
     },
     ["week_start"],
 )
@@ -100,20 +109,33 @@ class ContentOperationTools:
         self,
         week_start: str,
         source_items: list[dict[str, Any]] | None = None,
+        research_artifact_path: str | None = None,
     ) -> dict[str, Any]:
         try:
-            data = generate_content_weekly_plan(week_start, source_items=source_items)
+            data = generate_content_weekly_plan(
+                week_start,
+                source_items=source_items,
+                research_artifact_path=research_artifact_path,
+            )
             artifacts = _write_artifacts("weekly-plan", week_start, data)
         except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
             return _error("INVALID_CONTENT_WEEKLY_PLAN", str(exc))
-        return {
+        result = {
             "success": True,
-            "workflow": "content_weekly_plan_v0",
+            "workflow": (
+                "content_weekly_plan_from_research_v0"
+                if research_artifact_path
+                else "content_weekly_plan_v0"
+            ),
             "plan": data,
             "artifacts": artifacts,
-            "presentation": self.registry.register(CONTENT_WEEKLY_PLAN_SCENARIO, data),
             "message": f"{week_start} 起的一周内容计划已生成，共 {len(data['contents'])} 个选题。",
         }
+        if research_artifact_path is None:
+            result["presentation"] = self.registry.register(
+                CONTENT_WEEKLY_PLAN_SCENARIO, data
+            )
+        return result
 
     def analyze_performance(self, path: str) -> dict[str, Any]:
         try:
@@ -143,8 +165,14 @@ def generate_content_weekly_plan(
     week_start: str,
     *,
     source_items: list[dict[str, Any]] | None = None,
+    research_artifact_path: str | None = None,
 ) -> dict[str, Any]:
     start = _monday(week_start)
+    if research_artifact_path is not None:
+        if source_items is not None:
+            raise ValueError("source_items 和 research_artifact_path 不能同时提供。")
+        research = load_content_research_artifact(research_artifact_path)
+        return _weekly_plan_from_research(start, research, research_artifact_path)
     sources = _normalize_sources(source_items)
     source_mode = "公开搜索候选" if sources else "离线演示线索"
     if not sources:
@@ -208,6 +236,92 @@ def generate_content_weekly_plan(
         "contents": contents,
         "reference_sources": sources,
         "rpa_boundary": "RPA 只能把已审核图文保存到小红书草稿箱，不执行最终发布。",
+    }
+
+
+def _weekly_plan_from_research(
+    start: date,
+    research: dict[str, Any],
+    research_artifact_path: str,
+) -> dict[str, Any]:
+    if research["execution_status"] == "failed":
+        raise ValueError("失败的 14.2 研究工件不能进入周计划。")
+    candidates = research["candidate_topics"]
+    selected = candidates[:5]
+    if not selected:
+        raise ValueError("14.2 研究工件没有可用候选选题。")
+    weekdays = ("周一", "周二", "周三", "周四", "周五")
+    contents = []
+    for index, topic in enumerate(selected, 1):
+        contents.append(
+            {
+                "content_id": f"CO-{start.strftime('%Y%m%d')}-{index:02d}",
+                "platform": "小红书",
+                "publish_day": weekdays[index - 1],
+                "content_format": "小红书图文",
+                "audience": topic["target_user"],
+                "goal": "；".join(topic["expected_result"]),
+                "title": topic["title"],
+                "evidence": deepcopy(topic["evidence"]),
+                "why_fit_company": topic["why_fit_company"],
+                "required_materials": deepcopy(topic["required_materials"]),
+                "risks": deepcopy(topic["risks"]),
+                "ratings": deepcopy(topic["ratings"]),
+                "recommendation": topic["recommendation"],
+                "human_collaborator": "待负责人指定",
+                "delivery_time": "待负责人确认",
+                "status": "pending_confirmation",
+                "status_label": "待负责人确认",
+            }
+        )
+    plan_id = str(
+        uuid5(
+            NAMESPACE_URL,
+            f"{research['research_id']}:{start.isoformat()}:weekly-plan",
+        )
+    )
+    return {
+        "schema_version": "1.2",
+        "plan_id": plan_id,
+        "company_name": research["company_name"],
+        "week_start": start.isoformat(),
+        "platform": "小红书",
+        "weekly_goal": research["operation_goal"],
+        "target_users": list(dict.fromkeys(item["audience"] for item in contents)),
+        "core_themes": [item["title"] for item in contents],
+        "source_mode": "14.2 结构化研究工件",
+        "source_notice": (
+            "选题来自可追溯的 14.2 研究工件；事实仍须按来源核实，计划和选题必须由负责人确认。"
+        ),
+        "summary": (
+            f"已从 14.2 研究结果选择 {len(contents)} 个小红书候选选题形成周计划草案。"
+        ),
+        "approval_status": "pending_confirmation",
+        "metrics": {
+            "content_count": len(contents),
+            "pending_confirmation_count": len(contents),
+        },
+        "contents": contents,
+        "backup_topics": deepcopy(candidates[5:]),
+        "reference_sources": deepcopy(research["source_references"]),
+        "research_id": research["research_id"],
+        "research_artifact_path": research_artifact_path,
+        "research_ref": {
+            "research_id": research["research_id"],
+            "version": research["version"],
+            "schema_version": research["schema_version"],
+            "artifact_path": research_artifact_path,
+        },
+        "company_profile": research["company_profile"],
+        "goal_ref": deepcopy(research["goal_ref"]),
+        "goal_snapshot": deepcopy(research["goal_snapshot"]),
+        "research_input_mode": research["input_mode"],
+        "research_execution_status": research["execution_status"],
+        "research_approval_status": research["approval_status"],
+        "research_limitations": deepcopy(research["limitations"]),
+        "success_failure_rule": "沿用 14.1 运营目标中已确认的衡量方法，不在 14.3 重定义指标。",
+        "adjustment_mechanism": "负责人确认后执行；素材或事实不足时替换为备选选题并重新确认。",
+        "rpa_boundary": "当前只生成 14.3 周计划草案，尚未制作正文，不能启动 RPA。",
     }
 
 

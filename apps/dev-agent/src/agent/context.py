@@ -6,7 +6,7 @@ import json
 import os
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 
@@ -191,8 +191,12 @@ class ContextReceipt:
     memory_policy: str = "disabled"
     memory_reason: str = "Memory integration is disabled"
     memory_item_count: int = 0
+    memory_context_pack_id: str | None = None
+    memory_record_versions: tuple[dict[str, str], ...] = ()
     tool_result_count: int = 0
     estimated_context_chars: int = 0
+    model_calls: list[dict[str, Any]] = field(default_factory=list)
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

@@ -15,6 +15,8 @@ from .models import (
     ModuleHealth,
     WorkflowCapability,
     XiaohongshuDraftRequest,
+    XiaohongshuMetricsAccount,
+    XiaohongshuMetricsRequest,
 )
 from .module import RpaExecutionModule
 
@@ -32,5 +34,7 @@ __all__ = [
     "RpaModuleError",
     "WorkflowCapability",
     "XiaohongshuDraftRequest",
+    "XiaohongshuMetricsAccount",
+    "XiaohongshuMetricsRequest",
     "XiaohongshuSelectors",
 ]

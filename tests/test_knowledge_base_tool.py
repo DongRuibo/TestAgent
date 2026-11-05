@@ -215,6 +215,138 @@ def test_attachment_lifecycle_uses_gateway_contract_without_exposing_token() -> 
     http_client.close()
 
 
+def test_managed_knowledge_base_lifecycle_uses_safe_gateway_contract() -> None:
+    document_id = "d1d66b91-701a-4e33-9f66-877244fae693"
+    upload_job_id = "e1d66b91-701a-4e33-9f66-877244fae693"
+    action_job_id = "f1d66b91-701a-4e33-9f66-877244fae693"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["authorization"] == "Bearer synthetic-token"
+        if request.method == "GET" and request.url.path.endswith(
+            _config().knowledge_base_id
+        ):
+            return httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "name": "Synthetic long-term knowledge",
+                        "description": "Synthetic only",
+                        "status": "READY",
+                        "retrieval_profile": "hybrid-default@1",
+                        "document_count": 1,
+                    }
+                },
+            )
+        if request.method == "GET" and request.url.path.endswith("/documents"):
+            assert request.url.params["page"] == "1"
+            assert request.url.params["page_size"] == "50"
+            return httpx.Response(
+                200,
+                json={
+                    "data": [
+                        {
+                            "id": document_id,
+                            "filename": "synthetic.md",
+                            "mime_type": "text/markdown",
+                            "file_size_bytes": 12,
+                            "status": "READY",
+                            "progress": 1,
+                            "chunk_count": 1,
+                            "token_count": 4,
+                            "updated_at": "2026-09-04T00:00:00Z",
+                        }
+                    ],
+                    "meta": {"page": 1, "page_size": 50, "total": 1},
+                },
+            )
+        if request.method == "POST" and request.url.path.endswith("/documents"):
+            assert b"testagent_long_term_knowledge" in request.content
+            assert b"synthetic.md" in request.content
+            return httpx.Response(
+                202,
+                json={
+                    "data": {
+                        "document_id": document_id,
+                        "job_id": upload_job_id,
+                        "status": "RECEIVED",
+                    }
+                },
+            )
+        if request.method == "GET" and request.url.path.endswith(document_id):
+            return httpx.Response(
+                200,
+                json={
+                    "data": {
+                        "status": "READY",
+                        "knowledge_base_id": _config().knowledge_base_id,
+                    }
+                },
+            )
+        if request.method == "POST" and request.url.path.endswith("/retry"):
+            return httpx.Response(
+                202,
+                json={"data": {"job_id": action_job_id, "status": "PENDING"}},
+            )
+        if request.method == "DELETE" and request.url.path.endswith(document_id):
+            assert request.url.params["cancel_active"] == "true"
+            return httpx.Response(
+                202,
+                json={"data": {"job_id": action_job_id, "status": "PENDING"}},
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    http_client = httpx.Client(
+        base_url="http://rag.test/",
+        transport=httpx.MockTransport(handler),
+    )
+    client = KnowledgeBaseClient(_config(), http_client=http_client)
+
+    assert client.get_knowledge_base_summary()["name"] == (
+        "Synthetic long-term knowledge"
+    )
+    documents = client.list_documents(page=1, page_size=50)
+    assert documents["documents"][0]["document_id"] == document_id
+    uploaded = client.upload_managed_document(
+        BytesIO(b"# synthetic"),
+        filename="synthetic.md",
+        content_type="text/markdown",
+    )
+    assert uploaded["job_id"] == upload_job_id
+    assert client.retry_managed_document(document_id)["success"] is True
+    assert client.delete_managed_document(document_id)["success"] is True
+    assert "synthetic-token" not in str(documents)
+    http_client.close()
+
+
+def test_managed_document_action_rejects_attachment_database_document() -> None:
+    document_id = "d1d66b91-701a-4e33-9f66-877244fae693"
+    attachment_knowledge_base_id = "e1d66b91-701a-4e33-9f66-877244fae693"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "status": "READY",
+                    "knowledge_base_id": attachment_knowledge_base_id,
+                }
+            },
+        )
+
+    http_client = httpx.Client(
+        base_url="http://rag.test/",
+        transport=httpx.MockTransport(handler),
+    )
+    result = KnowledgeBaseClient(
+        _config(), http_client=http_client
+    ).delete_managed_document(document_id)
+
+    assert result["success"] is False
+    assert result["error_type"] == "RAG_RESOURCE_NOT_FOUND"
+    http_client.close()
+
+
 def test_search_knowledge_base_rejects_invalid_query_without_request() -> None:
     def handler(_request: httpx.Request) -> httpx.Response:
         raise AssertionError("invalid query must not reach RAG Gateway")

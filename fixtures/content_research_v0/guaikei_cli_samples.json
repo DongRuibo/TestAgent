@@ -1,0 +1,62 @@
+{
+  "search": {
+    "status": "success",
+    "request_id": "fixture-search",
+    "results": {
+      "posts": [
+        {
+          "note_id": "note-001",
+          "title": "小户型显大：先处理动线",
+          "note_url": "https://www.xiaohongshu.com/explore/note-001",
+          "desc": "通过动线和收纳减少视觉阻塞。",
+          "author": {"nickname": "空间研究所"},
+          "liked_count": 268,
+          "comment_count": 31,
+          "collected_count": 96
+        }
+      ]
+    }
+  },
+  "detail": {
+    "status": "success",
+    "request_id": "fixture-detail",
+    "results": {
+      "note_id": "note-001",
+      "title": "小户型显大：先处理动线",
+      "desc": "原始户型的过道占用了大量面积，调整后增加了储物空间。",
+      "author": {"nickname": "空间研究所"},
+      "liked_count": 268,
+      "comment_count": 31,
+      "collected_count": 96
+    }
+  },
+  "comments": {
+    "status": "success",
+    "request_id": "fixture-comments",
+    "results": {
+      "comments": [
+        {
+          "comment_id": "comment-001",
+          "content": "想知道这种改造大概需要多少预算",
+          "user": {"nickname": "准备装修"},
+          "liked_count": 12
+        }
+      ]
+    }
+  },
+  "creator_posts": {
+    "status": "success",
+    "request_id": "fixture-creator",
+    "results": {
+      "posts": [
+        {
+          "note_id": "note-002",
+          "title": "旧房收纳改造前后对比",
+          "note_url": "https://www.xiaohongshu.com/explore/note-002",
+          "author": {"nickname": "空间研究所"},
+          "liked_count": 182
+        }
+      ]
+    }
+  }
+}

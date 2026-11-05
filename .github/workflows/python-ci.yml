@@ -8,6 +8,7 @@ on:
       - "services/sandbox-gateway/**"
       - "tests/**"
       - "evals/**"
+      - "生成式ui/**"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/python-ci.yml"
@@ -19,6 +20,7 @@ on:
       - "services/sandbox-gateway/**"
       - "tests/**"
       - "evals/**"
+      - "生成式ui/**"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/python-ci.yml"
@@ -36,9 +38,26 @@ jobs:
           enable-cache: true
       - run: uv python install 3.11
       - run: uv sync --frozen
-      - run: uv run pytest
+      - run: uv run pytest tests packages/rpa-agent-module/tests
       - run: uv build --package testagent-sandbox-contracts --out-dir dist/sandbox-contracts
       - run: uv build --package testagent-sandbox-client --out-dir dist/sandbox-client
       - run: uv build --package testagent-sandbox-gateway --out-dir dist/sandbox-gateway
       - run: uv build --package testagent-web-tools --out-dir dist/web-tools
       - run: uv build --package testagent-dev-agent --out-dir dist/dev-agent
+      - run: uv build --package rpa-agent-module --out-dir dist/rpa-agent-module
+
+  frontend-test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/dev-agent/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/dev-agent/frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build
