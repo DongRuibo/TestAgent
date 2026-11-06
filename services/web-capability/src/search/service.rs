@@ -803,6 +803,9 @@ mod tests {
         assert_eq!(events[0].request_id, "failed-request");
         assert_eq!(events[0].attempts, 2);
         assert_eq!(events[0].status, "error");
-        assert_eq!(events[0].error_type.as_deref(), Some("SEARCH_PROVIDER_ERROR"));
+        assert_eq!(
+            events[0].error_type.as_deref(),
+            Some("SEARCH_PROVIDER_ERROR")
+        );
     }
 }
