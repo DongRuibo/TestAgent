@@ -1,0 +1,296 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-06",
+  "base_sha": "b5a970dbbe66225fab63f4e4c2c0bd6911e67bc0",
+  "candidate_committed": false,
+  "final_source_frozen": true,
+  "independent_final_review": "accepted_limited_scope_by_Independent_AI_Reviewer_with_model_quality_limits",
+  "records": [
+    {
+      "raw_evidence_name": "robot/offline-final/pytest.log",
+      "raw_sha256": "6ec435b330cd0194940f1f8414d3fdece791130154cb735f548bf8ae8a280253",
+      "summary": {
+        "passed": 4,
+        "browser_cases_deselected": 11,
+        "boundary": "Only offline API/SQLite and download guard; no real browser execution"
+      }
+    },
+    {
+      "raw_evidence_name": "robot/regression-final-02.log",
+      "raw_sha256": "34b2e02398e87c8a6b2bbedbd0d6fc6c25f6b7b8ec6e328592739a19a4b5c99f",
+      "summary": {
+        "passed": 55,
+        "skipped": 18,
+        "boundary": "Focused regression, not whole suite"
+      }
+    },
+    {
+      "raw_evidence_name": "context/verification.json",
+      "raw_sha256": "d5e3f0453c177de3815b0b9cc5a374e5be439a4036efbf255b425c5b0e2ce2ca",
+      "summary": {
+        "passed": 185,
+        "skipped": 0,
+        "boundary": "Historical focused worker snapshot; superseded for final suite counts by final/offline-03"
+      }
+    },
+    {
+      "raw_evidence_name": "delivery/rust-offline-checks.json",
+      "raw_sha256": "8de7d907b3dc237c59004d7ee13544f34bed9a192cff6743d439139cb372bfc4",
+      "summary": {
+        "fmt": "tool unavailable",
+        "clippy": "tool unavailable",
+        "test": "offline dependency dom_smoothie unavailable",
+        "passed": false
+      }
+    },
+    {
+      "raw_evidence_name": "robot/browser-full-after-confirm-04/pytest.xml",
+      "raw_sha256": "f2146c57f2e5a423c0ebf2990ed9639ec8e3f15c503f70095f703ac459218f21"
+    },
+    {
+      "raw_evidence_name": "robot/browser-remaining-after-xml-status-05/pytest.xml",
+      "raw_sha256": "58b9d6a9f6af0b098dc665a91b9aa729853aa58538d407c2f81336dd170687ac"
+    },
+    {
+      "raw_evidence_name": "robot/browser-actual-01/interrupted-summary.json",
+      "raw_sha256": "b185243c4ee15df18d52486ef8ae35a9bab6093084512de37dc4ee9b1ecc4e20"
+    },
+    {
+      "raw_evidence_name": "robot/browser-diagnosis-02/pytest.xml",
+      "raw_sha256": "124cf7799f8c26841f4d85f194e30098b061e1682fa39bacc18ae252ca8ba90a"
+    },
+    {
+      "raw_evidence_name": "robot/managed-browser-cleanup-check.json",
+      "raw_sha256": "8291f553933bf9ee5600f2111686b03b243346419a5a744411f8177ed6dc2c65"
+    },
+    {
+      "raw_evidence_name": "delivery/wheel-notice-verification.json",
+      "raw_sha256": "e061ac5ff320352d7ea622056a75da2401266c6a6fb484bf3f5efe424c254f3f"
+    },
+    {
+      "raw_evidence_name": "delivery/docs-ci-static-validation.json",
+      "raw_sha256": "64298797675bc60fe3bf06768743e8fea193d3a69ee41df65156d208692b36ce"
+    },
+    {
+      "raw_evidence_name": "delivery/docs-ci-static-validation-final.json",
+      "raw_sha256": "dfcc2b4d556c015bc81590724e26411937d434692a48e49280a1080b74d59e0d"
+    },
+    {
+      "raw_evidence_name": "robot/python-freeze-video-hook.json",
+      "raw_sha256": "d0f2cac552ef9d2c63bbd63639a5a3f3b76bbd9b9a4699a924da2ff6f7c6ad11",
+      "summary": {
+        "boundary": "Historical hook freeze; superseded launcher/path tests by python-freeze-path-fix and offline-03"
+      }
+    },
+    {
+      "raw_evidence_name": "robot/video-preflight-07/video-preflight.json",
+      "raw_sha256": "edeb21d473002f6827bc27f8545344d2d0ad96a25338b3fee0c7b537f880d546"
+    },
+    {
+      "raw_evidence_name": "delivery/docs-ci-static-validation-with-video-hook.json",
+      "raw_sha256": "cf738571acd0a4b5ad207895d00a07200f9aeba3263f63e253f956ea87b95e68"
+    },
+    {
+      "raw_evidence_name": "live/final-live-summary.json",
+      "raw_sha256": "1f05b5e4eea2c52bc14f403a92c7ed79baaddcee5c9f1bc95be89cf4831db5fd"
+    },
+    {
+      "raw_evidence_name": "live/retest-run-summary.json",
+      "raw_sha256": "9c9c56a79287ca1e7ffc463803d5ec559fc80feab599decbf72c979f752b1399"
+    },
+    {
+      "raw_evidence_name": "final/offline-03/verification.json",
+      "raw_sha256": "463b8caa66739482001795bfd7a6a82672a34317688f7864b17a98b644a51979"
+    },
+    {
+      "raw_evidence_name": "final/package-frontend/package-verification.json",
+      "raw_sha256": "efed51f99e9195b051a66433421d6c940c2d41f36ca7ded91fb83f77bb8e1403"
+    },
+    {
+      "raw_evidence_name": "robot/python-freeze-path-fix.json",
+      "raw_sha256": "6848bf2293da001e764cad9b1f41027ac28c553d6bca27bcd748390da49cfb2a"
+    },
+    {
+      "raw_evidence_name": "robot/video-path-fix-tests.xml",
+      "raw_sha256": "4e5e40215603807a271fe8cfae3581607dc0782e6ef2359674db4b3b962f3287"
+    },
+    {
+      "raw_evidence_name": "robot/ffmpeg-download-verification.json",
+      "raw_sha256": "d8caf34fe771978979a12c1c8be5abb810ad268f0566d287bce578721621d323"
+    },
+    {
+      "raw_evidence_name": "robot/video-recording-approved-08/pytest.xml",
+      "raw_sha256": "b9774661cfe6cbffcb065c94e73b94f4206e70931ce52825e9b5fc1b453a87f8"
+    },
+    {
+      "raw_evidence_name": "robot/video-recording-approved-08/video-media-probe.json",
+      "raw_sha256": "406512f64f4102b21dbf23138c9d16ca424a8a42b94d4db52db4bebe78d68b87"
+    },
+    {
+      "raw_evidence_name": "reviewer/video-path-closure.json",
+      "raw_sha256": "4c8786d6348c91e7f4e83769045b9a1ac870df91f8147ef63291c334ceca5c97"
+    },
+    {
+      "raw_evidence_name": "reviewer/final-evidence/narrated-final-media-review.json",
+      "raw_sha256": "9dda78bf3c8d3018c3676c0c1d72ac640d6d19738e6e5d0d3098a830bab977ab"
+    },
+    {
+      "raw_evidence_name": "reviewer/final-evidence/final-live-review.json",
+      "raw_sha256": "662fc795f814dd96e51e791ea73aa347c0fd986f9592e12cc56928590dcea457"
+    },
+    {
+      "raw_evidence_name": "reviewer/final-evidence/final-semantic-review.json",
+      "raw_sha256": "18d513e88001f3ab901308301afb02dc4adf5248c2d89aa45026935b91f2948c"
+    },
+    {
+      "raw_evidence_name": "reviewer/final-evidence/package-review.json",
+      "raw_sha256": "d63064c6ac920703c03d323e67fc268c86d1f964f2e89ce399a2072c176cbddc"
+    },
+    {
+      "raw_evidence_name": "reviewer/final-evidence/video08-review.json",
+      "raw_sha256": "86873b0cc536f8adf5095016e69a754acfe5270a13ff2295834728b1f32bff95"
+    },
+    {
+      "raw_evidence_name": "final/scripted-24-final/verification.json",
+      "raw_sha256": "4410e6924f31f72b0ffd580c0923037a50439d79cb6d138bc47cec8e2fab7713"
+    },
+    {
+      "raw_evidence_name": "live/actual/shared-ledger.json",
+      "raw_sha256": "6ac59141d81a738b97908ea2472b6d82bd27667783f567fe2ff5e70f84b8c6b1"
+    }
+  ],
+  "real_robot": {
+    "planned_cases": 11,
+    "completed_scenarios": 11,
+    "normal_consecutive_successes": 3,
+    "state": "scenario_coverage_completed_across_two_batches_independent_AI_review_accepted",
+    "job_terminal_counts": {
+      "succeeded": 4,
+      "needs_review": 5,
+      "needs_user_action": 2
+    },
+    "business_terminal_counts": {
+      "draft_saved": 4,
+      "needs_review": 7
+    },
+    "single_batch_all_green": false,
+    "summary": "robot-summary.json"
+  },
+  "real_model": {
+    "state": "finished_with_remaining_failures_no_third_round",
+    "summary": "real-model-summary.json",
+    "baseline_passed": 6,
+    "first_operational_statuses": {
+      "normal_completed": 0,
+      "correct_refusal": 0,
+      "failed": 5,
+      "not_run": 3,
+      "harness_error": 0,
+      "interrupted": 0
+    },
+    "only_retest_statuses": {
+      "normal_completed": 3,
+      "correct_refusal": 2,
+      "failed": 3,
+      "not_run": 0,
+      "harness_error": 0,
+      "interrupted": 0
+    },
+    "sdk_attempts": 210,
+    "observed_attempts": 210,
+    "unknown_attempts": 0,
+    "reserved_attempts": 0,
+    "observed_upper_rate_estimate_cny": "5.634540",
+    "provider_invoice_verified": false,
+    "human_quality": "pending",
+    "semantic_review": "completed_with_11_findings_not_human_approval",
+    "semantic_summary": "semantic-review-summary.json",
+    "usage_ledger": "model-usage-ledger.json",
+    "prompt_tokens": 2282146,
+    "billable_output_tokens": 133781,
+    "human_body_approval_granted": false,
+    "overall_operational_pass_claim": false
+  },
+  "remote_ci": "not_run",
+  "recorded_video": {
+    "state": "two_raw_synthetic_ui_clips_and_narrated_playback_completed_independent_AI_review_accepted",
+    "raw_summary": "clips/manifest.json",
+    "raw_cases": 2,
+    "raw_test_status": "2 passed in 59.74s",
+    "raw_total_duration_seconds": 56.44,
+    "resolution": [
+      1280,
+      720
+    ],
+    "narrated_video": "clips/narrated-demo.webm",
+    "narrated_manifest": "clips/narrated-manifest.json",
+    "narrated_duration_seconds": 182.12,
+    "complete_narrated_3_to_5_minute_video": true,
+    "continuous_real_business_execution": false,
+    "model_calls": false,
+    "desktop_recorded": false,
+    "rpa_chrome_window_recorded": false,
+    "http_500_independently_proven_by_video": false,
+    "independent_artifact_review": "accepted_limited_scope_by_Independent_AI_Reviewer",
+    "human_approval": false
+  },
+  "third_party_authorization": "project_owner_authorized_this_project_display_and_distribution",
+  "boundaries": [
+    "Dated 2026-11-06 local acceptance snapshot before Git authorization; future publication and CI status belongs to actual PR/GitHub checks.",
+    "Local engineering acceptance does not grant human content approval or real platform acceptance.",
+    "Do not sum tests from different scopes; case counts are not SDK attempt counts.",
+    "210 request usages observed, unknown usage requests 0 and unsettled reservations 0; maximum-rate estimate CNY 5.634540, provider invoice not verified.",
+    "Historical browser 7/7 did not execute real Robot/WebDriver; actual new 11-scenario coverage is separate.",
+    "Original operational 5 failed plus 3 not-run retained; only retest has normal completed 3/4, abnormal correct refusal 2/4, and 3 failures overall.",
+    "Independent AI semantic review found 11 issues; human_quality and actual candidate body approval remain pending."
+  ],
+  "wheel_notice_verified": true,
+  "python_source_frozen": true,
+  "independent_component_review": "code_offline930_frontend24_four_packages_robot11_usage210_semantic_limits_and_media_AI_review_completed",
+  "offline_full_suite": {
+    "snapshot": "final/offline-03",
+    "passed": 930,
+    "skipped": 18,
+    "total": 948,
+    "source_hashes_unchanged": true,
+    "prior_snapshot_02": {
+      "passed": 926,
+      "skipped": 18,
+      "before_four_cli_path_regressions": true
+    },
+    "initial_node_path_environment_failure_retained": true
+  },
+  "package_frontend_summary": "package-frontend-summary.json",
+  "recording_dependency_pending": false,
+  "frozen": true,
+  "snapshot": {
+    "date": "2026-11-06",
+    "phase": "local_acceptance_sealed_before_git_authorization",
+    "meaning": "Dated local acceptance snapshot, not live publication status",
+    "local_engineering_accepted": true,
+    "model_quality_passed": false,
+    "future_publication_and_ci_sources": [
+      "https://github.com/DongRuibo/TestAgent/pulls",
+      "https://github.com/DongRuibo/TestAgent/actions"
+    ]
+  },
+  "git_at_snapshot": {
+    "branch_commit_push_draft_pr_authorized": false,
+    "candidate_committed": false,
+    "integrated_to_original_workspace": false
+  },
+  "real_platform_accepted": false,
+  "human_business_approval_granted": false,
+  "scripted_business_acceptance": {
+    "summary": "demo-summary.json",
+    "passed": 24,
+    "planned": 24,
+    "synthetic_turns": 49,
+    "real_model_calls": false,
+    "content_quality": null,
+    "cost": null
+  },
+  "source_manifest": "source-manifest.json",
+  "source_manifest_sha256": "51c1a34b7cc34c81a769cf16f4a575de1bdde8c34fa42839b58978d5080d280d",
+  "source_manifest_binding": "Status is excluded from the manifest file map to avoid self-reference; SHA256SUMS covers both."
+}

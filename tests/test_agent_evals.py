@@ -272,13 +272,14 @@ def test_interrupt_preserves_partial_case_events_and_usage(tmp_path, monkeypatch
 
     sdk = InterruptingSDK()
     monkeypatch.setattr(runner, "OpenAI", lambda **kwargs: sdk)
-    monkeypatch.setattr(runner.LLMConfig, "from_env", lambda: runner.LLMConfig("synthetic-secret", "offline-interrupt-test"))
+    monkeypatch.setattr(runner.LLMConfig, "from_env", lambda: runner.LLMConfig("synthetic-secret", "offline-interrupt-test", "https://eval.invalid/v1"))
     if scenario == "handler":
         def interrupt_read(*args, **kwargs):
             raise KeyboardInterrupt
         monkeypatch.setattr(runner, "read_file", interrupt_read)
     with pytest.raises(KeyboardInterrupt):
-        runner.run_evaluation(mode="live", case_ids=[case_id, "A06"], report_root=tmp_path)
+        runner.run_evaluation(mode="live", case_ids=[case_id, "A06"], report_root=tmp_path,
+                              approval_path=live_approval(tmp_path), ledger_path=tmp_path / "ledger.json")
     folder = next(tmp_path.glob("live-*"))
     report = json.loads((folder / "report.json").read_text())
     row, future = report["results"]
@@ -302,3 +303,241 @@ def test_interrupt_preserves_partial_case_events_and_usage(tmp_path, monkeypatch
     assert len(records) == sum(len(t["events"]) for t in row["turns"])
     assert all(e["case_id"] == case_id for e in records)
     assert "synthetic-secret" not in json.dumps(report)
+
+
+def live_approval(tmp_path, **changes):
+    value = {"schema_version": 1, "provider": "offline-test", "model": "offline-interrupt-test",
+        "base_url": "https://eval.invalid/v1", "price_source": "https://eval.invalid/pricing",
+        "input_bound_source": "https://eval.invalid/model", "verification_evidence_sha256": "0" * 64,
+        "ledger_path": str(tmp_path / "ledger.json"), "verified_at": "2026-11-06", "input_bound_basis": "离线夹具：不是供应商定价证明",
+        "input_cny_per_million": "2", "output_cny_per_million": "8", "max_input_tokens": 1100000,
+        "max_billable_output_tokens": 1100000, "max_request_bytes": 500000, "max_output_tokens": 8192,
+        "max_attempts": 200, "max_seconds": 3600, "request_timeout_seconds": 30, "max_cny": "20", **changes}
+    path = tmp_path / "approval.json"
+    path.write_text(json.dumps(value), "utf-8")
+    return path
+
+
+def test_live_requires_persisted_budget_before_sdk_construction(tmp_path, monkeypatch):
+    monkeypatch.setattr(runner.LLMConfig, "from_env", lambda: runner.LLMConfig("synthetic", "offline-interrupt-test"))
+    monkeypatch.setattr(runner, "OpenAI", lambda **kw: pytest.fail("预算未复核不能创建网络客户端"))
+    with pytest.raises(ValueError, match="approval"):
+        runner.run_evaluation(mode="live", report_root=tmp_path)
+
+
+def test_budget_is_shared_across_sdk_instances_and_restart(tmp_path):
+    from evals.live_budget import LiveBudget
+    approval = live_approval(tmp_path)
+    ledger = tmp_path / "ledger.json"
+    budget = LiveBudget(approval, ledger, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    request = {"model": "offline-interrupt-test", "messages": []}
+    first = budget.reserve(request, {"runner": "agent"})
+    budget.settle(first, {"prompt_tokens": 20, "completion_tokens": 5, "total_tokens": 25})
+    reopened = LiveBudget(approval, ledger, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    second = reopened.reserve(request, {"runner": "content"})
+    reopened.settle(second, None, "APITimeoutError")
+    assert reopened.snapshot()["sdk_attempts"] == 2
+    assert reopened.snapshot()["committed_upper_cny"] == "11.00008"
+    resumed = LiveBudget(approval, ledger, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    with pytest.raises(runner.BudgetStopped, match="unknown_usage"):
+        resumed.reserve(request, {"runner": "retest"})
+    assert len(resumed.data["attempts"]) == 2
+    assert resumed.data["attempts"][1]["actual_cny"] is None
+
+
+@pytest.mark.parametrize("usage", [None, {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 9},
+    {"prompt_tokens": None, "completion_tokens": 2, "total_tokens": 12}])
+def test_unknown_or_inconsistent_usage_stops_without_zero_cost(tmp_path, usage):
+    from evals.live_budget import LiveBudget
+    budget = LiveBudget(live_approval(tmp_path), tmp_path / "ledger.json",
+                        model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    item = budget.reserve({"model": "offline-interrupt-test", "messages": []}, {})
+    budget.settle(item, usage)
+    assert item["status"] == "unknown" and item["actual_cny"] is None
+    assert str(budget.committed_cny) == "11"
+    with pytest.raises(runner.BudgetStopped):
+        budget.check()
+
+
+def test_reserved_request_survives_process_loss(tmp_path):
+    from evals.live_budget import LiveBudget
+    approval = live_approval(tmp_path)
+    ledger = tmp_path / "ledger.json"
+    first = LiveBudget(approval, ledger, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    first.reserve({"model": "offline-interrupt-test", "messages": []}, {})
+    resumed = LiveBudget(approval, ledger, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    assert resumed.snapshot()["unknown_attempts"] == 1
+    assert resumed.snapshot()["committed_upper_cny"] == "11"
+    with pytest.raises(runner.BudgetStopped, match="unresolved_reserved_attempt"):
+        resumed.check()
+
+
+def test_sdk_boundary_passes_actual_output_cap_and_thinking_flag(tmp_path):
+    from evals.live_budget import LiveBudget
+    budget = LiveBudget(live_approval(tmp_path), tmp_path / "ledger.json",
+                        model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    received = []
+    class Delegate:
+        def __init__(self):
+            self.chat = self.completions = self
+        def create(self, **request):
+            received.append(request)
+            return SimpleNamespace(choices=[SimpleNamespace(message=ChatCompletionMessage(role="assistant", content="READY"))],
+                usage=SimpleNamespace(model_dump=lambda **kw: {"prompt_tokens": 20, "completion_tokens": 5, "total_tokens": 25}))
+    events = []
+    sdk = runner.RecordedSDK(events, Delegate(), budget)
+    sdk.create(model="offline-interrupt-test", messages=[])
+    assert received[0]["max_tokens"] == 8192
+    assert received[0]["extra_body"] == {"enable_thinking": False}
+    assert events[0]["budget_attempt_id"] == 1 and events[0]["actual_cny"] == "0.00008"
+
+
+def test_connection_failure_cannot_hide_retry_or_reuse_reserve(tmp_path):
+    from evals.live_budget import LiveBudget
+    budget = LiveBudget(live_approval(tmp_path), tmp_path / "ledger.json",
+                        model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    class Delegate:
+        def __init__(self):
+            self.chat = self.completions = self
+            self.calls = 0
+        def create(self, **request):
+            self.calls += 1
+            raise runner.APITimeoutError(request=runner.httpx.Request("POST", "https://eval.invalid"))
+    delegate = Delegate()
+    events = []
+    sdk = runner.RecordedSDK(events, delegate, budget)
+    client = runner.RecordedLLM(runner.LLMConfig("synthetic", "offline-interrupt-test"), sdk_client=sdk)
+    with pytest.raises(runner.BudgetStopped, match="unknown_usage"):
+        client.complete([])
+    assert delegate.calls == sum(event["event"] == "sdk_attempt" for event in events) == len(budget.data["attempts"]) == 1
+    assert next(event for event in events if event["event"] == "sdk_attempt")["usage"] is None
+    assert budget.data["attempts"][0]["reserved_cny"] == "11"
+
+
+def test_aggregate_preserves_inconsistent_usage_as_invalid_unknown(evaluated):
+    _, _, report = evaluated
+    row = deepcopy(next(row for row in report["results"] if row["case_id"] == "A01"))
+    attempt = next(event for event in row["turns"][0]["events"] if event["event"] == "sdk_attempt")
+    attempt["usage"] = {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 9}
+    summary = runner.aggregate_agent_results([row], "scripted")
+    assert summary["usage_observed_attempts"] == 0
+    assert summary["usage_invalid_attempts"] == summary["usage_missing_attempts"] == 1
+    assert summary["observed_token_usage"] is summary["cost_cny"] is None
+    assert attempt["usage"]["total_tokens"] == 9
+
+
+def test_invalid_usage_is_saved_and_stops_later_case_without_becoming_pass(tmp_path, monkeypatch):
+    class InvalidUsageSDK:
+        def __init__(self):
+            self.chat = self.completions = self
+            self.calls = 0
+            self.closed = False
+        def create(self, **request):
+            self.calls += 1
+            return SimpleNamespace(choices=[SimpleNamespace(message=ChatCompletionMessage(role="assistant", content="READY"))],
+                usage=SimpleNamespace(model_dump=lambda **kw: {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 9}))
+        def close(self):
+            self.closed = True
+    sdk = InvalidUsageSDK()
+    monkeypatch.setattr(runner, "OpenAI", lambda **kw: sdk)
+    monkeypatch.setattr(runner.LLMConfig, "from_env", lambda: runner.LLMConfig("synthetic", "offline-interrupt-test", "https://eval.invalid/v1"))
+    output, report = runner.run_evaluation(mode="live", case_ids=["A01", "A02"], report_root=tmp_path / "reports",
+        approval_path=live_approval(tmp_path), ledger_path=tmp_path / "ledger.json")
+    assert sdk.calls == 1 and sdk.closed
+    saved = json.loads((output / "report.json").read_text())
+    assert saved["results"][0]["status"] == "failed"
+    assert saved["results"][0]["turns"][0]["score"]["checks"]["usage_complete"] is False
+    assert saved["results"][1]["status"] == "not_run" and saved["results"][1]["not_run_reason"] == "unknown_usage"
+    assert saved["summary"]["usage_observed_attempts"] == 0
+    assert saved["summary"]["usage_invalid_attempts"] == saved["summary"]["usage_missing_attempts"] == 1
+    assert saved["summary"]["cost_cny"] is saved["summary"]["observed_token_usage"] is None
+    assert saved["summary"]["shared_budget"]["committed_upper_cny"] == "11"
+    assert saved["summary"]["shared_budget"]["unknown_attempts"] == 1
+    event = next(json.loads(line) for line in (output / "events.jsonl").read_text().splitlines()
+                 if json.loads(line)["event"] == "sdk_attempt")
+    assert event["usage"] == {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 9}
+
+
+@pytest.mark.parametrize("finish_reason", [None, "stop", "tool_calls", "length"])
+def test_sdk_preserves_actual_finish_reason_without_inference(finish_reason):
+    class Delegate:
+        def __init__(self): self.chat = self.completions = self
+        def create(self, **request):
+            choice = SimpleNamespace(message=ChatCompletionMessage(role="assistant", content="即将保存，但没有工具调用。"))
+            if finish_reason is not None:
+                choice.finish_reason = finish_reason
+            return SimpleNamespace(choices=[choice], usage=None)
+    events = []
+    runner.RecordedSDK(events, Delegate()).create(model="offline", messages=[])
+    assert events[0]["finish_reason"] == finish_reason
+
+
+def quota_fixture(tmp_path):
+    from evals.live_budget import LiveBudget
+    root = tmp_path / "evidence"
+    root.mkdir()
+    path = live_approval(root, max_attempts=100, max_seconds=1800, ledger_path=str(root / "actual/shared-ledger.json"))
+    path.rename(root / "proposed-approval.json")
+    budget = LiveBudget(root / "proposed-approval.json", root / "actual/shared-ledger.json",
+        model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    for _ in range(100):
+        item = budget.reserve({"model": "offline-interrupt-test", "messages": []}, {})
+        budget.settle(item, {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12})
+    with pytest.raises(runner.BudgetStopped, match="sdk_attempt_limit"):
+        budget.check()
+    report = root / "actual/results/offline-first-batch"
+    report.mkdir(parents=True)
+    for name in ("manifest.json", "report.json", "report.md", "events.jsonl"):
+        (report / name).write_text("original-byte-snapshot\n", "utf-8")
+    return root, budget
+
+
+def test_quota_proposal_and_one_apply_preserve_history_clock_money_and_reports(tmp_path):
+    from evals import revise_acceptance_quota as revision
+    from evals.live_budget import LiveBudget
+    root, budget = quota_fixture(tmp_path)
+    approval_path, ledger_path = root / "proposed-approval.json", root / "actual/shared-ledger.json"
+    approval_bytes, ledger_bytes = approval_path.read_bytes(), ledger_path.read_bytes()
+    old = json.loads(ledger_bytes)
+    proposal = tmp_path / "proposal"
+    manifest = revision.prepare(root, proposal)
+    assert approval_path.read_bytes() == approval_bytes and ledger_path.read_bytes() == ledger_bytes
+    assert manifest["status"] == "proposal_only_not_applied"
+    assert manifest["revision"]["applies_from_attempt_id"] == 101
+    assert manifest["revision"]["case_runs"] == [{"case_id": f"L{i:02}", "repetition": rep} for rep in (1, 2) for i in range(1, 5)]
+    assert (proposal / "first-batch-snapshot/proposed-approval.json").read_bytes() == approval_bytes
+    assert (proposal / "first-batch-snapshot/shared-ledger.json").read_bytes() == ledger_bytes
+    receipt = revision.apply(proposal)
+    new = json.loads(ledger_path.read_text())
+    assert receipt["status"] == "applied_no_model_called" and new["attempts"] == old["attempts"]
+    assert new["started_at_epoch"] == old["started_at_epoch"]
+    assert new["approval"]["max_attempts"] == 300 and new["approval"]["max_seconds"] == 3600
+    assert {key for key in new["approval"] if new["approval"][key] != old["approval"][key]} == {"max_attempts", "max_seconds"}
+    reopened = LiveBudget(approval_path, ledger_path, model="offline-interrupt-test", base_url="https://eval.invalid/v1")
+    assert reopened.committed_cny == budget.committed_cny and len(reopened.data["attempts"]) == 100
+    next_item = reopened.reserve({"model": "offline-interrupt-test", "messages": []}, {})
+    assert next_item["attempt_id"] == 101
+    with pytest.raises(ValueError): revision.apply(proposal)
+    assert (root / "actual/results/offline-first-batch/report.json").read_text() == "original-byte-snapshot\n"
+
+
+@pytest.mark.parametrize("corruption", ["unknown", "reserved", "other_halt", "clock_expired", "price_tampered"])
+def test_quota_revision_refuses_unknown_unapproved_change_or_expired_original_clock(tmp_path, monkeypatch, corruption):
+    from evals import revise_acceptance_quota as revision
+    root, _ = quota_fixture(tmp_path)
+    path = root / "actual/shared-ledger.json"
+    data = json.loads(path.read_text())
+    if corruption in {"unknown", "reserved"}: data["attempts"][0]["status"] = corruption
+    elif corruption == "other_halt": data["halted_reason"] = "unknown_usage"
+    elif corruption == "clock_expired": data["started_at_epoch"] -= 4000
+    elif corruption == "price_tampered": data["approval"]["input_cny_per_million"] = "1"
+    path.write_text(json.dumps(data), "utf-8")
+    original = path.read_bytes()
+    proposal = tmp_path / "proposal"
+    if corruption == "clock_expired":
+        revision.prepare(root, proposal)
+        with pytest.raises(ValueError, match="3600"):
+            revision.apply(proposal)
+    else:
+        with pytest.raises(ValueError): revision.prepare(root, proposal)
+    assert path.read_bytes() == original

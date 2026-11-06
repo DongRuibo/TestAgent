@@ -1,0 +1,39 @@
+{
+  "initial_missing_encoder_preflight": {
+    "revision": "1011",
+    "download_urls": [
+      "https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-mac-arm64.zip",
+      "https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-mac-arm64.zip",
+      "https://cdn.playwright.dev/builds/ffmpeg/1011/ffmpeg-mac-arm64.zip"
+    ],
+    "executable_ready": false,
+    "model": "synthetic",
+    "source": "synthetic",
+    "platform": "loopback",
+    "browser_started": false,
+    "download_performed": false,
+    "captured_surface": "本地合成FastAPI UI页面；不录桌面、其他程序或RPA Chrome窗口",
+    "playwright_version": "1.62.0",
+    "expected_cache_structure": "PLAYWRIGHT_BROWSERS_PATH/ffmpeg-1011/ffmpeg-mac",
+    "installation_marker_name": "INSTALLATION_COMPLETE",
+    "raw_preflight_name": "robot/video-preflight-07/video-preflight.json",
+    "raw_preflight_sha256": "edeb21d473002f6827bc27f8545344d2d0ad96a25338b3fee0c7b537f880d546",
+    "recorded_video_files": [],
+    "encoder_download_requires_separate_authorization": true
+  },
+  "current_encoder_binary_ready": true,
+  "encoder_download_authorization": "explicitly_granted",
+  "recording_authorization": "explicitly_granted",
+  "current_recording_state": "two_raw_clips_and_narrated_playback_completed_and_AI_review_accepted",
+  "raw_binary_verification_name": "robot/ffmpeg-download-verification.json",
+  "raw_binary_verification_sha256": "d8caf34fe771978979a12c1c8be5abb810ad268f0566d287bce578721621d323",
+  "recorded_video_files": [
+    "clips/normal-edit-review/raw.webm",
+    "clips/recovery/raw.webm"
+  ],
+  "recording_manifest": "clips/manifest.json",
+  "narrated_video": "clips/narrated-demo.webm",
+  "narrated_manifest": "clips/narrated-manifest.json",
+  "narrated_duration_seconds": 182.12,
+  "independent_media_review": "accepted_limited_scope_by_Independent_AI_Reviewer_not_human_approval"
+}

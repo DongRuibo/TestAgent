@@ -1,0 +1,38 @@
+{
+  "clips": [
+    {
+      "name": "normal-edit-review",
+      "video": "normal-edit-review/raw.webm",
+      "manifest": "normal-edit-review/manifest.json",
+      "duration_seconds": 28.28,
+      "resolution": [
+        1280,
+        720
+      ],
+      "bytes": 1854168,
+      "sha256": "c4420ab79f28ad0ebf80569c44db5b1edaf9a3ed754b3adf59db55de4ae45dc0"
+    },
+    {
+      "name": "recovery",
+      "video": "recovery/raw.webm",
+      "manifest": "recovery/manifest.json",
+      "duration_seconds": 28.16,
+      "resolution": [
+        1280,
+        720
+      ],
+      "bytes": 1844448,
+      "sha256": "1dd4cd18a3d0f3f79fc031a91487428a158c930a0d8073d66734da7c4899d0cf"
+    }
+  ],
+  "total_duration_seconds": 56.44,
+  "total_video_bytes": 3698616,
+  "model_calls": false,
+  "real_robot_executed": true,
+  "rpa_window_recorded": false,
+  "desktop_recorded": false,
+  "complete_3_to_5_minute_edited_video": false,
+  "test_result": "2 passed in 59.74s",
+  "raw_junit_name": "robot/video-recording-approved-08/pytest.xml",
+  "raw_junit_sha256": "b9774661cfe6cbffcb065c94e73b94f4206e70931ce52825e9b5fc1b453a87f8"
+}

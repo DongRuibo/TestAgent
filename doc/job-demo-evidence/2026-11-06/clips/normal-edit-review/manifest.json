@@ -1,0 +1,68 @@
+{
+  "case": "test_real_ui_to_robot_success_three_times[1]",
+  "model": "synthetic",
+  "source": "synthetic",
+  "platform": "loopback",
+  "captured_surface": "Only local synthetic FastAPI UI; no desktop, other programs, personal Profile or RPA Chrome window",
+  "video": "raw.webm",
+  "video_sha256": "c4420ab79f28ad0ebf80569c44db5b1edaf9a3ed754b3adf59db55de4ae45dc0",
+  "bytes": 1854168,
+  "duration_seconds": 28.28,
+  "resolution": [
+    1280,
+    720
+  ],
+  "original_video_unmodified": true,
+  "screenshot": "after-refresh.png",
+  "screenshot_sha256": "353e36f8a323664a63b87237559227682fae21e7e675768408a873b8bdd2a3e4",
+  "screenshot_source": "Synthetic UI only; no personal account or credential data",
+  "pytest_status": "passed",
+  "job_id": "91aa302c-b872-4042-ba91-59c9f877f7d2",
+  "execution_id": "40c5228a-c8d9-44ab-aeb9-bb3927d5fcb8",
+  "job_status": "succeeded",
+  "business_status": "draft_saved",
+  "jobs_count": 1,
+  "confirmed_dialogs": [
+    "确认执行“保存修改为新版本”吗？",
+    "确认执行“保存本版本审核”吗？",
+    "确认执行“确认保存小红书草稿”吗？"
+  ],
+  "readback_verification": {
+    "draft_reopened": true,
+    "fields": {
+      "title": {
+        "expected": "合成收纳验收",
+        "actual": "合成收纳验收",
+        "matched": true
+      },
+      "body": {
+        "expected": "先观察动线，再安排收纳位置。\n\n#收纳 #动线",
+        "actual": "先观察动线，再安排收纳位置。\n\n#收纳 #动线",
+        "matched": true
+      },
+      "image_count": {
+        "expected": 1,
+        "actual": 1,
+        "matched": true
+      },
+      "tags": {
+        "expected": [
+          "#收纳",
+          "#动线"
+        ],
+        "actual": [
+          "#收纳",
+          "#动线"
+        ],
+        "matched": true
+      }
+    }
+  },
+  "final_publish_performed": false,
+  "raw_manifest_sha256": "a588ea34af98962f7b8bdccafd98795a51baca404d48c7abe2f1182321e30c2e",
+  "raw_acceptance_sha256": "19704fcddf80058385ae71a25fd597020475b616cb1753e76a5850706e6baecf",
+  "raw_manifest_name": "robot/video-recording-approved-08/test_real_ui_to_robot_success_three_times[1]/video-manifest.json",
+  "robot_xml_summary": "robot-xml-summary.json",
+  "not_a_complete_narrated_3_to_5_minute_video": true,
+  "fault_injection": null
+}

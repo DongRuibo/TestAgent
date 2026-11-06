@@ -7,7 +7,7 @@ on:
       - "contracts/web-capability-openapi.yaml"
       - ".github/workflows/web-capability-ci.yml"
   push:
-    branches: [main]
+    branches: [main, codex/job-demo-acceptance]
     paths:
       - "services/web-capability/**"
       - "contracts/web-capability-openapi.yaml"

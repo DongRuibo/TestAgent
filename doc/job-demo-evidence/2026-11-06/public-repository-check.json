@@ -1,0 +1,14 @@
+{
+  "verified_date": "2026-11-06",
+  "repository": "DongRuibo/TestAgent",
+  "visibility": "public",
+  "default_branch": "main",
+  "feature_branch": "codex/personal-agent-monorepo",
+  "feature_sha": "b5a970dbbe66225fab63f4e4c2c0bd6911e67bc0",
+  "method": "Read-only existing GitHub connector get_repo and branch GET",
+  "tracked_distribution_scope": [
+    "生成式ui/lazyai-generation-ui-vue-0.5.2.tgz",
+    "apps/dev-agent/src/web_agent/static/generation-ui/"
+  ],
+  "permission_or_license_changed": false
+}

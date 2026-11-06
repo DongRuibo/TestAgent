@@ -1,0 +1,12 @@
+{
+  "wheel": "testagent_dev_agent-0.1.0-py3-none-any.whl",
+  "wheel_sha256": "0962abaeb1d6dc98d9ee749ddf10ccb74754b6fd0e034dd57cdb5ff31c479ca4",
+  "notice_entry": "web_agent/THIRD_PARTY_NOTICES.txt",
+  "notice_sha256": "c66cddcb64831f91956a71fa0805261911572ff503b9444ffce1afa593c23ed8",
+  "notice_matches_source_bytes": true,
+  "bundle_original_hashes_preserved": 3,
+  "offline_build_in_temporary_source_copy": true,
+  "published": false,
+  "final_package_source_files_matched": 75,
+  "verification_source": "package-frontend-summary.json"
+}

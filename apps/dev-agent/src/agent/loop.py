@@ -834,11 +834,50 @@ class AgentLoop:
         if browser_message is not None:
             messages.append(browser_message)
         messages.append({"role": "user", "content": model_task})
-        receipt.estimated_context_chars = estimate_messages_chars(messages)
+        tool_definitions_chars = (
+            len(json.dumps(run_tools, ensure_ascii=False, separators=(",", ":")))
+            if run_tools else 0
+        )
+        receipt.estimated_context_chars = estimate_messages_chars(messages) + tool_definitions_chars
         # print(f"初始消息：{messages}")
 
         for step in range(1, run_max_steps + 1):
             ensure_running()
+            # 普通和流式请求共用预算闸门；只移除最旧完整历史轮次，保留本轮证据与工具链。
+            estimated_before = estimate_messages_chars(messages) + tool_definitions_chars
+            receipt.estimated_context_chars = estimated_before
+            trimmed_count = 0
+            while (
+                receipt.estimated_context_chars > self.context_config.context_max_chars
+                and receipt.history_message_count
+            ):
+                del messages[1:3]
+                receipt.history_message_count -= 2
+                receipt.history_omitted_count += 2
+                trimmed_count += 2
+                receipt.estimated_context_chars = estimate_messages_chars(messages) + tool_definitions_chars
+            over_budget = receipt.estimated_context_chars > self.context_config.context_max_chars
+            receipt.budget_checks.append({
+                "step": step,
+                "context_max_chars": self.context_config.context_max_chars,
+                "estimated_chars_before": estimated_before,
+                "estimated_context_chars": receipt.estimated_context_chars,
+                "tool_definitions_chars": tool_definitions_chars,
+                "history_trimmed_count": trimmed_count,
+                "history_message_count": receipt.history_message_count,
+                "history_omitted_count": receipt.history_omitted_count,
+                "status": "budget_exceeded" if over_budget else "within_budget",
+                "stop_reason": "required_context_exceeds_budget" if over_budget else None,
+            })
+            if trimmed_count:
+                self._log(f"Context: Step {step} 总预算裁剪 {trimmed_count} 条历史消息")
+            if over_budget:
+                raise RuntimeError(
+                    "上下文预算不足：保留本轮任务、证据与工具调用链后，"
+                    f"估算 {receipt.estimated_context_chars} 字符（含工具定义），"
+                    f"上限 {self.context_config.context_max_chars}；"
+                    "字符估算并非精确 token，已停止调用模型。"
+                )
             self._log(f"Step {step}: 调用模型")
             model_started = time.perf_counter()
             try:
@@ -871,7 +910,7 @@ class AgentLoop:
                     raise RuntimeError("模型既没有返回文本，也没有调用工具。")
                 self._log(f"Step {step}: 模型给出最终回答")
                 ensure_running()
-                receipt.estimated_context_chars = estimate_messages_chars(messages[:-1])
+                receipt.estimated_context_chars = estimate_messages_chars(messages[:-1]) + tool_definitions_chars
                 if (
                     self.memory is not None
                     and generation_ui_event is None
@@ -941,7 +980,7 @@ class AgentLoop:
                     result=result,
                 )
                 receipt.tool_result_count += 1
-                receipt.estimated_context_chars = estimate_messages_chars(messages)
+                receipt.estimated_context_chars = estimate_messages_chars(messages) + tool_definitions_chars
                 # print(f"当前消息：{messages}")
                 self._log_tool_result(step, name, result)
 

@@ -1,0 +1,210 @@
+{
+  "planned_browser_cases": 11,
+  "completed_scenarios": 11,
+  "normal_consecutive_successes": 3,
+  "scenario_evidence": [
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[missing_body]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_robot_failure_states_keep_original_job[missing_body]/acceptance.json",
+      "receipt_sha256": "131cdea7299f0b0dfc96d2e230a5484735ed7e38d4bf55f6ecd642088e460fd4",
+      "robot_output_sha256": "2a554c474b601e0e4d8a5f4bcb1809ceba492317d76d61f32165da76f3cf61e9",
+      "job_status": "needs_review",
+      "business_status": "needs_review",
+      "job_id": "2075789d-56a6-4cf7-b8d3-fea327a32bc3",
+      "execution_id": "0f1417cc-6ab4-4f00-af9f-13921f24bbcc",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[missing_image]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_robot_failure_states_keep_original_job[missing_image]/acceptance.json",
+      "receipt_sha256": "3686bb904d9199bc75b515d7059c34eabb7a0b4e8f7f773143163f370e6793d4",
+      "robot_output_sha256": "8e5ed0e2cc1c12a0879ca62539bfc86dbea35b721b3cfdc740f035dc29b3f58e",
+      "job_status": "needs_review",
+      "business_status": "needs_review",
+      "job_id": "05c774d4-481e-4348-abaf-6eab2bb4be6c",
+      "execution_id": "fe50d896-cdf4-4a9e-bb7b-f3b91ca311f5",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[missing_tags]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_robot_failure_states_keep_original_job[missing_tags]/acceptance.json",
+      "receipt_sha256": "2ba698e32d3540adc34c6b36fd1f0e6cf80902716884e085f645d33bf068e259",
+      "robot_output_sha256": "e58a4c2eda6d9f7b81721f664e241c70cc8cf0cd12866ce8564afab46ec79bb4",
+      "job_status": "needs_review",
+      "business_status": "needs_review",
+      "job_id": "e85367c6-1cb1-4212-ad74-b371c4a1da17",
+      "execution_id": "da846b7a-8ddc-47a5-9cda-64ba57a783e0",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[same_title]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_robot_failure_states_keep_original_job[same_title]/acceptance.json",
+      "receipt_sha256": "c03d6dca5b5e82e6487843dbd111f1009c254ba838b92ad7af5b0a301b215a66",
+      "robot_output_sha256": "863563f06115bf8b5dde826430faa27ace53100b43ec7d203b1687b23838d791",
+      "job_status": "needs_review",
+      "business_status": "needs_review",
+      "job_id": "19297824-a9f8-4ade-8248-9176a48cd29f",
+      "execution_id": "47fd0819-ed3a-4e2c-90ae-ad6d1a9fa4b0",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[save_timeout]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_robot_failure_states_keep_original_job[save_timeout]/acceptance.json",
+      "receipt_sha256": "fa4629bc1eefb3ce662284829f14d20100c5e078b41ae85b77c143e4454e1821",
+      "robot_output_sha256": "ba5cc0018071a969bb5cfa3116fcd816e0ee21d66b707ff34b8a0d205ea3a55f",
+      "job_status": "needs_review",
+      "business_status": "needs_review",
+      "job_id": "bfbb573d-e5ba-4ae1-ba0e-2abfb3b82ada",
+      "execution_id": "4a6d2666-d364-42cc-9a61-10a75ded39e1",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_ui_to_robot_success_three_times[1]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_ui_to_robot_success_three_times[1]/acceptance.json",
+      "receipt_sha256": "4277cd3bc2316deea154c28d25ca9e459a08000f1cb810d8e55f7811af6d4450",
+      "robot_output_sha256": "38f9f0688c86d6f74c7e4267bb4ca237a770711aa45f8abe6ba98902e403eeca",
+      "job_status": "succeeded",
+      "business_status": "draft_saved",
+      "job_id": "c64e246c-a393-4b80-9c25-0f9758a942c3",
+      "execution_id": "1891af04-1041-4624-973f-ae1aa2443f38",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_ui_to_robot_success_three_times[2]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_ui_to_robot_success_three_times[2]/acceptance.json",
+      "receipt_sha256": "c33b9de823e63e648c3eeb8931258387e8ac92436fb967e8e3a5d02116cd192d",
+      "robot_output_sha256": "4f24e8cb161507ed3241a798224e9834f6ebca2cf015ca09f9aadd776b10813c",
+      "job_status": "succeeded",
+      "business_status": "draft_saved",
+      "job_id": "cfcf3ea7-cb19-47c7-9a1a-7709dc3aca96",
+      "execution_id": "c587c326-faaf-4230-b313-3eeb543a9b2e",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_ui_to_robot_success_three_times[3]",
+      "batch": "browser-full-after-confirm-04",
+      "receipt": "browser-full-after-confirm-04/test_real_ui_to_robot_success_three_times[3]/acceptance.json",
+      "receipt_sha256": "3ef1c1650d322e00d6a6194f4c467bb27b9620af9e5a94d97f2de23acdc9d621",
+      "robot_output_sha256": "4a790821cd6869ca63e8ab4e1689aadf9afa971bda5f51790e1b3185b1446804",
+      "job_status": "succeeded",
+      "business_status": "draft_saved",
+      "job_id": "ae555e6e-6917-4b04-9916-490183966190",
+      "execution_id": "f9fd5917-ac1c-4d55-b108-adb86359818a",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[challenge]",
+      "batch": "browser-remaining-after-xml-status-05",
+      "receipt": "browser-remaining-after-xml-status-05/test_real_robot_failure_states_keep_original_job[challenge]/acceptance.json",
+      "receipt_sha256": "e4078c377c6ca258ecff052208dfa81a66c41cac27203d29ad9a4164db21fb95",
+      "robot_output_sha256": "9907c195ba089a0e98c48a95e4b25b8166a1606c2d6454feda0841b8c9c544f7",
+      "job_status": "needs_user_action",
+      "business_status": "needs_review",
+      "job_id": "179f74d1-5665-45ac-831d-703603e9eb88",
+      "execution_id": "42f7476f-5596-4f77-9971-cdc7059e357d",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_failure_states_keep_original_job[no_login]",
+      "batch": "browser-remaining-after-xml-status-05",
+      "receipt": "browser-remaining-after-xml-status-05/test_real_robot_failure_states_keep_original_job[no_login]/acceptance.json",
+      "receipt_sha256": "cce2b17afcec74001d00aec11427f0c143a624a1536fd2df161c1427192b8c2e",
+      "robot_output_sha256": "f6a1958eb42467e2f79d94c29bff191f98e8606007a3c4f02bb33053a1a50d2c",
+      "job_status": "needs_user_action",
+      "business_status": "needs_review",
+      "job_id": "61f61867-bdba-4ba6-89f2-a8af19c93600",
+      "execution_id": "096bf623-192f-4054-a85d-c876841934e9",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    },
+    {
+      "case": "test_real_robot_success_then_failed_business_write_recovers_without_replay",
+      "batch": "browser-remaining-after-xml-status-05",
+      "receipt": "browser-remaining-after-xml-status-05/test_real_robot_success_then_failed_business_write_recovers_without_replay/acceptance.json",
+      "receipt_sha256": "0fc607f6795d239337713be3c568af83f3af7b50b0d860f4af5dadd940a27dba",
+      "robot_output_sha256": "f4c8cd58308edb577789a788e9ff1af3195ecdddbc9ed88d4a29f10e0890f8e7",
+      "job_status": "succeeded",
+      "business_status": "draft_saved",
+      "job_id": "c59a37bd-9769-4476-9d39-ea7d059d5513",
+      "execution_id": "fef12839-77ee-41fa-8aa2-ea6bb6d18282",
+      "confirmed_dialogs": [
+        "确认执行“保存修改为新版本”吗？",
+        "确认执行“保存本版本审核”吗？",
+        "确认执行“确认保存小红书草稿”吗？"
+      ]
+    }
+  ],
+  "job_terminal_counts": {
+    "needs_review": 5,
+    "succeeded": 4,
+    "needs_user_action": 2
+  },
+  "business_terminal_counts": {
+    "needs_review": 7,
+    "draft_saved": 4
+  },
+  "batches": {
+    "browser-full-after-confirm-04": "8 browser scenarios passed plus 3 offline admissions; no_login assertion failed because Robot includes NOT RUN nodes. Original failed JUnit retained.",
+    "browser-remaining-after-xml-status-05": "Only no_login, challenge, writeback rerun after correcting status interpretation; 3 passed. Successful original 8 not rerun."
+  },
+  "earlier_failed_runs_retained": [
+    "browser-actual-01/interrupted-summary.json",
+    "browser-diagnosis-02/pytest.xml"
+  ],
+  "boundary": "Real FastAPI static UI confirmations, production save adapter/module/Robot/Selenium/WebDriver, loopback synthetic creator. Synthetic upstream/model, no real account. Verify title/body/hashtag text/image count only. UI requests captured; Chrome global background network not audited.",
+  "screenshot_limitation": "04 full-page UI screenshots may show older v1 because of nested scroller; DB/Robot receipts verified. 05 scrolls latest card before capture; no dedicated rerun for earlier screenshots.",
+  "single_batch_all_green": false,
+  "independent_final_review": "accepted_limited_scope_by_Independent_AI_Reviewer",
+  "local_acceptance_frozen": true,
+  "snapshot": {
+    "date": "2026-11-06",
+    "phase": "local_acceptance_sealed_before_git_authorization",
+    "real_platform_accepted": false
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "case": "test_real_robot_success_then_failed_business_write_recovers_without_replay",
+  "model": "synthetic",
+  "source": "synthetic",
+  "platform": "loopback",
+  "captured_surface": "Only local synthetic FastAPI UI; no desktop, other programs, personal Profile or RPA Chrome window",
+  "video": "raw.webm",
+  "video_sha256": "1dd4cd18a3d0f3f79fc031a91487428a158c930a0d8073d66734da7c4899d0cf",
+  "bytes": 1844448,
+  "duration_seconds": 28.16,
+  "resolution": [
+    1280,
+    720
+  ],
+  "original_video_unmodified": true,
+  "screenshot": "after-refresh.png",
+  "screenshot_sha256": "353e36f8a323664a63b87237559227682fae21e7e675768408a873b8bdd2a3e4",
+  "screenshot_source": "Synthetic UI only; no personal account or credential data",
+  "pytest_status": "passed",
+  "job_id": "994cf3a7-41a8-458a-a24e-9ee3fb7221db",
+  "execution_id": "db82566a-b0ef-4c31-99e6-002b6a368044",
+  "job_status": "succeeded",
+  "business_status": "draft_saved",
+  "jobs_count": 1,
+  "confirmed_dialogs": [
+    "确认执行“保存修改为新版本”吗？",
+    "确认执行“保存本版本审核”吗？",
+    "确认执行“确认保存小红书草稿”吗？"
+  ],
+  "readback_verification": {
+    "draft_reopened": true,
+    "fields": {
+      "title": {
+        "expected": "合成收纳验收",
+        "actual": "合成收纳验收",
+        "matched": true
+      },
+      "body": {
+        "expected": "先观察动线，再安排收纳位置。\n\n#收纳 #动线",
+        "actual": "先观察动线，再安排收纳位置。\n\n#收纳 #动线",
+        "matched": true
+      },
+      "image_count": {
+        "expected": 1,
+        "actual": 1,
+        "matched": true
+      },
+      "tags": {
+        "expected": [
+          "#收纳",
+          "#动线"
+        ],
+        "actual": [
+          "#收纳",
+          "#动线"
+        ],
+        "matched": true
+      }
+    }
+  },
+  "final_publish_performed": false,
+  "raw_manifest_sha256": "226422e1fdc99bbfcbf7ad24e97e8185087ed0d07e047ad979070d836006be55",
+  "raw_acceptance_sha256": "11b3b0b350dc9238a99ce18ad846364da25ad584212737b5d128683fdd9144c1",
+  "raw_manifest_name": "robot/video-recording-approved-08/test_real_robot_success_then_failed_business_write_recovers_without_replay/video-manifest.json",
+  "robot_xml_summary": "robot-xml-summary.json",
+  "not_a_complete_narrated_3_to_5_minute_video": true,
+  "fault_injection": "Actual SQLite writeback failure after Robot success, followed by production query recovery without replay"
+}

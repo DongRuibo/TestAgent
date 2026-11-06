@@ -1,0 +1,64 @@
+{
+  "raw_verification_name": "final/package-frontend/package-verification.json",
+  "raw_verification_sha256": "efed51f99e9195b051a66433421d6c940c2d41f36ca7ded91fb83f77bb8e1403",
+  "frontend": {
+    "passed": 24,
+    "failed": 0,
+    "all_three_bundles_byte_identical": true,
+    "baseline_bundle_sha256": {
+      "auto-CrB1VfOs.js": "d127f5595da118e1635f9f4aa3773d7c4f5372128c47b2dbb5d09fc866b3d78d",
+      "generation-ui.css": "1c88354c038ff14a50aa97041ebfd84977109ae21d7a040b7a37206f9a140b22",
+      "generation-ui.js": "9fd10fff3aa99207c79ee84950a0f1c101ad3be5d179c561148823461afb2898"
+    },
+    "rebuilt_bundle_sha256": {
+      "auto-CrB1VfOs.js": "d127f5595da118e1635f9f4aa3773d7c4f5372128c47b2dbb5d09fc866b3d78d",
+      "generation-ui.css": "1c88354c038ff14a50aa97041ebfd84977109ae21d7a040b7a37206f9a140b22",
+      "generation-ui.js": "9fd10fff3aa99207c79ee84950a0f1c101ad3be5d179c561148823461afb2898"
+    },
+    "lock_files_unchanged": true,
+    "installed_or_downloaded_dependencies": false
+  },
+  "packages": [
+    {
+      "package": "apps/dev-agent",
+      "source_files": 75,
+      "python_files": 60,
+      "robot_files": 0,
+      "tests_not_packaged": true,
+      "published": false,
+      "wheel": {
+        "filename": "testagent_dev_agent-0.1.0-py3-none-any.whl",
+        "sha256": "0962abaeb1d6dc98d9ee749ddf10ccb74754b6fd0e034dd57cdb5ff31c479ca4",
+        "bytes": 1043230,
+        "all_production_sources_match_candidate": true
+      },
+      "sdist": {
+        "filename": "testagent_dev_agent-0.1.0.tar.gz",
+        "sha256": "1d105974dacdff9742d80820ecd7d7e2ca320b7c22e0b53cd6a22082fea9267e",
+        "bytes": 999572,
+        "all_production_sources_match_candidate": true
+      }
+    },
+    {
+      "package": "packages/rpa-agent-module",
+      "source_files": 18,
+      "python_files": 15,
+      "robot_files": 3,
+      "tests_not_packaged": true,
+      "published": false,
+      "wheel": {
+        "filename": "rpa_agent_module-0.1.1-py3-none-any.whl",
+        "sha256": "bb352c060187c37da88938be70dae03af780814e4760f2c46841b844a099496c",
+        "bytes": 43304,
+        "all_production_sources_match_candidate": true
+      },
+      "sdist": {
+        "filename": "rpa_agent_module-0.1.1.tar.gz",
+        "sha256": "ded851ef6c4689d8849d2d4681ab87c3367a83db17460a21a335b1ffa11dfa70",
+        "bytes": 33019,
+        "all_production_sources_match_candidate": true
+      }
+    }
+  ],
+  "published": false
+}

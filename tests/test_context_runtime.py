@@ -6,6 +6,7 @@ import pytest
 
 from agent.context import (
     MemoryRecallPolicy,
+    estimate_messages_chars,
     select_completed_history,
     serialize_tool_result,
 )
@@ -80,3 +81,19 @@ def test_long_tool_result_becomes_valid_json_preview() -> None:
     assert payload["original_chars"] > 1000
     assert len(serialized) <= 1000
     assert payload["preview"]
+
+
+def test_context_estimate_counts_serialized_tool_arguments_and_message_fields() -> None:
+    messages = [
+        {"role": "user", "content": "中文及引号\""},
+        {"role": "assistant", "tool_calls": [{
+            "id": "call_1", "type": "function",
+            "function": {"name": "read_file", "arguments": '{"path":"示例.md"}'},
+        }]},
+        {"role": "tool", "tool_call_id": "call_1", "content": '{"success":true}'},
+    ]
+
+    assert estimate_messages_chars(messages) == len(
+        json.dumps(messages, ensure_ascii=False, separators=(",", ":"))
+    )
+    assert estimate_messages_chars(messages) > sum(len(item.get("content", "")) for item in messages)

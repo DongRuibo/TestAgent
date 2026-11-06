@@ -1,0 +1,489 @@
+{
+  "base_sha": "b5a970dbbe66225fab63f4e4c2c0bd6911e67bc0",
+  "scope": "Frontend runtime lock entries and bundled JS/CSS/fonts; Python dependencies remain separate distributions, not a complete transitive license audit.",
+  "tgz": {
+    "path": "生成式ui/lazyai-generation-ui-vue-0.5.2.tgz",
+    "sha256": "002e8d678c5242fccc6d6ff6a6674c5e374e62ffb3f5222024c87b80476d1e14",
+    "license_metadata": "UNLICENSED",
+    "archive_entries": 14,
+    "license_notice_files": [],
+    "first_local_commit": "63383b3",
+    "public_scope": "public DongRuibo/TestAgent branch codex/personal-agent-monorepo at baseline, checked by root via GitHub connector on 2026-11-06"
+  },
+  "lock_sha256": "bb8abba4c11ce85e481baa44ad3541d869ce7572d58680adddcc354c7a805d99",
+  "runtime_components": [
+    {
+      "package": "@babel/helper-string-parser",
+      "version": "7.29.7",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-117da2af0d4c.txt",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "package": "@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-117da2af0d4c.txt",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "package": "@babel/parser",
+      "version": "7.29.8",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-2e97627cb278.txt",
+          "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
+        }
+      ]
+    },
+    {
+      "package": "@babel/types",
+      "version": "7.29.8",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-117da2af0d4c.txt",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "package": "@jridgewell/sourcemap-codec",
+      "version": "1.5.5",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-769d154fbde3.txt",
+          "sha256": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c"
+        }
+      ]
+    },
+    {
+      "package": "@kurkle/color",
+      "version": "0.3.4",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-89ba00327314.txt",
+          "sha256": "89ba0032731489153d552db918b727feb05128cf9eca20092875a9ad14147671"
+        }
+      ]
+    },
+    {
+      "package": "@lazyai/generation-ui-vue",
+      "version": "0.5.2",
+      "license_metadata": "UNLICENSED",
+      "notices": []
+    },
+    {
+      "package": "@primeuix/styled",
+      "version": "0.7.4",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-c6e70ce414f6.txt",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "package": "@primeuix/styles",
+      "version": "2.0.3",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-c6e70ce414f6.txt",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "package": "@primeuix/themes",
+      "version": "1.2.5",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-c6e70ce414f6.txt",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "package": "@primeuix/utils",
+      "version": "0.6.4",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-c6e70ce414f6.txt",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "package": "@primevue/core",
+      "version": "4.5.5",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-39a2ce8d759c.txt",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "package": "@primevue/icons",
+      "version": "4.5.5",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-39a2ce8d759c.txt",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "package": "@vue/compiler-core",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/compiler-dom",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/compiler-sfc",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/compiler-ssr",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/reactivity",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/runtime-core",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/runtime-dom",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/server-renderer",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "@vue/shared",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "package": "chart.js",
+      "version": "4.5.1",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-41a84aa2caba.txt",
+          "sha256": "41a84aa2caba645f966a18d9c2056b73e6d3a81d80bc0046bc0011a2634d4cce"
+        }
+      ]
+    },
+    {
+      "package": "csstype",
+      "version": "3.2.3",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-11d55bd4541c.txt",
+          "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e"
+        }
+      ]
+    },
+    {
+      "package": "entities",
+      "version": "7.0.1",
+      "license_metadata": "BSD-2-Clause",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/bsd-2-clause-cb992345949c.txt",
+          "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164"
+        }
+      ]
+    },
+    {
+      "package": "estree-walker",
+      "version": "2.0.2",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-8a6dcbabe717.txt",
+          "sha256": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e"
+        }
+      ]
+    },
+    {
+      "package": "magic-string",
+      "version": "0.30.21",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1cbe51b90766.txt",
+          "sha256": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484"
+        }
+      ]
+    },
+    {
+      "package": "nanoid",
+      "version": "3.3.18",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-da4db1480d9b.txt",
+          "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987"
+        }
+      ]
+    },
+    {
+      "package": "picocolors",
+      "version": "1.1.1",
+      "license_metadata": "ISC",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/isc-6582629e2979.txt",
+          "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750"
+        }
+      ]
+    },
+    {
+      "package": "postcss",
+      "version": "8.5.26",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-5be1f3465bba.txt",
+          "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        }
+      ]
+    },
+    {
+      "package": "primeicons",
+      "version": "7.0.0",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-140e5886a54d.txt",
+          "sha256": "140e5886a54d897d852dbf7eeffd2c464467eddfcb04374241f90c61658493bd"
+        }
+      ]
+    },
+    {
+      "package": "primevue",
+      "version": "4.5.5",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-39a2ce8d759c.txt",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "package": "source-map-js",
+      "version": "1.2.1",
+      "license_metadata": "BSD-3-Clause",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/bsd-3-clause-6cb0631f71c7.txt",
+          "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd"
+        }
+      ]
+    },
+    {
+      "package": "vue",
+      "version": "3.5.41",
+      "license_metadata": "MIT",
+      "notices": [
+        {
+          "path": "doc/job-demo-evidence/2026-11-06/licenses/mit-1bb85cc9b13b.txt",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    }
+  ],
+  "bundled_assets": [
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/auto-CrB1VfOs.js",
+      "sha256": "d127f5595da118e1635f9f4aa3773d7c4f5372128c47b2dbb5d09fc866b3d78d",
+      "bytes": 289106
+    },
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/generation-ui.css",
+      "sha256": "1c88354c038ff14a50aa97041ebfd84977109ae21d7a040b7a37206f9a140b22",
+      "bytes": 928940
+    },
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/generation-ui.js",
+      "sha256": "9fd10fff3aa99207c79ee84950a0f1c101ad3be5d179c561148823461afb2898",
+      "bytes": 1383061
+    }
+  ],
+  "embedded_font_urls": [
+    {
+      "mime": "data:application/vnd.ms-fontobject",
+      "sha256": "987f23eadfa70c603276a71c3c975c8d0534d9c719d8a6e3d965005e7b93747b",
+      "bytes": 85156,
+      "source_files": [
+        "primeicons.eot"
+      ],
+      "comparison": "exact_bytes"
+    },
+    {
+      "mime": "data:application/vnd.ms-fontobject",
+      "sha256": "987f23eadfa70c603276a71c3c975c8d0534d9c719d8a6e3d965005e7b93747b",
+      "bytes": 85156,
+      "source_files": [
+        "primeicons.eot"
+      ],
+      "comparison": "exact_bytes"
+    },
+    {
+      "mime": "data:font/woff2",
+      "sha256": "9eea6e0bcb974ec568fdcb1eec182d3b5383a3a23899a690140b2c0167886882",
+      "bytes": 35148,
+      "source_files": [
+        "primeicons.woff2"
+      ],
+      "comparison": "exact_bytes"
+    },
+    {
+      "mime": "data:font/woff",
+      "sha256": "f5d1d2195e05b8085953aa7d50b2e77070cd1120e0100a8600771aa5ba11a01e",
+      "bytes": 85056,
+      "source_files": [
+        "primeicons.woff"
+      ],
+      "comparison": "exact_bytes"
+    },
+    {
+      "mime": "data:font/ttf",
+      "sha256": "dc895fee9f3ce1b0eaf16b4b9fab20077fc2981e6c0b332e4c97c176832fc05b",
+      "bytes": 84980,
+      "source_files": [
+        "primeicons.ttf"
+      ],
+      "comparison": "exact_bytes"
+    },
+    {
+      "mime": "data:image/svg+xml",
+      "sha256": "b56f5e4885ab5fc06fca05fb961fb5a0ea2a700b85fe003f7c6f3fa6b406c3d3",
+      "bytes": 342183,
+      "source_files": [
+        "primeicons.svg"
+      ],
+      "comparison": "xml_elements_and_attributes_only; metadata whitespace and quotes transformed, not byte-identical"
+    }
+  ],
+  "dev_agent_wheel": {
+    "filename": "testagent_dev_agent-0.1.0-py3-none-any.whl",
+    "sha256": "0962abaeb1d6dc98d9ee749ddf10ccb74754b6fd0e034dd57cdb5ff31c479ca4",
+    "build": "final offline package validation; all 75 production source files match candidate; not published",
+    "bundled_assets": [
+      "web_agent/static/generation-ui/auto-CrB1VfOs.js",
+      "web_agent/static/generation-ui/generation-ui.css",
+      "web_agent/static/generation-ui/generation-ui.js"
+    ],
+    "license_notice_entries": [
+      "web_agent/THIRD_PARTY_NOTICES.txt"
+    ],
+    "requires_dist": [
+      "fastapi<1,>=0.115",
+      "httpx<1,>=0.27",
+      "httpx2<3,>=2.5",
+      "mcp==2.0.0",
+      "openai<3,>=1.0",
+      "python-dotenv<2,>=1.0",
+      "pyyaml<7,>=6",
+      "rpa-agent-module<0.2,>=0.1",
+      "testagent-sandbox-gateway<0.2,>=0.1",
+      "uvicorn<1,>=0.30"
+    ],
+    "source_files_matched": 75,
+    "verification_source": "package-frontend-summary.json"
+  },
+  "authorization_status": "project_owner_authorized_this_project_display_and_distribution",
+  "authorization_basis": "distribution-authorization.json; project owner statement in current conversation, 2026-11-06",
+  "package_license_metadata_unchanged": true,
+  "authorization_is_not_general_relicensing": true
+}

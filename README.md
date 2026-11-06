@@ -1,30 +1,56 @@
 # TestAgent
 
-这个仓库以 Monorepo 方式维护 Agent Runtime、Sandbox Gateway 和 Web Capability，
-用于不依赖 Agent 框架、从底层实现并验证一个个人助手 Agent。
+自研 Agent 运行时，以**需要人工审批的内容运营**作为核心业务案例：从目标与研究、
+周计划到单条图文版本审核，再到草稿任务关联与异常对账。重点展示工具契约、上下文、
+成本观测和可恢复的业务状态，不执行最终发布。
 
 当前默认版本是 **V2：单进程多工具个人助手 Agent**。模型可以在对话中调用本地文件、
 代码沙箱、表格分析、公开网页、知识库和受控业务工作流。Code、表格和 Browser 工具在
 Agent 进程内直连腾讯 AGSX，搜索直连 Tavily，不需要启动本项目自己的 Gateway 或 Web
 Capability Service。两个服务及其 SDK 仍保留在仓库中，供多 Agent 复用或后续恢复服务化部署。
 
-## 内容运营闭环开发批次（2026-11-05）
+## 从这里查看
 
-在已有研究与 Markdown 周计划之后，新增单条图文制作、编辑与版本审核、草稿执行关联、
-只读对账及人工处置。经用户授权后，已按原锁文件安装前端依赖并构建静态产物，
-前端测试24/24、本地Chrome合成UI验收8/8、本地模拟创作后台浏览器验收7/7。
-真实模型生成质量、Robot+WebDriver完整执行链、真实小红书页面保存及远程 CI 尚未验收。
-本轮源码冻结后的离线全量验证为 **894 项通过、7 项浏览器用例跳过**；
-最新业务固定评测为 **24/24**，评分器复审修复新增78项反例验证。
-独立源码与离线边界复审已完成，五项既有审查问题关闭；新增前端与本地浏览器验收批也已独立复审通过，无剩余实际阻断。
-默认全量中的7项跳过与随后显式浏览器7项通过分别记录，不相加为新的全量通过数。
+- [求职展示验收](doc/求职展示验收.md)：本人模块与外部组件、离线复现、三条演示脚本和 3–5 分钟录屏提纲。
+- [可分享证据索引](doc/job-demo-evidence/2026-11-06/README.md)：逐项状态、报告口径、人工评分及尚未执行项。
+- [两段原始合成UI短片](doc/job-demo-evidence/2026-11-06/clips/README.md)：正常/版本编辑审核与恢复，合计56.44秒，非3–5分钟完整成片。
+- [约3分钟讲解成片](doc/job-demo-evidence/2026-11-06/clips/narrated-demo.webm)：182.12秒，内含两段原始UI录像回放；不是一段连续真实业务执行。
+- [内容运营实现与验收](doc/内容运营实现与验收.md)：上一批实现和历史验证明细。
+- [第三方组件与分发边界](THIRD_PARTY_NOTICES.md)：Generation UI 元数据仍为 `UNLICENSED`，项目负责人已明确允许本项目公开展示和分发。
 
-本次 Git 最小提交候选验证为 **868 项通过、7 项默认跳过**；开发工作区此前的 894 项通过另含本次排除的独立 Runtime 测试。
+本人维护运行时、工具适配、业务版本审批、SQLite 执行关联、对账及评测；模型推理、
+AGSX/E2B 云沙箱、Tavily、独立 Memory/RAG 服务及Robot/Selenium/Chrome为所依赖能力。
+Generation UI为本项目复用渲染组件，本轮实现桥接与业务卡片，未在本轮实现组件引擎；不据包名推断既往作者身份。
 
-实现范围、三条演示路径、验证命令和待确认项见[内容运营实现与验收](doc/内容运营实现与验收.md)。
-业务评测入口为 `python -m evals.content_runner`，24 个固定用例明确使用合成模型与平台替身，
-其中 N02 贯通真实目标确认、研究保存、周计划校验、正文审核和 RPA 适配器；
-通过率不能解释为真实模型任务成功率或内容质量。
+本页记录 **2026-11-06本地验收封板、Git操作前的快照**，基于 `b5a970dbbe66225fab63f4e4c2c0bd6911e67bc0`，
+文件按manifest的SHA256绑定。该快照阶段，分支/提交/推送/Draft PR尚待用户授权，尚无本轮远程CI结果；
+后续发布与检查状态以[仓库PR](https://github.com/DongRuibo/TestAgent/pulls)及[GitHub Actions](https://github.com/DongRuibo/TestAgent/actions)为准。
+历史 **868 通过 / 7 跳过**对应上一批 Git 最小候选；**894 / 7**对应包含独立 Runtime
+测试的更大历史工作区；另行显式浏览器 **7/7**仅验证本地模拟页面与 Library 读回，
+没有经过真实 Robot 子进程及 WebDriver，不能合并为整链通过数。
+本轮新增 Robot 整链 11 项默认不运行，连同旧 7 项在本地默认共 18 项浏览器跳过；
+真实 Robot 整链已按原计划覆盖 11 个回环模拟场景，正常连续 3 次通过；先后两批分别完成 8 项和 3 项，
+中间的测试断言失败与首轮中断记录保留，没有一份“单批全绿”的报告。
+真实模型基础文件工具链 6/6；原运营 8 次中 5 次失败、3 次未运行。唯一一次集中复测 8 次全部运行，
+结果为正常完成 3、正确拒绝 2、失败 3；原失败分母保留，不合并为运营整体通过或模型成熟的结论。
+210次请求用量均已观测，未知用量请求0、未结预留0；按高峰未缓存单价估算5.634540元，未核供应商账单。
+独立AI语义复核标出11处待核，不是人类审批；人工内容质量仍待确认，不能宣称quality passed。
+最终离线全量03为 930 通过 / 18 浏览器跳过（948项）；926/18为新增4项CLI路径回归前的历史02。
+两段已获授权的合成UI原始录屏也已完成，均1280×720；不录桌面或RPA Chrome窗口，配对原Job/XML回执。
+另有182.12秒中文讲解成片回放上述原片，非连续真实业务执行；这些证据不包含真实平台保存。
+代码、本地验证、逐次用量与成片已获Independent AI Reviewer限定接受，本地验收已封板；该结论不替代人类内容审批。
+逐次可复算用量见[210条去敏账本](doc/job-demo-evidence/2026-11-06/model-usage-ledger.json)，
+11处内容问题见[AI语义复核摘要](doc/job-demo-evidence/2026-11-06/semantic-review-summary.json)。
+
+已有依赖下，从仓库根目录执行以下离线命令，不读 `.env`、不调用收费模型或下载浏览器：
+
+```bash
+PYTHON_DOTENV_DISABLED=1 PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m pytest -p no:cacheprovider tests packages/rpa-agent-module/tests
+PYTHON_DOTENV_DISABLED=1 PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m evals.content_runner --output-dir artifacts/evals/job-demo-scripted
+```
+
+最终24例固定业务评测24/24，49轮均为合成模型、来源与平台替身；真实用量、内容质量和成本评分均为空，不与210次真实SDK请求合并。`read_file` 基线评测仅证明基础工具
+调用链。用例数、模型轮数、SDK 尝试次数和费用分别记录，不据此宣称真实质量或成本。
 
 ## 当前目录
 
@@ -75,11 +101,13 @@ Capability Service。两个服务及其 SDK 仍保留在仓库中，供多 Agent
 项目使用 Python 3.11+ 和 `uv`：
 
 ```bash
-uv sync
+uv sync --locked --offline
 cp .env.example .env
 ```
 
 然后编辑 `.env`：
+
+离线依赖缓存不足时安装会停止；联网安装和下文真实服务演示需另行配置与授权。
 
 ```dotenv
 OPENAI_API_KEY=你的密钥

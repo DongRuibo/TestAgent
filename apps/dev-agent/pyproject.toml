@@ -31,4 +31,4 @@ testagent = "testagent_dev_agent.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-web_agent = ["static/*", "static/generation-ui/*"]
+web_agent = ["static/*", "static/generation-ui/*", "THIRD_PARTY_NOTICES.txt"]

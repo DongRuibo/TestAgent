@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
@@ -449,6 +450,206 @@ def test_agent_trims_history_by_complete_turn_budget() -> None:
     assert agent.last_context_receipt is not None
     assert agent.last_context_receipt.history_message_count == 2
     assert agent.last_context_receipt.history_omitted_count == 2
+
+
+@pytest.mark.parametrize("streaming", [False, True])
+def test_agent_stops_before_request_for_oversized_initial_task(streaming: bool) -> None:
+    client = (FakeStreamingLLMClient if streaming else FakeLLMClient)([FakeMessage("不应请求")])
+    agent = AgentLoop(
+        client, trace=None, tool_handlers={},
+        context_config=ContextConfig(context_max_chars=4_000),
+    )
+    options = {"on_answer_delta": lambda _: None, "is_cancelled": lambda: False} if streaming else {}
+
+    with pytest.raises(RuntimeError, match="上下文预算不足.*已停止调用模型"):
+        agent.run("本轮必要输入" * 1_000, **options)
+
+    assert client.requests == []
+    receipt = agent.last_context_receipt.to_dict()
+    assert receipt["model_calls"] == []
+    assert receipt["context_estimation_method"] == "serialized_chars_not_tokens"
+    assert receipt["budget_checks"][0]["status"] == "budget_exceeded"
+    assert receipt["budget_checks"][0]["stop_reason"] == "required_context_exceeds_budget"
+    assert receipt["estimated_context_chars"] > 4_000
+
+
+def test_agent_counts_actual_tool_definitions_before_initial_request() -> None:
+    client = FakeLLMClient([FakeMessage("不应请求")])
+    definition = {
+        "type": "function", "function": {
+            "name": "read_file", "description": "工具说明" * 2_000,
+            "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
+        },
+    }
+    agent = AgentLoop(
+        client, trace=None,
+        tool_definitions={"read_file": definition},
+        tool_handlers={"read_file": lambda path: {"success": True}},
+        context_config=ContextConfig(context_max_chars=6_000),
+    )
+
+    with pytest.raises(RuntimeError, match="上下文预算不足"):
+        agent.run("短任务", history=[
+            {"role": "user", "content": "旧问题"},
+            {"role": "assistant", "content": "旧回答"},
+        ])
+
+    assert client.requests == []
+    check = agent.last_context_receipt.budget_checks[0]
+    assert check["tool_definitions_chars"] == len(json.dumps([definition], ensure_ascii=False, separators=(",", ":")))
+    assert check["history_trimmed_count"] == check["history_omitted_count"] == 2
+    assert check["history_message_count"] == 0
+
+
+@pytest.mark.parametrize("streaming", [False, True])
+def test_agent_prunes_oldest_complete_history_as_tool_results_accumulate(streaming: bool) -> None:
+    client = (FakeStreamingLLMClient if streaming else FakeLLMClient)([
+        FakeMessage(None, [make_tool_call(arguments='{"path":"one.md"}', call_id="one")]),
+        FakeMessage(None, [make_tool_call(arguments='{"path":"two.md"}', call_id="two")]),
+        FakeMessage("完成"),
+    ])
+    history = [
+        {"role": "user", "content": "旧问题" + "x" * 1_000},
+        {"role": "assistant", "content": "旧回答" + "x" * 1_000},
+        {"role": "user", "content": "新问题" + "x" * 1_000},
+        {"role": "assistant", "content": "新回答" + "x" * 1_000},
+    ]
+    agent = AgentLoop(
+        client, trace=None,
+        tool_handlers={"read_file": lambda path: {"success": True, "content": path + "x" * 2_200}},
+        context_config=ContextConfig(context_max_chars=10_000),
+    )
+    options = {"on_answer_delta": lambda _: None, "is_cancelled": lambda: False} if streaming else {}
+
+    assert agent.run("本轮任务", history=history, **options) == "完成"
+
+    assert client.requests[0][1:5] == history
+    assert client.requests[1][1:3] == history[2:]
+    assert client.requests[2][1] == {"role": "user", "content": "本轮任务"}
+    assert [m["tool_call_id"] for m in client.requests[2] if m["role"] == "tool"] == ["one", "two"]
+    receipt = agent.last_context_receipt
+    assert [item["history_trimmed_count"] for item in receipt.budget_checks] == [0, 2, 2]
+    assert receipt.history_message_count == 0
+    assert receipt.history_omitted_count == 4
+    for request, tools, check in zip(client.requests, client.tool_requests, receipt.budget_checks):
+        actual_chars = len(json.dumps(request, ensure_ascii=False, separators=(",", ":"))) + len(json.dumps(tools, ensure_ascii=False, separators=(",", ":")))
+        assert check["estimated_context_chars"] == actual_chars <= 10_000
+
+
+@pytest.mark.parametrize("streaming", [False, True])
+def test_agent_preserves_multi_tool_group_when_history_is_removed(streaming: bool) -> None:
+    client = (FakeStreamingLLMClient if streaming else FakeLLMClient)([
+        FakeMessage(None, [
+            make_tool_call(arguments='{"path":"one.md"}', call_id="one"),
+            make_tool_call(arguments='{"path":"two.md"}', call_id="two"),
+        ]),
+        FakeMessage("完成"),
+    ])
+    agent = AgentLoop(
+        client, trace=None,
+        tool_handlers={"read_file": lambda path: {"success": True, "source": path, "content": "x" * 1_300}},
+        context_config=ContextConfig(context_max_chars=9_000),
+    )
+    options = {"on_answer_delta": lambda _: None, "is_cancelled": lambda: False} if streaming else {}
+
+    assert agent.run("本轮任务", history=[
+        {"role": "user", "content": "旧问题" + "x" * 2_000},
+        {"role": "assistant", "content": "旧回答" + "x" * 2_000},
+    ], **options) == "完成"
+
+    request = client.requests[1]
+    assert [item["role"] for item in request] == ["system", "user", "assistant", "tool", "tool"]
+    assert [call["id"] for call in request[2]["tool_calls"]] == ["one", "two"]
+    assert [item["tool_call_id"] for item in request[3:]] == ["one", "two"]
+    assert [json.loads(item["content"])["source"] for item in request[3:]] == ["one.md", "two.md"]
+    assert agent.last_context_receipt.budget_checks[1]["history_trimmed_count"] == 2
+
+
+def test_agent_keeps_memory_attachments_and_current_web_evidence_when_pruning() -> None:
+    client = FakeLLMClient([
+        FakeMessage(None, [make_tool_call()]),
+        FakeMessage("完成"),
+    ])
+    memory = FakeMemory()
+    agent = AgentLoop(
+        client, trace=None, memory=memory, attachment_filenames=("当前附件.pdf",),
+        tool_handlers={
+            "read_file": lambda path: {"success": True, "content": "x" * 3_000},
+            "search_knowledge_base": lambda query: {"success": True, "content": "附件关键来源"},
+            "browse_public_page": lambda url: {"success": True, "source_url": url, "content": "当前网页关键来源"},
+        },
+        context_config=ContextConfig(context_max_chars=11_000),
+    )
+    task = "总结这个附件，打开 https://example.com/current ，沿用之前偏好。"
+
+    assert agent.run(task, history=[
+        {"role": "user", "content": "旧问题" + "x" * 2_000},
+        {"role": "assistant", "content": "旧回答" + "x" * 2_000},
+    ]) == "完成"
+
+    assert agent.last_context_receipt.budget_checks[1]["history_trimmed_count"] == 2
+    assert client.requests[1][0] == client.requests[0][0]
+    assert client.requests[1][1:5] == client.requests[0][3:7]
+    assert "用户偏好中文回答" in client.requests[1][1]["content"]
+    assert "附件关键来源" in client.requests[1][2]["content"]
+    assert "当前网页关键来源" in client.requests[1][3]["content"]
+    assert client.requests[1][4] == {"role": "user", "content": task}
+
+
+@pytest.mark.parametrize("streaming", [False, True])
+@pytest.mark.parametrize("growth", ["arguments", "results"])
+def test_agent_stops_without_extra_request_when_required_tool_context_exceeds_budget(streaming: bool, growth: str) -> None:
+    responses = [FakeMessage(None, [make_tool_call(
+        arguments=json.dumps({"path": "x" * 7_000 if growth == "arguments" else "one.md"}),
+        call_id="one",
+    )])]
+    if growth == "results":
+        responses.append(FakeMessage(None, [make_tool_call(arguments='{"path":"two.md"}', call_id="two")]))
+    responses.append(FakeMessage("不应请求"))
+    client = (FakeStreamingLLMClient if streaming else FakeLLMClient)(responses)
+    handled = []
+    agent = AgentLoop(
+        client, trace=None,
+        tool_handlers={"read_file": lambda path: handled.append(path) or {"success": True, "content": "x" * (2_600 if growth == "results" else 1)}},
+        context_config=ContextConfig(context_max_chars=9_000),
+    )
+    options = {"on_answer_delta": lambda _: None, "is_cancelled": lambda: False} if streaming else {}
+
+    with pytest.raises(RuntimeError, match="上下文预算不足"):
+        agent.run("本轮任务", history=[
+            {"role": "user", "content": "旧问题" + "x" * 500},
+            {"role": "assistant", "content": "旧回答" + "x" * 500},
+        ], **options)
+
+    expected_calls = 2 if growth == "results" else 1
+    assert len(client.requests) == len(handled) == expected_calls
+    receipt = agent.last_context_receipt
+    assert len(receipt.model_calls) == receipt.tool_result_count == expected_calls
+    assert len(receipt.budget_checks) == expected_calls + 1
+    assert receipt.budget_checks[-1]["status"] == "budget_exceeded"
+    assert receipt.budget_checks[-1]["estimated_context_chars"] > 9_000
+    assert receipt.history_message_count == 0
+    assert receipt.history_omitted_count == 2
+
+
+def test_agent_honors_explicit_large_context_and_tool_result_limits() -> None:
+    client = FakeLLMClient([
+        FakeMessage(None, [make_tool_call()]),
+        FakeMessage("完成"),
+    ])
+    task = "本轮必要资料" * 8_000
+    agent = AgentLoop(
+        client, trace=None,
+        tool_handlers={"read_file": lambda path: {"success": True, "content": "x" * 50_000}},
+        context_config=ContextConfig(context_max_chars=180_000, tool_result_max_chars=100_000),
+    )
+
+    assert agent.run(task) == "完成"
+
+    assert client.requests[0][-1]["content"] == task
+    assert json.loads(client.requests[1][-1]["content"])["content"] == "x" * 50_000
+    assert all(check["context_max_chars"] == 180_000 for check in agent.last_context_receipt.budget_checks)
+    assert 40_000 < agent.last_context_receipt.estimated_context_chars <= 180_000
 
 
 def test_agent_degrades_when_memory_is_unavailable() -> None:
