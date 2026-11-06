@@ -17,6 +17,8 @@ pub struct SearchUsageEvent {
 
 #[async_trait]
 pub trait UsageLogger: Send + Sync {
+    // async_trait 会重复添加 must_use；Future 本身的未使用检查仍然保留。
+    #[allow(clippy::double_must_use)]
     async fn log(&self, event: SearchUsageEvent);
 }
 

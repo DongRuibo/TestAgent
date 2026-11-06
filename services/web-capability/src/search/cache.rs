@@ -17,7 +17,10 @@ pub struct CachedSearch {
 
 #[async_trait]
 pub trait SearchCache: Send + Sync {
+    // async_trait 会重复添加 must_use；这里只豁免两个异步方法的重复提示。
+    #[allow(clippy::double_must_use)]
     async fn get(&self, key: &str) -> Option<CachedSearch>;
+    #[allow(clippy::double_must_use)]
     async fn put(&self, key: String, value: CachedSearch);
 }
 
