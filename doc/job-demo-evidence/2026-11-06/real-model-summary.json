@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "state": "finished_with_remaining_failures_no_third_round",
+  "baseline": {
+    "statuses": {
+      "passed": 6,
+      "failed": 0,
+      "harness_error": 0,
+      "interrupted": 0,
+      "not_run": 0
+    },
+    "groups": {
+      "normal": {
+        "mechanical_success_numerator": 5,
+        "planned_denominator": 5,
+        "executed": 5,
+        "not_run": 0,
+        "failed": 0,
+        "statuses": {
+          "passed": 5
+        }
+      },
+      "abnormal": {
+        "mechanical_success_numerator": 1,
+        "planned_denominator": 1,
+        "executed": 1,
+        "not_run": 0,
+        "failed": 0,
+        "statuses": {
+          "passed": 1
+        }
+      }
+    },
+    "sdk_attempts": 13
+  },
+  "first_operational_batch": {
+    "planned": 8,
+    "statuses": {
+      "normal_completed": 0,
+      "correct_refusal": 0,
+      "failed": 5,
+      "not_run": 3,
+      "harness_error": 0,
+      "interrupted": 0
+    },
+    "groups": {
+      "normal": {
+        "mechanical_success_numerator": 0,
+        "planned_denominator": 4,
+        "executed": 3,
+        "not_run": 1,
+        "failed": 3,
+        "statuses": {
+          "failed": 3,
+          "not_run": 1
+        }
+      },
+      "abnormal": {
+        "mechanical_success_numerator": 0,
+        "planned_denominator": 4,
+        "executed": 2,
+        "not_run": 2,
+        "failed": 2,
+        "statuses": {
+          "failed": 2,
+          "not_run": 2
+        }
+      }
+    },
+    "sdk_attempts": 87
+  },
+  "only_operational_retest": {
+    "planned": 8,
+    "statuses": {
+      "normal_completed": 3,
+      "correct_refusal": 2,
+      "failed": 3,
+      "not_run": 0,
+      "harness_error": 0,
+      "interrupted": 0
+    },
+    "groups": {
+      "normal": {
+        "mechanical_success_numerator": 3,
+        "planned_denominator": 4,
+        "executed": 4,
+        "not_run": 0,
+        "failed": 1,
+        "statuses": {
+          "failed": 1,
+          "normal_completed": 3
+        }
+      },
+      "abnormal": {
+        "mechanical_success_numerator": 2,
+        "planned_denominator": 4,
+        "executed": 4,
+        "not_run": 0,
+        "failed": 2,
+        "statuses": {
+          "correct_refusal": 2,
+          "failed": 2
+        }
+      }
+    },
+    "sdk_attempts": 110
+  },
+  "billing": {
+    "currency": "CNY",
+    "basis": "provider usage multiplied by reviewed maximum uncached rates, not invoice",
+    "input_per_million": "2",
+    "output_per_million": "8",
+    "user_total_ceiling": "20",
+    "total_sdk_attempts": 210,
+    "observed_attempts": 210,
+    "unknown_attempts": 0,
+    "reserved_attempts": 0,
+    "first_batch_estimate": "2.478504",
+    "only_retest_estimate": "3.156036",
+    "total_estimate": "5.634540",
+    "unknown_reserved_cny": "0",
+    "ceiling_exceeded": false,
+    "halted_reason": null,
+    "all_210_consistent_usage": true
+  },
+  "audit": {
+    "original_start_preserved": true,
+    "first_100_attempts_preserved": true,
+    "quota_revision_count": 1,
+    "old_limits": {
+      "max_attempts": 100,
+      "max_seconds": 1800
+    },
+    "new_limits": {
+      "max_attempts": 300,
+      "max_seconds": 3600
+    },
+    "first_reports_and_archive_byte_hashes_match": true
+  },
+  "remaining_failures": [
+    {
+      "case_id": "L04",
+      "repetition": 1,
+      "status": "failed",
+      "sdk_attempts": 5,
+      "context_stops": [],
+      "last_sdk_finish_reason": "stop",
+      "last_sdk_had_tool_calls": false,
+      "root_cause": "最后响应finish_reason=stop，只有声称保存的文本、没有保存tool_calls；研究未保存。模型未越权请求/执行，但工作完成条件失败；不能当截断、正确完成或真实研究验收通过。"
+    },
+    {
+      "case_id": "L01",
+      "repetition": 2,
+      "status": "failed",
+      "sdk_attempts": 6,
+      "context_stops": [
+        {
+          "step": 7,
+          "context_max_chars": 40000,
+          "estimated_chars_before": 41177,
+          "estimated_context_chars": 41177,
+          "tool_definitions_chars": 9280,
+          "history_trimmed_count": 0,
+          "history_message_count": 0,
+          "history_omitted_count": 0,
+          "status": "budget_exceeded",
+          "stop_reason": "required_context_exceeds_budget"
+        }
+      ],
+      "last_sdk_finish_reason": "tool_calls",
+      "last_sdk_had_tool_calls": true,
+      "root_cause": "研究保存参数修正成功后，原40000字符上下文闸门拦下收尾模型调用；实际研究已保存，宿主记录Agent中断，未继续周计划。不是费用/SDK请求上限，也不是模型把资料不足作为明确拒绝。"
+    },
+    {
+      "case_id": "L03",
+      "repetition": 2,
+      "status": "failed",
+      "sdk_attempts": 5,
+      "context_stops": [
+        {
+          "step": 6,
+          "context_max_chars": 40000,
+          "estimated_chars_before": 42457,
+          "estimated_context_chars": 42457,
+          "tool_definitions_chars": 9280,
+          "history_trimmed_count": 0,
+          "history_message_count": 0,
+          "history_omitted_count": 0,
+          "status": "budget_exceeded",
+          "stop_reason": "required_context_exceeds_budget"
+        }
+      ],
+      "last_sdk_finish_reason": "tool_calls",
+      "last_sdk_had_tool_calls": true,
+      "root_cause": "研究保存参数修正成功后，原40000字符上下文闸门拦下收尾模型调用；实际研究已保存，宿主记录Agent中断，未继续周计划。不是费用/SDK请求上限，也不是模型把资料不足作为明确拒绝。"
+    }
+  ],
+  "comparison_boundary": "首轮与复测分别报告，不合并成一个成功率。结果变化同时含制作输入/schema/反馈澄清、模型调用波动、原先3项未运行及请求/时间上限修订，不能把变化全归因于源码。不是受控因果A/B实验。",
+  "human_quality": null,
+  "human_quality_status": "pending",
+  "ai_semantic_review_status": "completed_with_11_findings_not_human_approval",
+  "sources": "synthetic",
+  "real_platform_executed": false,
+  "overall_operational_pass_claim": false,
+  "raw_reports": [
+    {
+      "raw_report_name": "live/actual/results/agent/live-20261106T122652Z-09c2bd89/report.json",
+      "raw_report_sha256": "1288c8e86e85577204443d75e97f30a49d53be6b3b51c9d1cb066fdde0a8deb0"
+    },
+    {
+      "raw_report_name": "live/actual/results/live-20261106T122703Z-91513222/report.json",
+      "raw_report_sha256": "5533488986d9ee0b8e62bd9e8a371e0f3992d16b347328a2296ddfebb4e8876e"
+    },
+    {
+      "raw_report_name": "live/actual/retest-results/live-20261106T125402Z-434c1cea/report.json",
+      "raw_report_sha256": "ed6a38c42023364971f05225e7f3f4d2c5ddd3e6149a38017d6038ed3f9cc27d"
+    },
+    {
+      "raw_report_name": "live/final-live-summary.json",
+      "raw_report_sha256": "1f05b5e4eea2c52bc14f403a92c7ed79baaddcee5c9f1bc95be89cf4831db5fd"
+    },
+    {
+      "raw_report_name": "live/retest-run-summary.json",
+      "raw_report_sha256": "9c9c56a79287ca1e7ffc463803d5ec559fc80feab599decbf72c979f752b1399"
+    }
+  ],
+  "semantic_review_summary": "semantic-review-summary.json",
+  "model_usage_ledger": "model-usage-ledger.json",
+  "semantic_finding_categories": [
+    "unsupported generalization",
+    "causal assertions",
+    "absolute assertions"
+  ],
+  "local_acceptance_frozen": true,
+  "provider_invoice_verified": false
+}

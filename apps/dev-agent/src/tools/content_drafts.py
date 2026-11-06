@@ -14,8 +14,10 @@ SAVE_DRAFT_TOOL = "save_content_draft_candidate"
 
 class DraftClaim(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    text: str = Field(min_length=1, max_length=1500)
-    source_refs: list[str] = Field(min_length=1, max_length=10)
+    text: str = Field(min_length=1, max_length=1500,
+        description="必须逐字复制本次body中实际存在的事实原句，标点也保持一致。不能填来源原句、摘要或正文没有的补充说明。")
+    source_refs: list[str] = Field(min_length=1, max_length=10,
+        description="只填宿主allowed_source_ids中的source_id，且必须同时列在顶层source_refs中；不得填receipt_id或拼接来源ID与回执ID。")
 
 
 class DraftPayload(BaseModel):
@@ -23,10 +25,14 @@ class DraftPayload(BaseModel):
     title: str = Field(min_length=1, max_length=500)
     body: str = Field(min_length=1, max_length=30000)
     tags: list[str] = Field(default_factory=list, max_length=30)
-    image_notes: str = Field(min_length=1, max_length=3000)
-    source_refs: list[str] = Field(min_length=1, max_length=20)
-    claims: list[DraftClaim] = Field(default_factory=list, max_length=30)
-    missing_materials: list[str] = Field(default_factory=list, max_length=20)
+    image_notes: str = Field(min_length=1, max_length=3000,
+        description="区分计划需用的图片与实际已收到、已核实授权的图片。素材安排或未来提交承诺不证明已经收到或授权；没有明确回执时写待核实，正文不能写成已提供或已授权。")
+    source_refs: list[str] = Field(min_length=1, max_length=20,
+        description="只填宿主allowed_source_ids中的source_id，例如S1；receipt_id仅为读取回执，不能填写或拼接成S1:receipt_id。")
+    claims: list[DraftClaim] = Field(default_factory=list, max_length=30,
+        description="列出正文中可外部核实的事实及其来源。每条text必须是本次body的逐字原句，不是从原始来源另抄一句。")
+    missing_materials: list[str] = Field(default_factory=list, max_length=20,
+        description="列出尚未收到、未核实或未确认授权的素材及事实依据。计划中要求提交、承诺未来提交或只有路径都不能当作已收到且已授权。")
 
     @field_validator("title", "body", "image_notes")
     @classmethod

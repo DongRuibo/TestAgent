@@ -13,7 +13,7 @@ on:
       - "uv.lock"
       - ".github/workflows/python-ci.yml"
   push:
-    branches: [main]
+    branches: [main, codex/job-demo-acceptance]
     paths:
       - "apps/dev-agent/**"
       - "packages/**"
@@ -28,6 +28,10 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHON_DOTENV_DISABLED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -38,13 +42,24 @@ jobs:
           enable-cache: true
       - run: uv python install 3.11
       - run: uv sync --frozen
-      - run: uv run pytest tests packages/rpa-agent-module/tests
+      # 默认跳过显式浏览器验收；JUnit中的跳过不能解释为Robot整链通过。
+      - run: mkdir -p ci-evidence/python
+      - run: uv run pytest tests packages/rpa-agent-module/tests --junitxml=ci-evidence/python/pytest.xml
       - run: uv build --package testagent-sandbox-contracts --out-dir dist/sandbox-contracts
       - run: uv build --package testagent-sandbox-client --out-dir dist/sandbox-client
       - run: uv build --package testagent-sandbox-gateway --out-dir dist/sandbox-gateway
       - run: uv build --package testagent-web-tools --out-dir dist/web-tools
       - run: uv build --package testagent-dev-agent --out-dir dist/dev-agent
       - run: uv build --package rpa-agent-module --out-dir dist/rpa-agent-module
+      - name: Record wheel and source archive hashes
+        run: find dist -type f -print0 | sort -z | xargs -0 sha256sum > ci-evidence/python/package-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-test-and-build-evidence
+          path: ci-evidence/python/
+          if-no-files-found: warn
+          retention-days: 14
 
   frontend-test-and-build:
     runs-on: ubuntu-latest
@@ -59,5 +74,15 @@ jobs:
           cache: npm
           cache-dependency-path: apps/dev-agent/frontend/package-lock.json
       - run: npm ci --ignore-scripts
-      - run: npm test
-      - run: npm run build
+      - run: mkdir -p ../../../ci-evidence/frontend
+      - run: npm test > ../../../ci-evidence/frontend/tests.log 2>&1
+      - run: npm run build > ../../../ci-evidence/frontend/build.log 2>&1
+      - name: Record generated asset hashes
+        run: sha256sum ../src/web_agent/static/generation-ui/* > ../../../ci-evidence/frontend/asset-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-and-build-evidence
+          path: ci-evidence/frontend/
+          if-no-files-found: warn
+          retention-days: 14

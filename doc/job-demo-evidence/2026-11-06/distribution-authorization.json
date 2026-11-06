@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-06",
+  "component": "@lazyai/generation-ui-vue",
+  "version": "0.5.2",
+  "package_license_metadata": "UNLICENSED",
+  "package_license_changed": false,
+  "evidence_type": "project_owner_statement_in_current_conversation",
+  "statement": "我拥有完整权利，允许公开展示和分发",
+  "scope": "Public display and distribution within this TestAgent project",
+  "status": "project_owner_authorized_this_project_display_and_distribution",
+  "general_relicense_granted": false,
+  "external_contract_or_documentary_proof_independently_verified": false,
+  "git_commit_push_pr_authorized": false
+}

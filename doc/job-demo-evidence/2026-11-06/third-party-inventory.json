@@ -1,0 +1,412 @@
+{
+  "base_sha": "b5a970dbbe66225fab63f4e4c2c0bd6911e67bc0",
+  "component": {
+    "name": "@lazyai/generation-ui-vue",
+    "version": "0.5.2",
+    "license": "UNLICENSED",
+    "private": null
+  },
+  "tgz_sha256": "002e8d678c5242fccc6d6ff6a6674c5e374e62ffb3f5222024c87b80476d1e14",
+  "tgz_license_notice_files": [],
+  "runtime_packages": [
+    {
+      "lock_path": "node_modules/@babel/helper-string-parser",
+      "version": "7.29.7",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@babel/parser",
+      "version": "7.29.8",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "2e97627cb278aa7556fb9e8817368302301a595b6c7582512b8d74c57b773652"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@babel/types",
+      "version": "7.29.8",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "117da2af0d4ce0fe1c8e19b5cff9dcd806adf973d328d27b11d4448c4ff24f76"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@jridgewell/sourcemap-codec",
+      "version": "1.5.5",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@kurkle/color",
+      "version": "0.3.4",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "89ba0032731489153d552db918b727feb05128cf9eca20092875a9ad14147671"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@lazyai/generation-ui-vue",
+      "version": "0.5.2",
+      "license": "UNLICENSED",
+      "notices": []
+    },
+    {
+      "lock_path": "node_modules/@primeuix/styled",
+      "version": "0.7.4",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@primeuix/styles",
+      "version": "2.0.3",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@primeuix/themes",
+      "version": "1.2.5",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@primeuix/utils",
+      "version": "0.6.4",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "c6e70ce414f6d95d44001ecb8b6d5b66bb4990db85829ea6be8b51549195ad31"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@primevue/core",
+      "version": "4.5.5",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@primevue/icons",
+      "version": "4.5.5",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/compiler-core",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/compiler-dom",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/compiler-sfc",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/compiler-ssr",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/reactivity",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/runtime-core",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/runtime-dom",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/server-renderer",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/@vue/shared",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/chart.js",
+      "version": "4.5.1",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "41a84aa2caba645f966a18d9c2056b73e6d3a81d80bc0046bc0011a2634d4cce"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/csstype",
+      "version": "3.2.3",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/entities",
+      "version": "7.0.1",
+      "license": "BSD-2-Clause",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/estree-walker",
+      "version": "2.0.2",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "8a6dcbabe7179f9c8489c08a7d874d0f1e093ae7449e03756ccf87cb9d0e296e"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/magic-string",
+      "version": "0.30.21",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1cbe51b907662f6cb1492b16c359384a595180bf0e4d101603ed525e75c4e484"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/nanoid",
+      "version": "3.3.18",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/picocolors",
+      "version": "1.1.1",
+      "license": "ISC",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/postcss",
+      "version": "8.5.26",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/primeicons",
+      "version": "7.0.0",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "140e5886a54d897d852dbf7eeffd2c464467eddfcb04374241f90c61658493bd"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/primevue",
+      "version": "4.5.5",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "39a2ce8d759cfcb59eccc49b0a417ad5c943f960c1bcdfba4720ca7547029af7"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/source-map-js",
+      "version": "1.2.1",
+      "license": "BSD-3-Clause",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd"
+        }
+      ]
+    },
+    {
+      "lock_path": "node_modules/vue",
+      "version": "3.5.41",
+      "license": "MIT",
+      "notices": [
+        {
+          "name": "LICENSE",
+          "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        }
+      ]
+    }
+  ],
+  "tracked_bundled_assets": [
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/auto-CrB1VfOs.js",
+      "sha256": "d127f5595da118e1635f9f4aa3773d7c4f5372128c47b2dbb5d09fc866b3d78d",
+      "bytes": 289106
+    },
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/generation-ui.css",
+      "sha256": "1c88354c038ff14a50aa97041ebfd84977109ae21d7a040b7a37206f9a140b22",
+      "bytes": 928940
+    },
+    {
+      "path": "apps/dev-agent/src/web_agent/static/generation-ui/generation-ui.js",
+      "sha256": "9fd10fff3aa99207c79ee84950a0f1c101ad3be5d179c561148823461afb2898",
+      "bytes": 1383061
+    }
+  ],
+  "authorization_status": "project_owner_authorized_this_project_display_and_distribution",
+  "no_license_changed": true,
+  "authorization_basis": {
+    "date": "2026-11-06",
+    "source": "explicit user reply in this chat",
+    "statement": "我拥有完整权利，允许公开展示和分发",
+    "scope": "Generation UI artifact public display and distribution in this project",
+    "package_license_metadata_changed": false,
+    "general_relicense_granted": false
+  },
+  "source_inventory_sha256": "586081e4453ce7368aac744a00c6f9867645bf372456660a15fd39e0936632a9",
+  "source_inventory_authorization_status_at_creation": "project_owner_authorized_public_display_and_distribution",
+  "authorization_update": "distribution-authorization.json; project owner statement in current conversation, 2026-11-06"
+}

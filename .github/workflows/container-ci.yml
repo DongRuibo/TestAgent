@@ -8,7 +8,7 @@ on:
       - "packages/sandbox-contracts/**"
       - ".github/workflows/container-ci.yml"
   push:
-    branches: [main]
+    branches: [main, codex/job-demo-acceptance]
     paths:
       - "services/sandbox-gateway/**"
       - "services/web-capability/**"

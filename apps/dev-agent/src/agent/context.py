@@ -195,6 +195,8 @@ class ContextReceipt:
     memory_record_versions: tuple[dict[str, str], ...] = ()
     tool_result_count: int = 0
     estimated_context_chars: int = 0
+    context_estimation_method: str = "serialized_chars_not_tokens"
+    budget_checks: list[dict[str, Any]] = field(default_factory=list)
     model_calls: list[dict[str, Any]] = field(default_factory=list)
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
@@ -203,15 +205,8 @@ class ContextReceipt:
 
 
 def estimate_messages_chars(messages: Sequence[Mapping[str, Any]]) -> int:
-    total = 0
-    for message in messages:
-        content = message.get("content")
-        if isinstance(content, str):
-            total += len(content)
-        tool_calls = message.get("tool_calls")
-        if tool_calls:
-            total += len(json.dumps(tool_calls, ensure_ascii=False, separators=(",", ":")))
-    return total
+    """估算消息序列化后的字符数，包含工具参数和协议字段，并非精确 token 数。"""
+    return len(json.dumps(list(messages), ensure_ascii=False, separators=(",", ":")))
 
 
 def serialize_tool_result(result: dict[str, Any], *, max_chars: int) -> str:

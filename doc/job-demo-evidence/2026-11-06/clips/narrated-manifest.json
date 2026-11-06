@@ -1,0 +1,175 @@
+{
+  "title": "讲解成片，内含两段原始真实UI录屏回放",
+  "narrative_video": "narrated-demo.webm",
+  "sha256": "67954a76557c2c3b8f045e52b56023b5b67a0c064378e8886a2c4abd5f77f7c3",
+  "bytes": 11701594,
+  "recording_surface": "一次性本地讲解页面，播放既有两段原始录像并显示中文说明；未录桌面或其他程序",
+  "continuous_real_business_execution": false,
+  "contains_replayed_original_ui_clips": true,
+  "new_robot_runs": 0,
+  "new_model_calls": 0,
+  "new_downloads": 0,
+  "audio": "none; Chinese static text captions",
+  "rpa_chrome_window_recorded": false,
+  "http_500_independently_proven_by_video": false,
+  "recovery_proof": "paired existing test assertions, original Job, Robot XML and receipt summaries",
+  "script_and_html_location": "evidence/temp/narrated-video only; not product source",
+  "original_clips": [
+    {
+      "name": "normal-edit-review",
+      "video": "normal-edit-review/raw.webm",
+      "manifest": "normal-edit-review/manifest.json",
+      "duration_seconds": 28.28,
+      "resolution": [
+        1280,
+        720
+      ],
+      "bytes": 1854168,
+      "sha256": "c4420ab79f28ad0ebf80569c44db5b1edaf9a3ed754b3adf59db55de4ae45dc0"
+    },
+    {
+      "name": "recovery",
+      "video": "recovery/raw.webm",
+      "manifest": "recovery/manifest.json",
+      "duration_seconds": 28.16,
+      "resolution": [
+        1280,
+        720
+      ],
+      "bytes": 1844448,
+      "sha256": "1dd4cd18a3d0f3f79fc031a91487428a158c930a0d8073d66734da7c4899d0cf"
+    }
+  ],
+  "timeline": {
+    "events": [
+      {
+        "stage": "intro",
+        "event": "start",
+        "seconds": 0.0005
+      },
+      {
+        "stage": "intro",
+        "event": "end",
+        "seconds": 30.04059999999404
+      },
+      {
+        "stage": "normal-replay",
+        "event": "start",
+        "seconds": 30.04059999999404
+      },
+      {
+        "stage": "normal-replay",
+        "event": "media_ended",
+        "duration": 28.28,
+        "currentTime": 28.28,
+        "playbackRate": 1
+      },
+      {
+        "stage": "normal-replay",
+        "event": "end",
+        "seconds": 58.37129999998212
+      },
+      {
+        "stage": "approval",
+        "event": "start",
+        "seconds": 58.374
+      },
+      {
+        "stage": "approval",
+        "event": "end",
+        "seconds": 83.39619999998808
+      },
+      {
+        "stage": "recovery-replay",
+        "event": "start",
+        "seconds": 83.39639999997615
+      },
+      {
+        "stage": "recovery-replay",
+        "event": "media_ended",
+        "duration": 28.16,
+        "currentTime": 28.16,
+        "playbackRate": 1
+      },
+      {
+        "stage": "recovery-replay",
+        "event": "end",
+        "seconds": 111.59169999998808
+      },
+      {
+        "stage": "report",
+        "event": "start",
+        "seconds": 111.592
+      },
+      {
+        "stage": "report",
+        "event": "end",
+        "seconds": 180.60359999999403
+      }
+    ],
+    "elapsed": 180.60359999999403
+  },
+  "frozen_inputs": {
+    "raw_clips_manifest_sha256": "4315561ef75e9628d0adbc2a30a37bf6ece1f3d3698d2935da3725d97a620375",
+    "real_model_summary_sha256_at_recording": "b4786f09eab5d5e0693bcd155ce110c9c556aabeeb15977c09c95ab900a8efd8",
+    "real_model_summary_snapshot_at_recording": "evidence/temp/narrated-video/inputs/real-model-summary-at-recording.json"
+  },
+  "limitations": [
+    "synthetic source and loopback creator",
+    "manual human_quality pending",
+    "real platform not validated",
+    "model retest still has 3 failed cases"
+  ],
+  "duration_seconds": 182.12,
+  "resolution": [
+    1280,
+    720
+  ],
+  "encoding_stream": "Stream #0:0(eng): Video: vp8 (libvpx), yuv420p(tv, progressive), 1280x720, SAR 1:1 DAR 16:9, 25 fps, 25 tbr, 1k tbn (default)",
+  "media_qa_frames": [
+    {
+      "label": "start",
+      "seconds": 2,
+      "file": "narrated-qa-start.png",
+      "sha256": "537fcfacf9948bbe2c72a7e517d30bc6300cd1a881fb91de897938e4f6b0a2d2"
+    },
+    {
+      "label": "middle",
+      "seconds": 91.06,
+      "file": "narrated-qa-middle.png",
+      "sha256": "c48fb7cdf21ab1c58df8133dc497dcf7b73c8f74ccdc32b19f14c1be2972a01b"
+    },
+    {
+      "label": "end",
+      "seconds": 180.12,
+      "file": "narrated-qa-end.png",
+      "sha256": "59026c8234a572629682dfed8e130e446856823ef72e87d2d3d2d6cd870d6d33"
+    }
+  ],
+  "media_qa": "passed encoding/duration/hash and readable first/middle/end frames; independent review separately recorded",
+  "narration_attempts": 2,
+  "first_attempt_failed_media_qa_preserved": "evidence/temp/narrated-video/attempt01/failure-summary.json",
+  "independent_media_review": "accepted_limited_scope_by_Independent_AI_Reviewer",
+  "independent_media_review_record": {
+    "raw_evidence_name": "reviewer/final-evidence/narrated-final-media-review.json",
+    "raw_sha256": "9dda78bf3c8d3018c3676c0c1d72ac640d6d19738e6e5d0d3098a830bab977ab",
+    "visual_qa": {
+      "status": "accepted_limited_scope",
+      "reviewer": "Independent AI Reviewer",
+      "frames_inspected": [
+        2,
+        44,
+        70,
+        91.06,
+        140,
+        180.12
+      ],
+      "findings": "六个实际解码画面均已亲看；字幕/页脚与正文不重叠；原片回放阶段有明确提示；结果卡片与限制确实入画。",
+      "numbers_in_actual_encoded_frames": "930pass+18skip；frontend24/24；基础read_file6/6；原运营5failed+3not_run/8；唯一复测正常3/4、异常正确拒绝2/4、仍3failed；210observed、unknown0/reserved0、估算5.634540元非账单。",
+      "boundaries_in_actual_encoded_frames": "片中明确为讲解成片包含两段原片回放，并非连续真实业务执行；合成模型与来源/回环后台；内容仍待人工评分，AI语义发现缺来源泛化、因果、绝对化表述；真实平台未验收，RPA Chrome窗口未录；HTTP500需配对断言/Job/XML，录像不单独证明。",
+      "audio": "无音轨，中文静态文字讲解；不能描述为真人旁白或人类审批录音。",
+      "no_new_scope": "无新增Robot场景数、模型调用、浏览器运行或下载由Reviewer触发。"
+    },
+    "human_approval": false
+  }
+}

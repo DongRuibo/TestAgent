@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-06",
+  "demos": [
+    {
+      "scenario": "normal",
+      "raw_report_name": "delivery/demo-normal/report.json",
+      "raw_report_sha256": "8dab6ee1726cdd62aa5700bdfc0eb66a8cefaa4457e0d1e4e2ce0b3b2d929713",
+      "mode": "scripted",
+      "case_ids": [
+        "N02"
+      ],
+      "summary": {
+        "planned": 1,
+        "passed": 1,
+        "case_pass_rate": 1.0,
+        "normal_flow_pass_rate": 1.0,
+        "expected_failure_pass_rate": null,
+        "recovery_pass_rate": null,
+        "task_success_rate": null,
+        "semantic_evidence_coverage": null,
+        "content_quality": null,
+        "cost": null,
+        "unapproved_synthetic_submissions": 0,
+        "model_rounds": 2,
+        "sdk_attempts": 2,
+        "median_scripted_duration_ms": 132.67737501882948,
+        "failure_types": {
+          "harness_error": 0,
+          "interrupted": 0,
+          "not_run": 0
+        },
+        "usage_missing_calls": 2
+      }
+    },
+    {
+      "scenario": "revision",
+      "raw_report_name": "delivery/demo-revision/report.json",
+      "raw_report_sha256": "98c516d1597207fbef256974e8d1589788ce8a7c5553d08a028c0153550283b0",
+      "mode": "scripted",
+      "case_ids": [
+        "N03",
+        "A02",
+        "A03"
+      ],
+      "summary": {
+        "planned": 3,
+        "passed": 3,
+        "case_pass_rate": 1.0,
+        "normal_flow_pass_rate": 1.0,
+        "expected_failure_pass_rate": 1.0,
+        "recovery_pass_rate": null,
+        "task_success_rate": null,
+        "semantic_evidence_coverage": null,
+        "content_quality": null,
+        "cost": null,
+        "unapproved_synthetic_submissions": 0,
+        "model_rounds": 8,
+        "sdk_attempts": 8,
+        "median_scripted_duration_ms": 42.561582988128066,
+        "failure_types": {
+          "harness_error": 0,
+          "interrupted": 0,
+          "not_run": 0
+        },
+        "usage_missing_calls": 8
+      }
+    },
+    {
+      "scenario": "recovery",
+      "raw_report_name": "delivery/demo-recovery/report.json",
+      "raw_report_sha256": "180105d896c02aee9ef1889d32e5d8e47860f26b3e2f5c288903a3a9b30dc768",
+      "mode": "scripted",
+      "case_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R05",
+        "R06"
+      ],
+      "summary": {
+        "planned": 5,
+        "passed": 5,
+        "case_pass_rate": 1.0,
+        "normal_flow_pass_rate": null,
+        "expected_failure_pass_rate": null,
+        "recovery_pass_rate": 1.0,
+        "task_success_rate": null,
+        "semantic_evidence_coverage": null,
+        "content_quality": null,
+        "cost": null,
+        "unapproved_synthetic_submissions": 0,
+        "model_rounds": 10,
+        "sdk_attempts": 10,
+        "median_scripted_duration_ms": 43.65474998485297,
+        "failure_types": {
+          "harness_error": 0,
+          "interrupted": 0,
+          "not_run": 0
+        },
+        "usage_missing_calls": 10
+      }
+    }
+  ],
+  "real_model": false,
+  "real_platform": false,
+  "video_recorded": false,
+  "case_counts_are_not_api_call_counts": true,
+  "final_full_scripted_acceptance": {
+    "mode": "scripted",
+    "passed": 24,
+    "planned": 24,
+    "synthetic_turns": 49,
+    "turns_without_real_usage": 49,
+    "real_model_calls": false,
+    "task_success_rate": null,
+    "semantic": null,
+    "content_quality": null,
+    "cost": null,
+    "unapproved_synthetic_submit_calls": 0,
+    "raw_verification_name": "final/scripted-24-final/verification.json",
+    "raw_verification_sha256": "4410e6924f31f72b0ffd580c0923037a50439d79cb6d138bc47cec8e2fab7713",
+    "raw_report_name": "final/scripted-24-final/reports/report.json",
+    "raw_report_sha256": "a76f6ba4a365818ea315bfdd19cec5f74d9a3b2204e5e0bbe6f1eee8dae7e7e8",
+    "boundary": "Synthetic state/contract cases; not added to 210 real SDK attempts or real operational success denominators"
+  }
+}

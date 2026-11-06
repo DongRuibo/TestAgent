@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 from datetime import datetime, timezone
+from decimal import Decimal
 import hashlib
 import importlib.metadata
 import json
@@ -26,6 +27,7 @@ from agent.context import ContextConfig, MemoryRecallPolicy, serialize_tool_resu
 from agent.loop import AgentLoop, READ_FILE_TOOL
 from llm.client import LLMClient, LLMConfig, LLMConnectionError
 from tools.read_file import read_file
+from evals.live_budget import BudgetStopped, LiveBudget
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -127,18 +129,36 @@ class ScriptExhausted(RuntimeError):
 class RecordedSDK:
     """在 SDK 边界记录响应、重试和用量；脚本模式不会构造网络客户端。"""
 
-    def __init__(self, events: list[dict[str, Any]], delegate: Any = None) -> None:
+    def __init__(self, events: list[dict[str, Any]], delegate: Any = None,
+                 budget: LiveBudget | None = None, label: dict[str, Any] | None = None) -> None:
         self.chat = self.completions = self
         self.events = events
         self.delegate = delegate
+        self.budget = budget
+        self.label = label or {}
         self.script = iter(())
         self.turn = 0
         self.round = 0
         self.pending_calls: list[dict[str, Any]] = []
 
     def create(self, **request: Any) -> Any:
+        reservation = None
+        if self.budget is not None:
+            request["max_tokens"] = self.budget.approval.max_output_tokens
+            request["extra_body"] = {"enable_thinking": False}
+            request["timeout"] = min(self.budget.approval.request_timeout_seconds,
+                max(0.01, self.budget.approval.max_seconds - (time.time() - self.budget.data["started_at_epoch"])))
+            try:
+                reservation = self.budget.reserve(request, {**self.label, "turn": self.turn, "round": self.round})
+            except BudgetStopped as exc:
+                self.events.append({"event": "sdk_request_blocked", "turn": self.turn, "round": self.round,
+                                    "reason": str(exc), "network_attempted": False})
+                raise
         event = {"event": "sdk_attempt", "turn": self.turn, "round": self.round,
-                 "request": deepcopy(request), "usage": None}
+                 "request": deepcopy(request), "usage": None, "finish_reason": None}
+        if reservation is not None:
+            event["budget_attempt_id"] = reservation["attempt_id"]
+            event["reserved_cny"] = reservation["reserved_cny"]
         self.events.append(event)
         started = time.perf_counter()
         try:
@@ -157,6 +177,7 @@ class RecordedSDK:
                 )
                 response = SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=None)
             event["response"] = response.choices[0].message.model_dump(exclude_none=True)
+            event["finish_reason"] = getattr(response.choices[0], "finish_reason", None)
             if response.usage is not None:
                 event["usage"] = response.usage.model_dump(mode="json")
             return response
@@ -169,6 +190,10 @@ class RecordedSDK:
             raise
         finally:
             event["duration_ms"] = (time.perf_counter() - started) * 1000
+            if reservation is not None:
+                self.budget.settle(reservation, event["usage"], event.get("error_type"))
+                event["budget_status"] = reservation["status"]
+                event["actual_cny"] = reservation["actual_cny"]
 
 
 class RecordedLLM(LLMClient):
@@ -201,6 +226,7 @@ def score_turn(expected: Expected, observation: dict[str, Any]) -> dict[str, Any
     policies = [e for e in events if e["event"] == "policy_result"]
     handlers = [e for e in events if e["event"] == "handler_execution"]
     attempts = [e for e in events if e["event"] == "sdk_attempt"]
+    budgeted_attempts = [event for event in attempts if "budget_status" in event]
     successful_files = {e["result"]["path"] for e in handlers if e.get("result", {}).get("success") is True}
     # 原文继续保留在事件中；判分复用一次解析后的参数，忽略 JSON 排版差异。
     arguments = []
@@ -210,6 +236,8 @@ def score_turn(expected: Expected, observation: dict[str, Any]) -> dict[str, Any
         except ValueError:
             arguments.append(None)
     checks: dict[str, bool] = {}
+    if budgeted_attempts:
+        checks["usage_complete"] = all(event["budget_status"] == "observed" for event in budgeted_attempts)
     error = observation.get("error") or {}
     checks["terminal"] = (error.get("type") == expected.terminal
                           and expected.terminal_contains in (error.get("message") or ""))
@@ -304,7 +332,7 @@ def score_turn(expected: Expected, observation: dict[str, Any]) -> dict[str, Any
 
 
 def run_case(suite: Suite, case: Case, mode: str, delegate: Any = None, config: LLMConfig | None = None,
-             *, result: dict[str, Any] | None = None) -> dict[str, Any]:
+             *, result: dict[str, Any] | None = None, budget: LiveBudget | None = None) -> dict[str, Any]:
     if (mode not in {"scripted", "live"} or (mode == "live") != (delegate is not None)
             or mode == "live" and config is None):
         raise ValueError("真实模式必须提供 SDK 和模型配置，脚本模式不能接收网络 SDK")
@@ -316,7 +344,8 @@ def run_case(suite: Suite, case: Case, mode: str, delegate: Any = None, config: 
                   expected_fields=sum(len(t.expected.answer.keys() - {"sources"}) for t in case.turns if isinstance(t.expected.answer, dict)),
                   requires_sources=any(t.expected.required_files for t in case.turns),
                   status="running", duration_ms=0, turns=turns)
-    sdk = RecordedSDK(events, delegate)
+    sdk = RecordedSDK(events, delegate, budget, {"runner": "agent", "case_id": case.id,
+                      "repetition": result.get("repetition", 1)})
     with tempfile.TemporaryDirectory(prefix="agent-tool-eval-") as directory:
         workspace = Path(directory) / "workspace"
         workspace.mkdir()
@@ -398,7 +427,10 @@ def aggregate_agent_results(results: list[dict[str, Any]], mode: str) -> dict[st
     abnormal = [r for r in results if r["kind"] != "normal"]
     events = [e for r in results for t in r.get("turns", []) for e in t["events"]]
     attempts = [e for e in events if e["event"] == "sdk_attempt"]
-    usages = [e["usage"] for e in attempts if e.get("usage") is not None]
+    usages = [e["usage"] for e in attempts if isinstance(e.get("usage"), dict)
+              and all(type(e["usage"].get(key)) is int and e["usage"][key] >= 0
+                      for key in ("prompt_tokens", "completion_tokens", "total_tokens"))
+              and e["usage"]["total_tokens"] >= e["usage"]["prompt_tokens"] + e["usage"]["completion_tokens"]]
     policies = [e for e in events if e["event"] == "policy_result"]
     fields = sum(r["expected_fields"] for r in results)
     source_cases = [r for r in results if r["requires_sources"]]
@@ -417,13 +449,17 @@ def aggregate_agent_results(results: list[dict[str, Any]], mode: str) -> dict[st
             "normal_case_durations_ms": [r["duration_ms"] for r in normal if r["status"] == "passed"] if mode == "live" else [],
             "normal_case_median_ms": statistics.median([r["duration_ms"] for r in normal if r["status"] == "passed"]) if mode == "live" and any(r["status"] == "passed" for r in normal) else None,
             "usage_observed_attempts": len(usages), "usage_missing_attempts": len(attempts) - len(usages),
+            "usage_invalid_attempts": sum(e.get("usage") is not None for e in attempts) - len(usages),
             "observed_token_usage": {key: sum(u[key] for u in usages) for key in ("prompt_tokens", "completion_tokens", "total_tokens")} if usages else None,
-            "cost_cny": None, "cost_basis": "未提供价格及账单口径；已观测用量不代表全部费用"}
+            "cost_cny": str(sum((Decimal(e["actual_cny"]) for e in attempts), Decimal(0)))
+                if attempts and all(e.get("actual_cny") is not None for e in attempts) else None,
+            "cost_basis": "只有已复核定价且全部尝试有可计量usage才估算；未知费用保留为空，详见共享账本"}
 
 
 def run_evaluation(*, mode: str = "scripted", case_path: Path = CASE_PATH,
                    case_ids: list[str] | None = None, repetitions: int = 1,
-                   report_root: Path = ROOT / "artifacts/evals/agent-tools") -> tuple[Path, dict[str, Any]]:
+                   report_root: Path = ROOT / "artifacts/evals/agent-tools",
+                   approval_path: Path | None = None, ledger_path: Path | None = None) -> tuple[Path, dict[str, Any]]:
     if mode not in {"scripted", "live"} or not 1 <= repetitions <= 10:
         raise ValueError("模式必须为 scripted/live，重复次数必须为 1–10")
     suite = load_suite(case_path)
@@ -431,9 +467,12 @@ def run_evaluation(*, mode: str = "scripted", case_path: Path = CASE_PATH,
     if not selected or case_ids and set(case_ids) != {c.id for c in selected}:
         raise ValueError("用例不存在，或所选用例不支持当前模式")
     config = LLMConfig.from_env() if mode == "live" else LLMConfig("script-only", "scripted")
+    if mode == "live" and (approval_path is None or ledger_path is None):
+        raise ValueError("真实模型必须传入已复核的approval和全批共享ledger，不能无预算调用")
+    budget = LiveBudget(approval_path, ledger_path, model=config.model, base_url=config.base_url) if mode == "live" else None
     output = report_root / f"{mode}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{uuid4().hex[:8]}"
     output.mkdir(parents=True, exist_ok=False)
-    sources = [Path(__file__), case_path, ROOT / "apps/dev-agent/src/agent/loop.py",
+    sources = [Path(__file__), case_path, ROOT / "evals/live_budget.py", ROOT / "apps/dev-agent/src/agent/loop.py",
                ROOT / "apps/dev-agent/src/agent/context.py", ROOT / "apps/dev-agent/src/llm/client.py",
                ROOT / "apps/dev-agent/src/tools/read_file.py"]
     git = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False)
@@ -444,33 +483,50 @@ def run_evaluation(*, mode: str = "scripted", case_path: Path = CASE_PATH,
                 "source_sha256": {str(p.resolve()): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
                 "versions": {name: importlib.metadata.version(name) for name in ("openai", "pydantic")},
                 "reference_time": REFERENCE_TIME.isoformat(), "timezone": "Asia/Shanghai",
-                "context_config": vars(ContextConfig()), "sdk_timeout_seconds": 30 if mode == "live" else None,
+                "context_config": vars(ContextConfig()), "sdk_timeout_seconds": budget.approval.request_timeout_seconds if budget else None,
                 "sdk_internal_retries": 0, "client_connection_attempts": 3,
                 "cases": [{"id": c.id, "max_steps": c.max_steps, "budget": c.budget} for c in selected],
-                "repetitions": repetitions, "tool_names": ["read_file"], "memory_enabled": False}
+                "repetitions": repetitions, "tool_names": ["read_file"], "memory_enabled": False,
+                "budget": budget.snapshot() if budget else None,
+                "model_identity": "provider_route_name_not_frozen_weights" if mode == "live" else "scripted"}
     (output / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", "utf-8")
     results = [{"case_id": c.id, "kind": c.kind, "mode": mode, "repetition": rep, "status": "not_run",
                 "expected_fields": sum(len(t.expected.answer.keys() - {"sources"}) for t in c.turns if isinstance(t.expected.answer, dict)),
                 "requires_sources": any(t.expected.required_files for t in c.turns)}
                for rep in range(1, repetitions + 1) for c in selected]
     delegate = None
+    stop_reason = "not_started"
     try:
         if mode == "live":
-            delegate = OpenAI(api_key=config.api_key, base_url=config.base_url, timeout=30, max_retries=0)
+            delegate = OpenAI(api_key=config.api_key, base_url=config.base_url,
+                              timeout=budget.approval.request_timeout_seconds, max_retries=0)
         for index, row in enumerate(results):
+            if budget is not None:
+                try:
+                    budget.check()
+                except BudgetStopped as exc:
+                    stop_reason = str(exc)
+                    break
             case = next(c for c in selected if c.id == row["case_id"])
             try:
-                run_case(suite, case, mode, delegate, config, result=row)
+                run_case(suite, case, mode, delegate, config, result=row, budget=budget)
             except KeyboardInterrupt:
+                stop_reason = "interrupted"
                 if row["status"] == "running":
                     row["status"] = "interrupted"
                 raise
             except Exception as exc:
                 row.update(status="harness_error", error_type=type(exc).__name__)
     finally:
+        for row in results:
+            if row["status"] == "not_run":
+                row["not_run_reason"] = stop_reason
         if delegate is not None:
             delegate.close()
         summary = aggregate_agent_results(results, mode)
+        if budget is not None:
+            summary["shared_budget"] = budget.snapshot()
+            summary["cost_basis"] = "官方最高未缓存单价乘服务端usage；未知请求保留最坏预留，未与账单核对"
         report = {"schema_version": 1, "manifest": manifest, "summary": summary, "results": results}
         (output / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", "utf-8")
         with (output / "events.jsonl").open("w", encoding="utf-8") as stream:
@@ -479,7 +535,7 @@ def run_evaluation(*, mode: str = "scripted", case_path: Path = CASE_PATH,
                     for event in turn["events"]:
                         stream.write(json.dumps({"case_id": row["case_id"], "repetition": row["repetition"], **event}, ensure_ascii=False) + "\n")
         lines = ["# Agent 工具链评测", "", f"模式：{mode}；通过 {summary['passed']}/{summary['planned']}。",
-                 "", ("真实模型评测；以下结果仅适用于本批用例。费用未估算。" if mode == "live"
+                 "", ("真实模型评测；以下结果仅适用于本批用例。预算上界及已观测费用见共享账本，未经账单核实。" if mode == "live"
                        else "脚本回放验证执行链路和评分器，不代表真实模型质量。费用未估算。"), "",
                  "| 指标 | 观测值 |", "|---|---|"]
         for key in ("case_pass_rate", "task_success_rate", "abnormal_case_pass_rate", "fact_field_accuracy",
@@ -504,9 +560,12 @@ def main() -> None:
     parser.add_argument("--case-file", type=Path, default=CASE_PATH)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--report-root", type=Path, default=ROOT / "artifacts/evals/agent-tools")
+    parser.add_argument("--approval", type=Path, dest="approval_path")
+    parser.add_argument("--ledger", type=Path, dest="ledger_path")
     args = parser.parse_args()
     output, report = run_evaluation(mode=args.mode, case_path=args.case_file, case_ids=args.case_ids,
-                                    repetitions=args.repetitions, report_root=args.report_root)
+                                    repetitions=args.repetitions, report_root=args.report_root,
+                                    approval_path=args.approval_path, ledger_path=args.ledger_path)
     print(f"{report['summary']['passed']}/{report['summary']['planned']} passed; report: {output}")
     raise SystemExit(0 if report["summary"]["passed"] == report["summary"]["planned"] else 1)
 

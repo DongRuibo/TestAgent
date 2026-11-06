@@ -50,5 +50,7 @@ pub trait SearchProvider: Send + Sync {
     fn name(&self) -> &'static str;
     fn configured(&self) -> bool;
 
+    // async_trait 会重复添加 must_use；Future 本身的未使用检查仍然保留。
+    #[allow(clippy::double_must_use)]
     async fn search(&self, query: &str, max_results: usize) -> Result<Vec<SearchResult>, AppError>;
 }

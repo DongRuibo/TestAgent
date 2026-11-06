@@ -1,0 +1,48 @@
+{
+  "generator": "Robot 7.4.2 (Python 3.12.14 on darwin)",
+  "robot_test_statuses": [
+    "PASS"
+  ],
+  "selected_keywords": [
+    {
+      "name": "Attach Chrome Browser",
+      "owner": "RPA.Browser.Selenium",
+      "status": "PASS",
+      "elapsed_seconds": "0.059592"
+    },
+    {
+      "name": "Choose File",
+      "owner": "RPA.Browser.Selenium",
+      "status": "PASS",
+      "elapsed_seconds": "0.020854"
+    },
+    {
+      "name": "Input Text",
+      "owner": "RPA.Browser.Selenium",
+      "status": "PASS",
+      "elapsed_seconds": "0.093069"
+    },
+    {
+      "name": "Input Text",
+      "owner": "RPA.Browser.Selenium",
+      "status": "PASS",
+      "elapsed_seconds": "0.039012"
+    },
+    {
+      "name": "Open Exact Draft",
+      "owner": "rpa_agent_module.workflows.xhs_keywords.XhsWorkflowLibrary",
+      "status": "PASS",
+      "elapsed_seconds": "0.036349"
+    },
+    {
+      "name": "Mark Draft Saved",
+      "owner": "rpa_agent_module.workflows.xhs_keywords.XhsWorkflowLibrary",
+      "status": "PASS",
+      "elapsed_seconds": "0.000790"
+    }
+  ],
+  "raw_output_sha256": "66ac857c5a1f1f14b5c81369f8e64ad5f32406277208cf3fe242b89e3f3510af",
+  "raw_console_sha256": "8e035836fd4f75d44a93ad07e184655fe56ab68a75b07ada48bdc855fac57654",
+  "job_result_sha256": "ef2d9c83cfcc8f71057747f2f031659a841940db0f55307044af7ea3a1da9fa0",
+  "raw_output_name": "robot/video-recording-approved-08/test_real_robot_success_then_failed_business_write_recovers_without_replay/rpa/jobs/994cf3a7-41a8-458a-a24e-9ee3fb7221db/output.xml"
+}

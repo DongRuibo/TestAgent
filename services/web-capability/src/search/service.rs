@@ -329,7 +329,7 @@ impl SearchService {
                 })
             }
             Err((error, provider)) => {
-                let error = error.with_request_id(request_id);
+                let error = (*error).with_request_id(request_id);
                 let attempts = error_attempts(&error);
                 self.record(
                     &context,
@@ -353,7 +353,7 @@ impl SearchService {
     async fn search_providers(
         &self,
         query: &SearchQuery,
-    ) -> Result<(String, Vec<SearchResult>, usize), (AppError, Option<String>)> {
+    ) -> Result<(String, Vec<SearchResult>, usize), (Box<AppError>, Option<String>)> {
         let mut total_attempts = 0;
         let mut last_error = None;
         let mut last_provider = None;
@@ -376,9 +376,12 @@ impl SearchService {
             }
         }
         Err((
-            last_error
-                .unwrap_or_else(|| AppError::configuration("没有可用的搜索 Provider"))
-                .with_attempts(total_attempts),
+            // 仅在最终失败时装箱，缩小内部错误分支；原错误字段和记录流程保持不变。
+            Box::new(
+                last_error
+                    .unwrap_or_else(|| AppError::configuration("没有可用的搜索 Provider"))
+                    .with_attempts(total_attempts),
+            ),
             last_provider,
         ))
     }
@@ -753,5 +756,56 @@ mod tests {
         assert_eq!(outcome.attempts, 2);
         assert_eq!(first_calls.load(Ordering::SeqCst), 1);
         assert_eq!(second_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn failed_providers_preserve_error_context_and_usage_record() {
+        use axum::{body::to_bytes, response::IntoResponse};
+
+        let logger = Arc::new(RecordingLogger::default());
+        let service = SearchService::new(
+            vec![
+                Arc::new(TestProvider {
+                    provider_name: "first",
+                    calls: Arc::new(AtomicUsize::new(0)),
+                    failures: 10,
+                }),
+                Arc::new(TestProvider {
+                    provider_name: "second",
+                    calls: Arc::new(AtomicUsize::new(0)),
+                    failures: 10,
+                }),
+            ],
+            SearchPolicy {
+                max_attempts: 1,
+                cache_enabled: false,
+                ..SearchPolicy::default()
+            },
+            None,
+            Some(logger.clone()),
+        )
+        .unwrap();
+        let mut context = SearchContext::generated();
+        context.request_id = "failed-request".into();
+
+        let error = service.search("failure", 5, context).await.unwrap_err();
+        let body = to_bytes(error.into_response().into_body(), 4096)
+            .await
+            .unwrap();
+        let body: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(body["error_type"], "SEARCH_PROVIDER_ERROR");
+        assert_eq!(body["request_id"], "failed-request");
+        assert_eq!(body["attempts"], 2);
+        assert_eq!(body["retryable"], true);
+        let events = logger.events.lock().await;
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].provider.as_deref(), Some("second"));
+        assert_eq!(events[0].request_id, "failed-request");
+        assert_eq!(events[0].attempts, 2);
+        assert_eq!(events[0].status, "error");
+        assert_eq!(
+            events[0].error_type.as_deref(),
+            Some("SEARCH_PROVIDER_ERROR")
+        );
     }
 }

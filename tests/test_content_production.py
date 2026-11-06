@@ -311,3 +311,67 @@ def test_production_model_failure_preserves_receipt_without_claiming_draft(produ
     assert response.status_code == 502
     assert env.store.message_records(env.identifier)[-1].context == receipt
     assert env.service.list(env.identifier)["drafts"] == []
+
+
+def test_source_receipt_confusion_and_nonverbatim_claim_can_be_locally_repaired(production_env):
+    env = production_env
+    receipts = []
+    original_workflow = deepcopy(env.store.content_workflow(env.identifier))
+    def generate(inputs, save):
+        assert inputs["allowed_source_ids"] == ["S01"]
+        assert "receipt_id" in inputs["boundary"] and "逐字复制" in inputs["boundary"]
+        assert "不证明已经收到或授权" in inputs["boundary"]
+        receipts.append(save(**candidate(source_refs=["S01:receipt01"],
+            claims=[{"text": "先观察动线，再决定收纳位置。", "source_refs": ["S01:receipt01"]}])))
+        assert receipts[-1]["success"] is False
+        assert receipts[-1]["allowed_source_ids"] == ["S01"]
+        receipts.append(save(**candidate(claims=[{"text": "应先看动线，随后安排收纳。", "source_refs": ["S01"]}])))
+        assert receipts[-1]["success"] is False
+        assert "原句" in receipts[-1]["message"] and "逐字复制" in receipts[-1]["claim_text_rule"]
+        repaired = candidate(missing_materials=["照片收到情况和使用授权尚待人工核实"])
+        receipts.append(save(**repaired))
+        assert receipts[-1]["success"] is True
+    env.service.generate = generate
+    saved = produce(env)
+    assert saved["version"] == 1 and saved["status"] == "pending_review"
+    assert saved["body"] == candidate()["body"] and saved["source_refs"] == ["S01"]
+    assert saved["approval"] is None and saved["execution_status"] == "not_started" and saved["image_paths"] == []
+    assert env.store.content_workflow(env.identifier) == original_workflow
+    assert len(env.service.list(env.identifier)["drafts"]) == 1 and not env.tracker.executions
+
+
+def test_failed_local_repairs_keep_existing_approved_other_draft_and_original_versions(production_env):
+    env = production_env
+    first = produce(env)
+    other = env.service.produce(env.identifier, ProductionRequest(plan_version=1, content_id="C02", idempotency_key=uuid4()))
+    action(env, other, "edit_content_draft", title=other["title"], body=other["body"], tags_text="收纳", image_paths_text=str(env.image))
+    other = next(draft for draft in env.service.list(env.identifier)["drafts"] if draft["draft_id"] == other["draft_id"])
+    action(env, other, "review_content_draft", decision="approve")
+    before = deepcopy(next(draft for draft in env.service.list(env.identifier)["drafts"] if draft["draft_id"] == other["draft_id"]))
+    receipts = []
+    def generate(inputs, save):
+        receipts.append(save(**candidate(source_refs=["receipt01"])))
+        receipts.append(save(**candidate(claims=[{"text": "来源原文不等于正文原句", "source_refs": ["S01"]}])))
+        receipts.append(save(**candidate(title="第一条仅修订表达")))
+    env.service.generate = generate
+    revised = produce(env, expected_version=1)
+    assert [result["success"] for result in receipts] == [False, False, True]
+    assert revised["version"] == 2 and revised["approval"] is None
+    after = next(draft for draft in env.service.list(env.identifier)["drafts"] if draft["draft_id"] == other["draft_id"])
+    assert after == before and after["approval"] is not None
+    with env.store._connect() as connection:
+        old = connection.execute("SELECT data_json FROM content_draft_versions WHERE draft_id=? AND version=1", (first["draft_id"],)).fetchone()
+    import json
+    old = json.loads(old[0])
+    assert old["body"] == first["body"] and old["source_refs"] == first["source_refs"] and old["status"] == "superseded"
+    assert not env.tracker.executions
+
+
+def test_draft_schema_explains_source_ids_claim_verbatim_and_unverified_images():
+    from tools.content_drafts import DRAFT_TOOL_DEFINITION
+    schema = DRAFT_TOOL_DEFINITION["function"]["parameters"]
+    assert "allowed_source_ids" in schema["properties"]["source_refs"]["description"]
+    assert "receipt_id" in schema["properties"]["source_refs"]["description"]
+    assert "逐字" in schema["$defs"]["DraftClaim"]["properties"]["text"]["description"]
+    assert "不证明已经收到或授权" in schema["properties"]["image_notes"]["description"]
+    assert "授权" in schema["properties"]["missing_materials"]["description"]

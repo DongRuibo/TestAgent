@@ -1,0 +1,29 @@
+{
+  "status": "stopped_at_approved_sdk_attempt_limit",
+  "total_planned_case_runs": 14,
+  "baseline_passed": 6,
+  "operational_statuses": {
+    "normal_completed": 0,
+    "correct_refusal": 0,
+    "failed": 5,
+    "not_run": 3,
+    "harness_error": 0,
+    "interrupted": 0
+  },
+  "sdk_attempts": 100,
+  "observed_attempts": 100,
+  "unknown_attempts": 0,
+  "inflight_reserved_attempts": 0,
+  "observed_upper_rate_estimate_cny": "2.478504",
+  "unknown_reserved_cny": "0",
+  "halted_reason": "sdk_attempt_limit",
+  "raw_summary_name": "live/actual-run-summary.json",
+  "raw_summary_sha256": "20322522a1af6c0d474e72ed7d028cab2b491907ce7337c2ecb5f871f61bb7d2",
+  "retry_state": "single_retest_completed_with_remaining_failures_no_third_round",
+  "original_operational_denominator": 8,
+  "estimate_is_provider_invoice": false,
+  "source_provider": "synthetic",
+  "real_platform_executed": false,
+  "state": "first_batch_completed_with_failures",
+  "retest_summary": "real-model-summary.json"
+}
