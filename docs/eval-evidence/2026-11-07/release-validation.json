@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "scope": "isolated_publication_candidate_on_existing_public_base",
+  "base_commit": "6888395820efdf30872410644dc1dece45eb4b77",
+  "environment": {
+    "python": "3.12.14",
+    "sqlite": "3.53.1",
+    "dependency_installation": "reused existing installed environment; clean uv sync not verified"
+  },
+  "pytest": {
+    "passed": 982,
+    "skipped": 18,
+    "failed": 0,
+    "errors": 0,
+    "command": "python -B -m pytest -p no:cacheprovider tests packages/rpa-agent-module/tests -q",
+    "exit_code": 0
+  },
+  "benchmark": {
+    "repetitions": 3,
+    "summary": {
+      "planned": 150,
+      "passed": 144,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 96,
+          "denominator": 99,
+          "value": 0.9696969696969697,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 42,
+          "denominator": 45,
+          "value": 0.9333333333333333,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 3,
+          "denominator": 9,
+          "value": 0.3333333333333333,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 23.399208002956584,
+          "p95": 1161.212582985172,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.2844589839223772,
+          "p95": 760.971707990393
+        },
+        "content": {
+          "observed": 72,
+          "p50": 25.721000012708828,
+          "p95": 60.19095898955129
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 34.569291019579396,
+          "p95": 1349.3901250185445
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 144,
+          "denominator": 150,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 48,
+          "denominator": 50,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 48,
+          "denominator": 50,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 30,
+          "denominator": 36,
+          "value": 0.8333333333333334,
+          "unknown": 0
+        }
+      },
+      "failures": [
+        {
+          "case_id": "RT-E10",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        }
+      ]
+    },
+    "failed_case_runs": [
+      {
+        "case_id": "RT-E10",
+        "repetition": 1,
+        "failure_reasons": [
+          "receipt_matches_database"
+        ]
+      },
+      {
+        "case_id": "RT-E12",
+        "repetition": 1,
+        "failure_reasons": [
+          "no_false_completion"
+        ]
+      },
+      {
+        "case_id": "RT-E10",
+        "repetition": 2,
+        "failure_reasons": [
+          "receipt_matches_database"
+        ]
+      },
+      {
+        "case_id": "RT-E12",
+        "repetition": 2,
+        "failure_reasons": [
+          "no_false_completion"
+        ]
+      },
+      {
+        "case_id": "RT-E10",
+        "repetition": 3,
+        "failure_reasons": [
+          "receipt_matches_database"
+        ]
+      },
+      {
+        "case_id": "RT-E12",
+        "repetition": 3,
+        "failure_reasons": [
+          "no_false_completion"
+        ]
+      }
+    ],
+    "command": "python -B -m evals.reliability_runner --repetitions 3",
+    "exit_code": 1,
+    "exit_code_reason": "known fixed-v1 contract failures retained"
+  },
+  "diagnostic": "First isolated pytest run: 979 passed,18 skipped,3 fixture setup errors from macOS /var and /private/var path aliases. Canonicalizing validation source paths resolved all 3; no code/test changes were made. Raw local diagnostics retained.",
+  "paid_model_calls": 0,
+  "real_account_operations": 0,
+  "remote_ci": "not claimed; local isolated validation only",
+  "source_sha256": {
+    "evals/reliability_runner.py": "9c301a2d7ef20cf6f7449ebc7e49dc7174d526cb7655048911345b2074cfa5b3",
+    "evals/datasets/reliability_v1.json": "48d9c18814d253330fe578e590062054fcac1a1737ba89a5993a645b2a891995",
+    "evals/RELIABILITY.md": "9d631c88cb16b1672a8af2f2d3e5621de8e6f802204b851128a4c2ac1fea45cf",
+    "tests/test_reliability_evals.py": "a171f08bcea50e7751a5c24f68ba8d0c728fc1bd2b5a10017e9587013f6b1f11",
+    "tests/test_phase2_reliability.py": "9ec6342a9752d501e9512eabbdec1f7f5fadcaa9748dd3511d9368edff1a57d0",
+    "docs/EVAL_AUDIT.md": "b460ea2276ffd03d97a1030092622b2f8fc98f94522f72af15cbc7938a1e9afb",
+    "docs/EVAL_MANUAL_TERMINAL_FIX.md": "263f82f44c4df12037214057b5cee69d5a2c55b96ba0cc53777e5868411b8662",
+    "docs/EVAL_INTERVIEW.md": "63056c2b695429ca4809b0a2c07c0d7a32f94027ab3c71d936d36b10773fa707",
+    "docs/EVAL_PHASE2.md": "45a1a2eb48c3ad1a41ca0d563897cc70113438b0a3b56a61af1d88f631f3e404",
+    "apps/dev-agent/src/web_agent/content_production.py": "b8b1d32b02e791aa2c8ba163081268459ad6238d8b8fb50aba1ed2a9865bec03",
+    "apps/dev-agent/src/web_agent/app.py": "f9592860fa8aecfb694011b37a756ff270d92c1c533bc35a58be930956aa2b52",
+    "apps/dev-agent/src/web_agent/static/app.js": "c717448b59630658389b6c29d470d08d1b95a75b48aa714cd4dfec5dd28c4354",
+    "tests/test_content_production.py": "7d9874ff61204eb8d0dd00d1534393b210ecc7f86de922ee2f8e3963a1520942"
+  },
+  "published_metadata_redaction": "hostname, exact metadata wall-clock timestamps and local experiment paths removed after automatic approval review; verdicts/metrics unchanged",
+  "local_full_reports_rescored": [
+    {
+      "version": "original",
+      "planned": 150,
+      "passed": 138,
+      "all_verdicts_and_metrics_unchanged": true
+    },
+    {
+      "version": "rt-e09",
+      "planned": 150,
+      "passed": 141,
+      "all_verdicts_and_metrics_unchanged": true
+    },
+    {
+      "version": "phase2",
+      "planned": 150,
+      "passed": 144,
+      "all_verdicts_and_metrics_unchanged": true
+    }
+  ],
+  "public_evidence_scope": "all 450 per-case verdicts, failure reasons, metrics, sanitized manifests and Markdown reports; full raw JSON/Trace archives excluded and retained locally"
+}

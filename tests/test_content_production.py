@@ -1,6 +1,7 @@
 """真实SQLite与Web接口的单条图文闭环；模型和平台为明确离线替身。"""
 
 from copy import deepcopy
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
@@ -27,6 +28,18 @@ def candidate(**changes):
         "missing_materials": [], **changes}
 
 
+def verified_receipt(post):
+    """成功替身也提供生产适配器要求的完整读回证据，不再只返回布尔值。"""
+    tags = ["#" + tag for tag in post["tags"]]
+    values = {"title": post["title"], "body": post["body"] + ("\n\n" + " ".join(tags) if tags else ""),
+        "image_count": len(post["image_paths"]), "tags": tags}
+    result = {"result_type": "xiaohongshu_draft_saved", "final_publish_performed": False,
+        "verification": {"draft_reopened": True, "fields": {
+            name: {"expected": value, "actual": value, "matched": True} for name, value in values.items()}}}
+    return rpa_xiaohongshu._draft_job_result(SimpleNamespace(
+        id="synthetic-job", status="succeeded", input=post, result=result))
+
+
 @pytest.fixture
 def production_env(tmp_path, monkeypatch):
     root = tmp_path / "images"; root.mkdir()
@@ -44,7 +57,7 @@ def production_env(tmp_path, monkeypatch):
                 "collected_at": "2026-11-05T08:00:00+08:00"}}}}
     store.save_content_workflow(identifier, state, expected_revision=0)
     workflow = SimpleNamespace(_goal=lambda state: {"company_name": "合成企业"}, _research=lambda state: deepcopy(research))
-    tracker = SimpleNamespace(generations=0, executions=[], mode="normal", payload=candidate(), query_result=None)
+    tracker = SimpleNamespace(generations=0, executions=[], mode="normal", payload=candidate(), query_result=None, completed_result=None)
 
     def generate(inputs, save):
         tracker.generations += 1
@@ -57,10 +70,11 @@ def production_env(tmp_path, monkeypatch):
         tracker.executions.append(kwargs)
         kwargs["on_job_created"]("synthetic-job")
         if tracker.mode == "interrupt": raise RuntimeError("合成进程中断")
-        return {"success": True, "status": "succeeded", "job_id": "synthetic-job", "message": "模拟平台完整核验通过", "final_publish_performed": False}
+        tracker.completed_result = verified_receipt(kwargs)
+        return tracker.completed_result
 
     def query(**kwargs):
-        return tracker.query_result or {"success": False, "status": "needs_review", "needs_review": True,
+        return tracker.query_result or tracker.completed_result or {"success": False, "status": "needs_review", "needs_review": True,
             "job_id": kwargs.get("job_id"), "message": "模拟结果未确认"}
 
     service = ContentProduction(store, workflow, generate, execute, query)
@@ -189,7 +203,7 @@ def test_interrupted_execution_recovers_after_plan_revision_without_replay(produ
     state = env.store.content_workflow(env.identifier)
     state["weekly_saved"]["version"] = 2
     env.store.save_content_workflow(env.identifier, state, expected_revision=state["revision"])
-    env.tracker.query_result = {"success": True, "status": "succeeded", "job_id": "synthetic-job", "message": "原任务核验成功"}
+    env.tracker.query_result = verified_receipt(data)
     action(env, data, "reconcile_content_draft")
     assert env.service.list(env.identifier)["drafts"][0]["execution_status"] == "draft_saved"
     assert len(env.tracker.executions) == 1
@@ -225,6 +239,79 @@ def test_human_resolution_preserves_original_execution_and_requires_new_approval
     with env.store._connect() as connection:
         rows = connection.execute("SELECT status,result_json FROM content_draft_executions ORDER BY rowid").fetchall()
     assert "human_resolution" in rows[0][1]
+
+
+@pytest.mark.parametrize("machine_result", [
+    {"success": False, "status": "needs_review"},
+    {"success": False, "status": "running"},
+    {"success": True, "status": "succeeded"},
+])
+def test_explicit_reconcile_preserves_manual_confirmation_without_query(production_env, machine_result):
+    env = production_env
+    data = editable_with_images(env, produce(env))
+    action(env, data, "review_content_draft", decision="approve")
+    env.tracker.mode = "interrupt"
+    action(env, data, "save_content_draft")
+    action(env, data, "resolve_content_draft", decision="found", note="已人工确认原草稿存在")
+    before = env.store.generation_ui_artifact(env.identifier, data["artifact_id"]).data
+    with env.store._connect() as connection:
+        execution_before = connection.execute("SELECT status,result_json FROM content_draft_executions").fetchone()
+    queries = []
+    env.service.query_draft = lambda **arguments: queries.append(arguments) or machine_result
+    arguments = {"result_ref": data["result_ref"], "version": data["version"]}
+    key = str(uuid4())
+    for request_key in (key, key, str(uuid4())):
+        response = env.service.action(env.identifier, data["artifact_id"], "reconcile_content_draft", arguments, request_key)
+        assert response["status"] == "manually_confirmed"
+        assert response["data_patch"] == before
+        assert "不代表机器完成完整字段核验" in response["message"]
+    assert not queries
+    assert env.store.generation_ui_artifact(env.identifier, data["artifact_id"]).data == before
+    with env.store._connect() as connection:
+        assert connection.execute("SELECT status,result_json FROM content_draft_executions").fetchone() == execution_before
+        assert json.loads(connection.execute("SELECT data_json FROM content_draft_versions WHERE artifact_id=?",
+            (data["artifact_id"],)).fetchone()[0]) == before
+    assert len(env.tracker.executions) == 1
+
+
+def test_explicit_reconcile_rejects_old_version_after_not_saved_resolution(production_env):
+    env = production_env
+    data = editable_with_images(env, produce(env))
+    action(env, data, "review_content_draft", decision="approve")
+    env.tracker.mode = "interrupt"
+    action(env, data, "save_content_draft")
+    action(env, data, "resolve_content_draft", decision="not_saved", note="已人工确认没有保存")
+    before = env.service.list(env.identifier)["drafts"][0]
+    queries = []
+    env.service.query_draft = lambda **arguments: queries.append(arguments) or {"success": True}
+    with pytest.raises(GenerationUiActionConflictError, match="当前版本"):
+        action(env, data, "reconcile_content_draft")
+    assert not queries
+    assert env.service.list(env.identifier)["drafts"][0] == before
+    assert before["execution_status"] == "not_started" and before["approval"] is None
+    with env.store._connect() as connection:
+        assert connection.execute("SELECT status FROM content_draft_executions").fetchone()[0] == "reviewed_not_saved"
+    assert len(env.tracker.executions) == 1
+
+
+@pytest.mark.parametrize("pending_status", ["running", "needs_review"])
+def test_explicit_reconcile_still_recovers_pending_execution(production_env, pending_status):
+    env = production_env
+    data = editable_with_images(env, produce(env))
+    action(env, data, "review_content_draft", decision="approve")
+    def pending(**arguments):
+        env.tracker.executions.append(arguments)
+        arguments["on_job_created"]("synthetic-job")
+        return {"success": False, "status": pending_status, "job_id": "synthetic-job"}
+    env.service.save_draft = pending
+    assert action(env, data, "save_content_draft")["status"] == pending_status
+    queries = []
+    env.service.query_draft = lambda **arguments: queries.append(arguments) or verified_receipt(data)
+    response = action(env, data, "reconcile_content_draft")
+    assert response["status"] == "draft_saved"
+    assert len(queries) == 1 and len(env.tracker.executions) == 1
+    with env.store._connect() as connection:
+        assert connection.execute("SELECT status FROM content_draft_executions").fetchone()[0] == "draft_saved"
 
 
 def test_source_receipts_keep_body_and_comments_and_generation_uses_original_text(production_env):

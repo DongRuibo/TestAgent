@@ -1,0 +1,1364 @@
+[
+  {
+    "case_id": "AG-A01",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 4.876999999396503
+  },
+  {
+    "case_id": "AG-A02",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.562917012255639
+  },
+  {
+    "case_id": "AG-A03",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.6603750011418015
+  },
+  {
+    "case_id": "AG-A04",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.199500002665445
+  },
+  {
+    "case_id": "AG-A05",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.416292001726106
+  },
+  {
+    "case_id": "AG-A06",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.485958015313372
+  },
+  {
+    "case_id": "AG-B01",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.4320840020664036
+  },
+  {
+    "case_id": "AG-B02",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.5769589992705733
+  },
+  {
+    "case_id": "AG-B03",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.429958985885605
+  },
+  {
+    "case_id": "AG-B04",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.390333014773205
+  },
+  {
+    "case_id": "AG-B05",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.4446669849567115
+  },
+  {
+    "case_id": "AG-B06",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.1964999905321747
+  },
+  {
+    "case_id": "AG-B07",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.5368330243509263
+  },
+  {
+    "case_id": "AG-B08",
+    "repetition": 1,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 758.5196670261212
+  },
+  {
+    "case_id": "CO-N01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 62.916249997215346
+  },
+  {
+    "case_id": "CO-N02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 75.32587499008514
+  },
+  {
+    "case_id": "CO-N03",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 24.027875013416633
+  },
+  {
+    "case_id": "CO-N04",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 26.218874991172925
+  },
+  {
+    "case_id": "CO-N05",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.176292000338435
+  },
+  {
+    "case_id": "CO-N06",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 20.744208013638854
+  },
+  {
+    "case_id": "CO-I01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 16.235957999015227
+  },
+  {
+    "case_id": "CO-I02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 16.068208002252504
+  },
+  {
+    "case_id": "CO-I03",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.73587501561269
+  },
+  {
+    "case_id": "CO-I04",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 20.792750001419336
+  },
+  {
+    "case_id": "CO-I05",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.465541001409292
+  },
+  {
+    "case_id": "CO-I06",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 21.395792020484805
+  },
+  {
+    "case_id": "CO-A01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.091416004812345
+  },
+  {
+    "case_id": "CO-A02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.576583022484556
+  },
+  {
+    "case_id": "CO-A03",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.953833013772964
+  },
+  {
+    "case_id": "CO-A04",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 21.559583983616903
+  },
+  {
+    "case_id": "CO-R01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 28.975458990316838
+  },
+  {
+    "case_id": "CO-R02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.299500009277835
+  },
+  {
+    "case_id": "CO-R03",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 28.27137499116361
+  },
+  {
+    "case_id": "CO-R04",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.47558301477693
+  },
+  {
+    "case_id": "CO-R05",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 27.973415999440476
+  },
+  {
+    "case_id": "CO-R06",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.696583999088034
+  },
+  {
+    "case_id": "CO-P01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 20.687875017756596
+  },
+  {
+    "case_id": "CO-P02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.26170798833482
+  },
+  {
+    "case_id": "RT-E01",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 33.409499999834225
+  },
+  {
+    "case_id": "RT-E02",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.304707994218916
+  },
+  {
+    "case_id": "RT-E03",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.947667004307732
+  },
+  {
+    "case_id": "RT-E04",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 26.49120899150148
+  },
+  {
+    "case_id": "RT-E05",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1087.2812499874271
+  },
+  {
+    "case_id": "RT-E06",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1041.1355000105686
+  },
+  {
+    "case_id": "RT-E07",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1078.9639999857172
+  },
+  {
+    "case_id": "RT-E08",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "tool_result_contract",
+    "duration_ms": 26.83275000890717
+  },
+  {
+    "case_id": "RT-E09",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "database_state",
+    "duration_ms": 33.60758299822919
+  },
+  {
+    "case_id": "RT-E10",
+    "repetition": 1,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "receipt_matches_database"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 32.61770898825489
+  },
+  {
+    "case_id": "RT-E11",
+    "repetition": 1,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 14.127666014246643
+  },
+  {
+    "case_id": "RT-E12",
+    "repetition": 1,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "no_false_completion"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 13.445707998471335
+  },
+  {
+    "case_id": "AG-A01",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.0325420084409416
+  },
+  {
+    "case_id": "AG-A02",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.5116670003626496
+  },
+  {
+    "case_id": "AG-A03",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.559915999881923
+  },
+  {
+    "case_id": "AG-A04",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.1455830030608922
+  },
+  {
+    "case_id": "AG-A05",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.311958000063896
+  },
+  {
+    "case_id": "AG-A06",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.2959579839371145
+  },
+  {
+    "case_id": "AG-B01",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.064500004053116
+  },
+  {
+    "case_id": "AG-B02",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.019792009377852
+  },
+  {
+    "case_id": "AG-B03",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.182833995902911
+  },
+  {
+    "case_id": "AG-B04",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.178624999942258
+  },
+  {
+    "case_id": "AG-B05",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.8037080192007124
+  },
+  {
+    "case_id": "AG-B06",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1.8973750120494515
+  },
+  {
+    "case_id": "AG-B07",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.374666975811124
+  },
+  {
+    "case_id": "AG-B08",
+    "repetition": 2,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 766.408166004112
+  },
+  {
+    "case_id": "CO-N01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 36.35429099085741
+  },
+  {
+    "case_id": "CO-N02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 71.36541602085344
+  },
+  {
+    "case_id": "CO-N03",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.920415995642543
+  },
+  {
+    "case_id": "CO-N04",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.436875002924353
+  },
+  {
+    "case_id": "CO-N05",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.22712498344481
+  },
+  {
+    "case_id": "CO-N06",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.1125420096796
+  },
+  {
+    "case_id": "CO-I01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 15.059833007398993
+  },
+  {
+    "case_id": "CO-I02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 13.87112500378862
+  },
+  {
+    "case_id": "CO-I03",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 18.779000005451962
+  },
+  {
+    "case_id": "CO-I04",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 17.72220799466595
+  },
+  {
+    "case_id": "CO-I05",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 18.476750003173947
+  },
+  {
+    "case_id": "CO-I06",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 21.69091600808315
+  },
+  {
+    "case_id": "CO-A01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 18.60483401105739
+  },
+  {
+    "case_id": "CO-A02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 33.53041599621065
+  },
+  {
+    "case_id": "CO-A03",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 24.870332999853417
+  },
+  {
+    "case_id": "CO-A04",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.209249992854893
+  },
+  {
+    "case_id": "CO-R01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.19254099833779
+  },
+  {
+    "case_id": "CO-R02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.889208992244676
+  },
+  {
+    "case_id": "CO-R03",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.43433399195783
+  },
+  {
+    "case_id": "CO-R04",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.948667001212016
+  },
+  {
+    "case_id": "CO-R05",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 27.976582990959287
+  },
+  {
+    "case_id": "CO-R06",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 31.585332995746285
+  },
+  {
+    "case_id": "CO-P01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 21.0593749943655
+  },
+  {
+    "case_id": "CO-P02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.681541016325355
+  },
+  {
+    "case_id": "RT-E01",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 32.85366599448025
+  },
+  {
+    "case_id": "RT-E02",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.227292019641027
+  },
+  {
+    "case_id": "RT-E03",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.01316700829193
+  },
+  {
+    "case_id": "RT-E04",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 26.093708002008498
+  },
+  {
+    "case_id": "RT-E05",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1072.1718749846332
+  },
+  {
+    "case_id": "RT-E06",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1047.6791249820963
+  },
+  {
+    "case_id": "RT-E07",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1069.0524999808986
+  },
+  {
+    "case_id": "RT-E08",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "tool_result_contract",
+    "duration_ms": 26.59424999728799
+  },
+  {
+    "case_id": "RT-E09",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "database_state",
+    "duration_ms": 32.648749998770654
+  },
+  {
+    "case_id": "RT-E10",
+    "repetition": 2,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "receipt_matches_database"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 34.527957992395386
+  },
+  {
+    "case_id": "RT-E11",
+    "repetition": 2,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 13.214292004704475
+  },
+  {
+    "case_id": "RT-E12",
+    "repetition": 2,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "no_false_completion"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 12.786833016434684
+  },
+  {
+    "case_id": "AG-A01",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.7295409818179905
+  },
+  {
+    "case_id": "AG-A02",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.117915981216356
+  },
+  {
+    "case_id": "AG-A03",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.27033399278298
+  },
+  {
+    "case_id": "AG-A04",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.153709025355056
+  },
+  {
+    "case_id": "AG-A05",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.417667012196034
+  },
+  {
+    "case_id": "AG-A06",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 3.192625008523464
+  },
+  {
+    "case_id": "AG-B01",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.7182500052731484
+  },
+  {
+    "case_id": "AG-B02",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1.8959589942824095
+  },
+  {
+    "case_id": "AG-B03",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.610334020573646
+  },
+  {
+    "case_id": "AG-B04",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.150790998712182
+  },
+  {
+    "case_id": "AG-B05",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.8708750032819808
+  },
+  {
+    "case_id": "AG-B06",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1.9844589987769723
+  },
+  {
+    "case_id": "AG-B07",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 2.19783402280882
+  },
+  {
+    "case_id": "AG-B08",
+    "repetition": 3,
+    "status": "passed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 764.2489999998361
+  },
+  {
+    "case_id": "CO-N01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 34.77529197698459
+  },
+  {
+    "case_id": "CO-N02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 67.21029101754539
+  },
+  {
+    "case_id": "CO-N03",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.713375012855977
+  },
+  {
+    "case_id": "CO-N04",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 26.390999992145225
+  },
+  {
+    "case_id": "CO-N05",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.15475001442246
+  },
+  {
+    "case_id": "CO-N06",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.7807909862604
+  },
+  {
+    "case_id": "CO-I01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 13.540875021135435
+  },
+  {
+    "case_id": "CO-I02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 14.383374975295737
+  },
+  {
+    "case_id": "CO-I03",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 18.680667009903118
+  },
+  {
+    "case_id": "CO-I04",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.342208019224927
+  },
+  {
+    "case_id": "CO-I05",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 16.89554101903923
+  },
+  {
+    "case_id": "CO-I06",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 21.579874999588355
+  },
+  {
+    "case_id": "CO-A01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 18.525584018789232
+  },
+  {
+    "case_id": "CO-A02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 23.127749998820946
+  },
+  {
+    "case_id": "CO-A03",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.315667007816955
+  },
+  {
+    "case_id": "CO-A04",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.03345898608677
+  },
+  {
+    "case_id": "CO-R01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.025374999037012
+  },
+  {
+    "case_id": "CO-R02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.80712498538196
+  },
+  {
+    "case_id": "CO-R03",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 27.85933398990892
+  },
+  {
+    "case_id": "CO-R04",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 33.23454098426737
+  },
+  {
+    "case_id": "CO-R05",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.3471660008654
+  },
+  {
+    "case_id": "CO-R06",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.54199999314733
+  },
+  {
+    "case_id": "CO-P01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 20.136582985287532
+  },
+  {
+    "case_id": "CO-P02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 19.326165987877175
+  },
+  {
+    "case_id": "RT-E01",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 33.30641699722037
+  },
+  {
+    "case_id": "RT-E02",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 30.655667011160403
+  },
+  {
+    "case_id": "RT-E03",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 29.52366601675749
+  },
+  {
+    "case_id": "RT-E04",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 25.196917005814612
+  },
+  {
+    "case_id": "RT-E05",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1054.0208330203313
+  },
+  {
+    "case_id": "RT-E06",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1039.2633750161622
+  },
+  {
+    "case_id": "RT-E07",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 1057.249999983469
+  },
+  {
+    "case_id": "RT-E08",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "tool_result_contract",
+    "duration_ms": 140.20774999517016
+  },
+  {
+    "case_id": "RT-E09",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "database_state",
+    "duration_ms": 508.4152090130374
+  },
+  {
+    "case_id": "RT-E10",
+    "repetition": 3,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "receipt_matches_database"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 103.85320900240913
+  },
+  {
+    "case_id": "RT-E11",
+    "repetition": 3,
+    "status": "completed",
+    "passed": true,
+    "failure_reasons": [],
+    "failure_layer": "runtime",
+    "duration_ms": 23.57620801194571
+  },
+  {
+    "case_id": "RT-E12",
+    "repetition": 3,
+    "status": "completed",
+    "passed": false,
+    "failure_reasons": [
+      "no_false_completion"
+    ],
+    "failure_layer": "result_reporting",
+    "duration_ms": 47.855959011940286
+  }
+]

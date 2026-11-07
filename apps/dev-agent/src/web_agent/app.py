@@ -378,6 +378,10 @@ class GenerationUiEventResponse(BaseModel):
     spec_patch: dict[str, Any] = Field(default_factory=dict)
     agent_message: str
     continuation: ChatResponse | None = None
+    replayed: bool = False
+    original_execution_status: str | None = None
+    current_business_status: str | None = None
+    current_data_patch: dict[str, Any] | None = None
 
 
 class ConversationMessage(BaseModel):

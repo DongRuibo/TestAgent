@@ -1,0 +1,710 @@
+{
+  "schema_version": 1,
+  "mode": "offline-scripted",
+  "dataset_version": "1.0.0",
+  "base_commit": "6888395820efdf30872410644dc1dece45eb4b77",
+  "variants": {
+    "original": {
+      "planned": 150,
+      "passed": 138,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 90,
+          "denominator": 99,
+          "value": 0.9090909090909091,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 42,
+          "denominator": 45,
+          "value": 0.9333333333333333,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 6,
+          "denominator": 9,
+          "value": 0.6666666666666666,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 21.25595899997279,
+          "p95": 1047.2513749846257,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.290042000822723,
+          "p95": 764.1155419987626
+        },
+        "content": {
+          "observed": 72,
+          "p50": 22.74387498619035,
+          "p95": 63.93687499803491
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 33.100917004048824,
+          "p95": 1114.8049590119626
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 138,
+          "denominator": 150,
+          "value": 0.92,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 46,
+          "denominator": 50,
+          "value": 0.92,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 46,
+          "denominator": 50,
+          "value": 0.92,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 24,
+          "denominator": 36,
+          "value": 0.6666666666666666,
+          "unknown": 0
+        }
+      },
+      "failures": [
+        {
+          "case_id": "RT-E08",
+          "repetition": 1,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E09",
+          "repetition": 1,
+          "layer": "database_state",
+          "status": "completed",
+          "reasons": [
+            "execution_status"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E08",
+          "repetition": 2,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E09",
+          "repetition": 2,
+          "layer": "database_state",
+          "status": "completed",
+          "reasons": [
+            "execution_status"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E08",
+          "repetition": 3,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E09",
+          "repetition": 3,
+          "layer": "database_state",
+          "status": "completed",
+          "reasons": [
+            "execution_status"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        }
+      ]
+    },
+    "rt-e09": {
+      "planned": 150,
+      "passed": 141,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 93,
+          "denominator": 99,
+          "value": 0.9393939393939394,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 42,
+          "denominator": 45,
+          "value": 0.9333333333333333,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 6,
+          "denominator": 9,
+          "value": 0.6666666666666666,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 21.167166996747255,
+          "p95": 1029.3223339831457,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.3708330118097365,
+          "p95": 759.4716250023339
+        },
+        "content": {
+          "observed": 72,
+          "p50": 23.068583017447963,
+          "p95": 44.484084006398916
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 32.245875016087666,
+          "p95": 1067.3443749838043
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 141,
+          "denominator": 150,
+          "value": 0.94,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 47,
+          "denominator": 50,
+          "value": 0.94,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 47,
+          "denominator": 50,
+          "value": 0.94,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 27,
+          "denominator": 36,
+          "value": 0.75,
+          "unknown": 0
+        }
+      },
+      "failures": [
+        {
+          "case_id": "RT-E08",
+          "repetition": 1,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E08",
+          "repetition": 2,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E08",
+          "repetition": 3,
+          "layer": "tool_result_contract",
+          "status": "completed",
+          "reasons": [
+            "unverified_success_rejected",
+            "execution_status",
+            "verified_business_success"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        }
+      ]
+    },
+    "phase2": {
+      "planned": 150,
+      "passed": 144,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 96,
+          "denominator": 99,
+          "value": 0.9696969696969697,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 42,
+          "denominator": 45,
+          "value": 0.9333333333333333,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 3,
+          "denominator": 9,
+          "value": 0.3333333333333333,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 21.0593749943655,
+          "p95": 1041.1355000105686,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.485958015313372,
+          "p95": 758.5196670261212
+        },
+        "content": {
+          "observed": 72,
+          "p50": 21.69091600808315,
+          "p95": 62.916249997215346
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 32.648749998770654,
+          "p95": 1078.9639999857172
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 144,
+          "denominator": 150,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 48,
+          "denominator": 50,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 48,
+          "denominator": 50,
+          "value": 0.96,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 30,
+          "denominator": 36,
+          "value": 0.8333333333333334,
+          "unknown": 0
+        }
+      },
+      "failures": [
+        {
+          "case_id": "RT-E10",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E12",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "no_false_completion"
+          ]
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "original": {
+      "manifest.json": {
+        "source_sha256": "dbb5e97bcc8b6f9493104ceddafbf27b9f2839ad9ba09cef8d7aa5928325e030",
+        "portable_content_sha256": "045d2de2264036dfd8edb61be065018753f2c2c98c623df06d3feb0480c46e5d",
+        "published_sha256": "045d2de2264036dfd8edb61be065018753f2c2c98c623df06d3feb0480c46e5d",
+        "file": "manifest.json",
+        "redaction": "Local path prefixes replaced and collection time reduced to date; no outcomes or assertions edited"
+      },
+      "report.md": {
+        "source_sha256": "fa7d336d41efe9d34bd8beeb80390172795bf3437c460f7df70b736e34c06fe3",
+        "portable_content_sha256": "fa7d336d41efe9d34bd8beeb80390172795bf3437c460f7df70b736e34c06fe3",
+        "published_sha256": "fa7d336d41efe9d34bd8beeb80390172795bf3437c460f7df70b736e34c06fe3",
+        "file": "report.md",
+        "redaction": "local repository, home and temporary-directory prefixes replaced; no outcomes or assertions edited"
+      }
+    },
+    "rt-e09": {
+      "manifest.json": {
+        "source_sha256": "f163768e3cbd2cbc3d3c770d66fff449fb23745fe9e5a666b0a4a8f61f21d066",
+        "portable_content_sha256": "92f03f9848d0d9f31e6f5ccdf2543b01ae7dc5f7f4b87060ef54074e88befad1",
+        "published_sha256": "92f03f9848d0d9f31e6f5ccdf2543b01ae7dc5f7f4b87060ef54074e88befad1",
+        "file": "manifest.json",
+        "redaction": "Local path prefixes replaced and collection time reduced to date; no outcomes or assertions edited"
+      },
+      "report.md": {
+        "source_sha256": "08541d380a51ccdba839bc40190d0011fad637a1553f3647f5012a0a7af7a715",
+        "portable_content_sha256": "08541d380a51ccdba839bc40190d0011fad637a1553f3647f5012a0a7af7a715",
+        "published_sha256": "08541d380a51ccdba839bc40190d0011fad637a1553f3647f5012a0a7af7a715",
+        "file": "report.md",
+        "redaction": "local repository, home and temporary-directory prefixes replaced; no outcomes or assertions edited"
+      }
+    },
+    "phase2": {
+      "manifest.json": {
+        "source_sha256": "9d49a7e1988d6c339b910316f38a271072e8019bd4fd7419fcf0629de00449ab",
+        "portable_content_sha256": "72e8bcab3babe4d1738c2fad1dd31a3c9b2c8bba86834f7a9676fce85ca15dc1",
+        "published_sha256": "72e8bcab3babe4d1738c2fad1dd31a3c9b2c8bba86834f7a9676fce85ca15dc1",
+        "file": "manifest.json",
+        "redaction": "Local path prefixes replaced and collection time reduced to date; no outcomes or assertions edited"
+      },
+      "report.md": {
+        "source_sha256": "41180f1f403b8a34faf4a21fdc7185c869a47bc75cb166f846e3b68ed0cd076b",
+        "portable_content_sha256": "41180f1f403b8a34faf4a21fdc7185c869a47bc75cb166f846e3b68ed0cd076b",
+        "published_sha256": "41180f1f403b8a34faf4a21fdc7185c869a47bc75cb166f846e3b68ed0cd076b",
+        "file": "report.md",
+        "redaction": "local repository, home and temporary-directory prefixes replaced; no outcomes or assertions edited"
+      }
+    }
+  },
+  "limitations": [
+    "Synthetic SDK/platform boundaries; no paid calls or real accounts in this evaluation batch.",
+    "Raw SQLite, browser profiles, worktree diffs, logs and source archives excluded.",
+    "Source fingerprints describe historical dirty experiments; release candidate validated separately.",
+    "Published reports replace local path prefixes; cases, verdicts and failures preserved.",
+    "Publication removes host identifiers, exact collection/test wall-clock timestamps and local experiment paths from metadata; business evidence and measured elapsed durations remain unchanged.",
+    "Full raw reports/Trace archives remain local and are excluded from GitHub after automatic approval review could not verify the entire raw derived payload. Public evidence contains every case verdict and reason, aggregate metrics, manifests and Markdown reports; reproduce locally to generate full traces."
+  ],
+  "local_only_full_evidence_sha256": {
+    "original": {
+      "report.json": "754621c6caace07ceb1114731069d129a1e84e13fe4dc2381da6d98d763e8d81",
+      "traces.jsonl": "fadb2646e4aa28daa1542f901e316fb7c9ad844605e45e44c095d98a4f690b56"
+    },
+    "rt-e09": {
+      "report.json": "f3a8b50816e1f106699068bccd4149be2cbe9c7577c169fd1a9476162e04567f",
+      "traces.jsonl": "da353d523aa4aaafa4a5b5ba6bbbdf7476962d950b4960470f89379ff4c95f3a"
+    },
+    "phase2": {
+      "report.json": "c7d7caf97791667a8007fe7ffc5b61ddd63426bf47276745066ac7013ffcaf3c",
+      "traces.jsonl": "c820c8974cc8ac867112c95c062322e541e3d7e776a6b6805a0476ba85f4db18"
+    }
+  }
+}

@@ -1128,7 +1128,17 @@ async function submitGenerationUiEvent(artifact, event, formValues) {
   })();
   generationUiActionRequests.set(requestKey, request);
   try {
-    const payload = await request;
+    const received = await request;
+    const stateLabels = {
+      not_started: "尚未执行", queued: "排队中", running: "执行中",
+      needs_review: "待人工核验", draft_saved: "草稿已保存并核验",
+      manually_confirmed: "人工确认草稿存在", reviewed_not_saved: "人工确认未保存",
+    };
+    // 历史回执仍可追溯；卡片和提示使用同一内容版本的当前状态，避免回退显示。
+    const payload = received.replayed && received.current_data_patch
+      ? { ...received, data_patch: received.current_data_patch, status: received.current_business_status,
+        message: `此请求已处理，当前状态：${stateLabels[received.current_business_status] || "请查看内容详情"}。` }
+      : received;
     void contentWorkflow.refresh();
     if (host) showInlineGenerationUiNotice(host, payload.message, "success");
     if (payload.continuation) {

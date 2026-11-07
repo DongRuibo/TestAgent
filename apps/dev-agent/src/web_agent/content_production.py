@@ -7,6 +7,7 @@ from typing import Callable
 from uuid import UUID, uuid4, uuid5, NAMESPACE_URL
 
 from pydantic import BaseModel, ConfigDict, Field
+from rpa_agent_module.models import verified_draft_result
 
 from tools.content_drafts import DRAFT_SCENARIO, DraftPayload, build_content_draft_ui
 from tools.research_images import IMAGE_TOOL_NAME
@@ -70,14 +71,39 @@ class ContentProduction:
             rows = connection.execute("SELECT execution_id, job_id, artifact_id FROM content_draft_executions "
                 "WHERE conversation_id=? AND status IN ('running','needs_review')", (identifier,)).fetchall()
         for execution_id, job_id, artifact_id in rows:
-            result = self.query_draft(execution_id=execution_id, job_id=job_id)
             with self.store._connect() as connection:
                 data = self._artifact_data(connection, identifier, artifact_id)
+                result = self._query_draft_result(data, execution_id, job_id)
                 status = "draft_saved" if result.get("success") else "running" if result.get("status") in {"queued", "running"} else "needs_review"
                 data.update(execution_status=status, execution_result=result)
                 self._write_data(connection, data)
                 connection.execute("UPDATE content_draft_executions SET status=?, job_id=COALESCE(?,job_id), result_json=? WHERE execution_id=?",
                     (status, result.get("job_id"), json.dumps(result, ensure_ascii=False), execution_id))
+
+    def _query_draft_result(self, data, execution_id, job_id):
+        """在RPA读回入口核验原执行、审核版本和完整字段；下游只使用核验结果。"""
+        try:
+            result = self.query_draft(execution_id=execution_id, job_id=job_id)
+        except Exception:
+            result = None
+        if (isinstance(result, dict) and result.get("success") is False
+            and (job_id is None or result.get("job_id") is None or result.get("job_id") == job_id)):
+            return result
+        approval = data.get("approval") or {}
+        if (isinstance(result, dict) and result.get("success") is True
+            and result.get("workflow") == "xiaohongshu_draft" and result.get("status") == "succeeded"
+            and isinstance(result.get("job_id"), str) and bool(result["job_id"])
+            and (job_id is None or result["job_id"] == job_id)
+            and result.get("result_type") == "xiaohongshu_draft_saved"
+            and result.get("final_publish_performed") is False
+            and not result.get("needs_review") and not result.get("needs_user_action")
+            and approval.get("version") == data["version"] and approval.get("result_ref") == data["result_ref"]
+            and verified_draft_result(result.get("result"), data)
+            and result.get("verification") == result["result"]["verification"]):
+            return result
+        return {"success": False, "status": "needs_review", "needs_review": True, "job_id": job_id,
+            "error_type": "RPA_RESULT_UNVERIFIED", "message": "原执行未取得与审核内容一致的完整核验回执，请人工核对；不会重复保存。",
+            "result": result, "final_publish_performed": result.get("final_publish_performed") if isinstance(result, dict) else None}
 
     def _latest(self, connection, identifier, draft_id):
         row = connection.execute("SELECT data_json FROM content_draft_versions WHERE conversation_id=? AND draft_id=? "
@@ -247,7 +273,10 @@ class ContentProduction:
         with self.store._connect() as connection:
             existing = _generation_action_receipt(connection, idempotency_key, identifier, artifact_id, action_id, arguments)
             if existing:
-                return existing
+                # 原回执保持历史语义；当前数据限定为原Action绑定的内容版本，不能跨版本套用。
+                current = self._artifact_data(connection, identifier, artifact_id)
+                return {**existing, "replayed": True, "original_execution_status": existing["status"],
+                    "current_business_status": current["execution_status"], "current_data_patch": current}
             data = self._artifact_data(connection, identifier, artifact_id)
             latest = self._latest(connection, identifier, data["draft_id"])
             if data["version"] != latest["version"] or arguments["version"] != data["version"] or arguments["result_ref"] != data["result_ref"]:
@@ -306,7 +335,11 @@ class ContentProduction:
                 execution = connection.execute("SELECT execution_id, job_id FROM content_draft_executions WHERE artifact_id=?", (artifact_id,)).fetchone()
                 if not execution:
                     raise GenerationUiActionConflictError("本版本尚未创建执行。")
-                response = None
+                # 人工确认属于已处理终态，查询只返回原结论，不再用机器结果覆盖。
+                if data["execution_status"] == "manually_confirmed":
+                    response = self._response(data, "已记录人工确认草稿存在；此结论不代表机器完成完整字段核验。")
+                else:
+                    response = None
             elif action_id == "resolve_content_draft":
                 if data["execution_status"] != "needs_review" or not arguments.get("note", "").strip():
                     raise GenerationUiActionConflictError("仅待核验任务可记录人工结论，并须填写核验说明。")
@@ -340,8 +373,14 @@ class ContentProduction:
             except Exception:
                 result = {"success": False, "status": "needs_review", "needs_review": True,
                     "message": "执行中断，草稿结果未确认；请查询原任务，不要重复保存。"}
+            if not isinstance(result, dict) or result.get("success") is not False:
+                # 保存应答不是完成凭证，须按已持久化的原执行关联只读核验。
+                with self.store._connect() as connection:
+                    job_id = connection.execute("SELECT job_id FROM content_draft_executions WHERE execution_id=?",
+                        (execution_id,)).fetchone()[0]
+                result = self._query_draft_result(data, execution_id, job_id)
         else:
-            result = self.query_draft(execution_id=execution[0], job_id=execution[1])
+            result = self._query_draft_result(data, execution[0], execution[1])
             execution_id = execution[0]
         with self.store._connect() as connection:
             data = self._artifact_data(connection, identifier, artifact_id)
