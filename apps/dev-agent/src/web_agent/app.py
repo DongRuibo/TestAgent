@@ -1333,6 +1333,7 @@ def create_app(
                         arguments=rpa_arguments,
                         idempotency_key=str(request.idempotency_key),
                         rpa_result=rpa_result,
+                        query_draft=query_xiaohongshu_draft,
                     )
             elif (
                 artifact.scenario == "structured_input"
@@ -1428,10 +1429,9 @@ def create_app(
             identifier = str(conversation_id)
             get_content_production().reconcile(identifier)
             for old_artifact_id, item in get_store().unresolved_content_xiaohongshu(identifier):
-                result = query_xiaohongshu_draft(execution_id=item["rpa_execution_id"], job_id=item.get("rpa_job_id") or None)
                 get_store().finish_content_xiaohongshu_rpa(identifier, old_artifact_id,
                     arguments={"content_id": item["content_id"]}, idempotency_key=item["rpa_idempotency_key"],
-                    rpa_result=result, reconcile=True)
+                    rpa_result={}, reconcile=True, query_draft=query_xiaohongshu_draft)
             message_records = get_store().message_records(identifier)
             artifacts = get_store().generation_ui_artifacts(identifier)
             resources = get_store().conversation_resources(identifier)
@@ -2190,9 +2190,26 @@ def create_app(
         nonlocal content_production_service
         if content_production_service is None:
             def generate(inputs, save):
+                from agent.completion import CompletionContract, CompletionDecision
                 agent = factory(lambda message: None, AttachmentRetrievalScope())
+                saved_refs = []
+                def save_candidate(**payload):
+                    result = save(**payload)
+                    if result.get("success") is True:
+                        saved_refs.append(result["result_ref"])
+                    return result
+                def verify_candidate():
+                    artifacts = get_store().generation_ui_artifacts(inputs["conversation_id"])
+                    matches = [item for item in artifacts if item.scenario == "content_draft"
+                        and item.data.get("result_ref") in saved_refs and item.data.get("plan_id") == inputs["plan_id"]
+                        and item.data.get("plan_version") == inputs["plan_version"] and item.data.get("content_id") == inputs["content_id"]]
+                    return CompletionDecision(status="completed" if len(matches) == 1 else "needs_review",
+                        reason="CANDIDATE_PERSISTED" if len(matches) == 1 else "CANDIDATE_NOT_PERSISTED",
+                        evidence={"artifact_id": matches[0].artifact_id, "result_ref": matches[0].data["result_ref"],
+                            "version": matches[0].data["version"]} if len(matches) == 1 else {})
+                agent.completion_contract = CompletionContract("save_candidate", verify_candidate)
                 # 隔离制作阶段只开放候选保存，不继承研究、文件或RPA工具权限。
-                agent.tool_handlers = {SAVE_DRAFT_TOOL: save}
+                agent.tool_handlers = {SAVE_DRAFT_TOOL: save_candidate}
                 agent.tool_definitions = {SAVE_DRAFT_TOOL: DRAFT_TOOL_DEFINITION}
                 agent.tool_budgets = {SAVE_DRAFT_TOOL: 3}
                 agent.tools = [DRAFT_TOOL_DEFINITION]

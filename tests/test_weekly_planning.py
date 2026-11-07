@@ -345,6 +345,7 @@ def test_real_agent_loop_tool_schemas_permissions_and_large_input(weekly_env):
     env = weekly_env
     catalog = SkillCatalog.from_directory(ROOT / ".agents/skills")
     sizes = []
+    agents = []
 
     class ScriptedClient:
         def __init__(self):
@@ -380,8 +381,10 @@ def test_real_agent_loop_tool_schemas_permissions_and_large_input(weekly_env):
         handlers = register_skill_tools(DEFAULT_TOOL_HANDLERS, catalog)
         handlers.update(env.research.handlers())
         handlers["social_get_post_detail"] = synthetic_detail
-        return AgentLoop(ScriptedClient(), trace=trace, skill_catalog=catalog,
+        agent = AgentLoop(ScriptedClient(), trace=trace, skill_catalog=catalog,
             tool_handlers=handlers)
+        agents.append(agent)
+        return agent
 
     env.client = TestClient(create_app(factory, conversation_store=env.store))
     answer = say(env, "制定周计划：2026-09-14；暂无人员名单；" + "业务背景" * 2200)
@@ -389,6 +392,15 @@ def test_real_agent_loop_tool_schemas_permissions_and_large_input(weekly_env):
     say(env, "启动研究")
     assert "下载周运营计划" in say(env, "同意费用并启动本次研究")
     assert max(sizes) > 8000
+    receipts = [agent.last_completion_receipt for agent in agents if agent.last_completion_receipt]
+    assert {receipt["task_type"] for receipt in receipts} == {"weekly_prepare", "research", "weekly_plan"}
+    for receipt in receipts:
+        assert receipt["evidence"]
+        if receipt["task_type"] == "research":
+            assert receipt["evidence"]["research_status"] == state(env)["research_status"]
+            assert (receipt["status"] == "completed") is (state(env)["research_status"] == "success")
+        else:
+            assert receipt["status"] == "completed"
 
 
 def test_stop_reaches_weekly_agent_and_preserves_recoverable_state(weekly_env):

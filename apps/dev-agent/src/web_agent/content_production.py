@@ -7,11 +7,10 @@ from typing import Callable
 from uuid import UUID, uuid4, uuid5, NAMESPACE_URL
 
 from pydantic import BaseModel, ConfigDict, Field
-from rpa_agent_module.models import verified_draft_result
 
 from tools.content_drafts import DRAFT_SCENARIO, DraftPayload, build_content_draft_ui
 from tools.research_images import IMAGE_TOOL_NAME
-from tools.rpa_xiaohongshu import validate_content_image_paths
+from tools.rpa_xiaohongshu import validate_content_image_paths, query_verified_draft
 from web_agent.conversations import (GenerationUiActionConflictError, _generation_action_receipt,
     _insert_generation_action, _insert_assistant_response, _serialize_ui_artifact, _now)
 from web_agent.research_session import source_receipts, post_key
@@ -82,28 +81,9 @@ class ContentProduction:
 
     def _query_draft_result(self, data, execution_id, job_id):
         """在RPA读回入口核验原执行、审核版本和完整字段；下游只使用核验结果。"""
-        try:
-            result = self.query_draft(execution_id=execution_id, job_id=job_id)
-        except Exception:
-            result = None
-        if (isinstance(result, dict) and result.get("success") is False
-            and (job_id is None or result.get("job_id") is None or result.get("job_id") == job_id)):
-            return result
         approval = data.get("approval") or {}
-        if (isinstance(result, dict) and result.get("success") is True
-            and result.get("workflow") == "xiaohongshu_draft" and result.get("status") == "succeeded"
-            and isinstance(result.get("job_id"), str) and bool(result["job_id"])
-            and (job_id is None or result["job_id"] == job_id)
-            and result.get("result_type") == "xiaohongshu_draft_saved"
-            and result.get("final_publish_performed") is False
-            and not result.get("needs_review") and not result.get("needs_user_action")
-            and approval.get("version") == data["version"] and approval.get("result_ref") == data["result_ref"]
-            and verified_draft_result(result.get("result"), data)
-            and result.get("verification") == result["result"]["verification"]):
-            return result
-        return {"success": False, "status": "needs_review", "needs_review": True, "job_id": job_id,
-            "error_type": "RPA_RESULT_UNVERIFIED", "message": "原执行未取得与审核内容一致的完整核验回执，请人工核对；不会重复保存。",
-            "result": result, "final_publish_performed": result.get("final_publish_performed") if isinstance(result, dict) else None}
+        return query_verified_draft(target=data, authorized=approval.get("version") == data["version"]
+            and approval.get("result_ref") == data["result_ref"], execution_id=execution_id, job_id=job_id, query=self.query_draft)
 
     def _latest(self, connection, identifier, draft_id):
         row = connection.execute("SELECT data_json FROM content_draft_versions WHERE conversation_id=? AND draft_id=? "

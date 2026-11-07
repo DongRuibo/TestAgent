@@ -5,6 +5,7 @@ from uuid import UUID, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
+from agent.completion import CompletionContract, CompletionDecision
 
 from tools.content_operations import generate_content_weekly_plan
 from tools import content_research
@@ -382,6 +383,17 @@ class ContentWorkflow:
                     state, result = self._save_research(identifier, state, payload, save)
                     return result
                 handlers[SAVE_CONTENT_RESEARCH_TOOL_NAME] = save_checkpoint
+                def verify_research():
+                    current = self.store.content_workflow(identifier)
+                    research = self._research(current) if current.get("research_path") else None
+                    pending = any(call["status"] in {"inflight", "pending"} for call in current.get("research_calls", {}).values())
+                    ok = bool(research and research["execution_status"] == "success" and source_receipts(current) and not pending)
+                    return CompletionDecision(status="completed" if ok else "needs_review",
+                        reason="RESEARCH_PERSISTED_AND_LINKED" if ok else "RESEARCH_PARTIAL_OR_UNVERIFIED",
+                        evidence={"workflow_id": current["workflow_id"], "goal_ref": current["goal_ref"],
+                            "research_status": research["execution_status"], "pending_requests": pending,
+                            "source_count": len(source_receipts(current))} if research else {})
+                agent.completion_contract = CompletionContract("research", verify_research)
 
             try:
                 (run_research or self.run_research)(identifier, state["goal_ref"]["artifact_path"], configure)

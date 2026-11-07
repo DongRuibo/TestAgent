@@ -379,17 +379,18 @@ def test_content_review_and_fake_rpa_round_trip_through_web_api(
 
     def fake_save_xiaohongshu_draft(**payload):
         rpa_calls.append(payload)
-        return {
-            "success": True,
-            "job_id": "fake-job-1",
-            "status": "succeeded",
-            "message": "离线假 RPA 已核验草稿。",
-            "final_publish_performed": False,
-        }
+        payload["on_job_created"]("synthetic-job")
+        from test_content_production import verified_receipt
+        return verified_receipt(payload)
 
     monkeypatch.setattr(
         "web_agent.app.save_xiaohongshu_draft", fake_save_xiaohongshu_draft
     )
+    def query_original(**arguments):
+        assert arguments == {"execution_id": rpa_calls[0]["execution_id"], "job_id": "synthetic-job"}
+        from test_content_production import verified_receipt
+        return verified_receipt(rpa_calls[0])
+    monkeypatch.setattr("web_agent.app.query_xiaohongshu_draft", query_original)
 
     class FakeAgent:
         last_context_receipt = None
@@ -444,7 +445,10 @@ def test_content_review_and_fake_rpa_round_trip_through_web_api(
     assert review.json()["status"] == "approved"
     assert saved.status_code == 200
     assert saved.json()["status"] == "draft_saved"
-    assert repeated.json() == saved.json()
+    assert repeated.json()["replayed"] is True
+    assert repeated.json()["current_business_status"] == "draft_saved"
+    for field in ("status", "data_patch", "message", "agent_message"):
+        assert repeated.json()[field] == saved.json()[field]
     assert len(rpa_calls) == 1
     assert rpa_calls[0]["image_paths"] == [str(image_path.resolve())]
     restored = client.get(f"/api/conversations/{chat['conversation_id']}").json()
@@ -452,7 +456,7 @@ def test_content_review_and_fake_rpa_round_trip_through_web_api(
     restored_item = restored_contents[0]
     assert restored_item["status"] == "approved"
     assert restored_item["rpa_status"] == "draft_saved"
-    assert restored_item["rpa_job_id"] == "fake-job-1"
+    assert restored_item["rpa_job_id"] == "synthetic-job"
 
 
 def _weekly_plan_artifact() -> tuple[dict, dict]:

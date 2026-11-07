@@ -1,6 +1,7 @@
 # 独立离线可靠性基线
 
-> GitHub公开证据见[证据索引](../docs/eval-evidence/2026-11-07/README.md)。本文保留历史实验路径；原始数据库、工作区日志和源码备份包仅留本地。公开文件保留全部逐例判分、失败原因和汇总指标，并清理机器元数据；完整JSON及Trace仅留本地，来源哈希见索引。
+> 本次公开增量的隔离验证为1017项通过、18项浏览器验收跳过；原工作区1043项包含26项未纳入发布的并行Runtime测试。去敏结果见[Phase 3证据](../docs/eval-evidence/phase3-2026-11-07/README.md)，完整Trace与数据库仅留本地。
+
 
 `reliability_runner.py`整合已有14例文件工具链、24例内容运营链，增加12例真实生产入口故障探针；数据集为`datasets/reliability_v1.json`。这是工程行为评测，固定SDK回复不衡量模型自主规划、语义理解或内容质量。
 
@@ -84,3 +85,14 @@ PYTHONPATH="$TASK_REPLAY_ROOT:$TASK_REPLAY_ROOT/apps/dev-agent/src:$TASK_REPLAY_
 ```
 
 预期仍返回1；不得把已有失败改为通过。正式快照SHA256及实际重放验证见报告目录的`snapshot-replay-verification.json`，依赖版本和Python版本见manifest。退出码、成功/失败分布应可复现，耗时、UUID和临时绝对路径不要求逐字相同。
+
+
+## Phase 3：契约v2与完成协议
+
+原v1数据集及评分器保持原字节，当前v1为147/150（仅RT-E10旧契约失败），v2为150/150。v2只改RT-E10为“保留历史回执+同版本当前状态快照”；同一运行同时保存两套判分，不能把契约差值当优化收益。
+
+    PYTHONDONTWRITEBYTECODE=1 PYTHON_DOTENV_DISABLED=1 .venv/bin/python -B -m evals.reliability_v2_runner --repetitions 3 --output-dir artifacts/evals/reliability/phase3-NEW
+
+v2输出v1-observations/完整原始执行、report.json/md新口径结果和输入/评分器哈希。只重评分可传--input-report已有完整v1报告，不发起新运行。Recovery分类入口为evals.recovery_analysis。
+
+宿主合同、旧周计划兼容修复、35项新增回归、准确分母及普通聊天局限见[Phase 3](../docs/EVAL_PHASE3.md)。本轮仍无真实模型或真实账号；完整证据仅保存在本地，未自动发布。

@@ -41,6 +41,7 @@ def workflow_env(tmp_path, monkeypatch):
         def run(self, task, *, history, episode_id, skill_name=None, auto_select_skill=True):
             tracker.calls += 1
             tracker.skill = skill_name
+            tracker.completion_contract = getattr(self, "completion_contract", None)
             assert auto_select_skill is False
             assert history == []
             if tracker.mode == "before_save":
@@ -88,6 +89,21 @@ def bind(env):
 def start(env):
     bind(env)
     return act(env, "research", confirm_research=True)
+
+
+@pytest.mark.parametrize("mode", ["no_save", "failed_result", "success"])
+def test_research_completion_uses_bound_artifact_and_source_status(workflow_env, mode):
+    from agent.completion import complete_answer
+    env = workflow_env
+    env.tracker.mode = mode
+    start(env)
+    assert env.tracker.completion_contract is not None
+    answer, receipt = complete_answer("模型认为研究已经完成", env.tracker.completion_contract)
+    current = env.store.content_workflow(env.identifier)
+    expected = current.get("research_status") == "success" and bool(current.get("research_path"))
+    assert json.loads(answer)["completed"] is expected
+    if mode in {"no_save", "failed_result"}:
+        assert receipt["status"] == "needs_review"
 
 
 @pytest.mark.parametrize("code", ["PROVIDER_TIMEOUT", "PROVIDER_RESULT_PENDING"])

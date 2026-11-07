@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "scope": "isolated publication on existing public phase2 commit",
+  "base_commit": "763ae34399e4d661e2b109445262830e0f5cfad0",
+  "pytest": {
+    "passed": 1017,
+    "browser_skipped": 18,
+    "failures": 0,
+    "errors": 0
+  },
+  "benchmark": {
+    "v1": {
+      "planned": 150,
+      "passed": 147,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 96,
+          "denominator": 99,
+          "value": 0.9696969696969697,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 45,
+          "denominator": 45,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 0,
+          "denominator": 9,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 22.771332995034754,
+          "p95": 1178.0239579966292,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.268542011734098,
+          "p95": 762.7034159959294
+        },
+        "content": {
+          "observed": 72,
+          "p50": 25.419834011700004,
+          "p95": 43.32787499879487
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 34.135666996007785,
+          "p95": 1237.21070800093
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 147,
+          "denominator": 150,
+          "value": 0.98,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 49,
+          "denominator": 50,
+          "value": 0.98,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 49,
+          "denominator": 50,
+          "value": 0.98,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 33,
+          "denominator": 36,
+          "value": 0.9166666666666666,
+          "unknown": 0
+        }
+      },
+      "failures": [
+        {
+          "case_id": "RT-E10",
+          "repetition": 1,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 2,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        },
+        {
+          "case_id": "RT-E10",
+          "repetition": 3,
+          "layer": "result_reporting",
+          "status": "completed",
+          "reasons": [
+            "receipt_matches_database"
+          ]
+        }
+      ]
+    },
+    "v2": {
+      "planned": 150,
+      "passed": 150,
+      "metrics": {
+        "task_success_rate": {
+          "numerator": 27,
+          "denominator": 27,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "state_consistency_rate": {
+          "numerator": 99,
+          "denominator": 99,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "recovery_success_rate": {
+          "numerator": 45,
+          "denominator": 45,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "idempotency_success_rate": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "tool_call_accuracy": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "duplicate_side_effect_rate": {
+          "numerator": 0,
+          "denominator": 30,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "unauthorized_action_rate": {
+          "numerator": 0,
+          "denominator": 36,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "false_completion_rate": {
+          "numerator": 0,
+          "denominator": 9,
+          "value": 0.0,
+          "unknown": 0
+        },
+        "latency_ms": {
+          "p50": 22.771332995034754,
+          "p95": 1178.0239579966292,
+          "observed": 150,
+          "planned": 150,
+          "scope": "scripted_per_case_includes_fixture_and_fault_wait_not_model_or_web_SLA"
+        },
+        "tokens_per_successful_task": null,
+        "cost_per_successful_task": null,
+        "live_model_task_success_rate": null
+      },
+      "latency_by_suite_ms": {
+        "agent": {
+          "observed": 42,
+          "p50": 2.268542011734098,
+          "p95": 762.7034159959294
+        },
+        "content": {
+          "observed": 72,
+          "p50": 25.419834011700004,
+          "p95": 43.32787499879487
+        },
+        "reliability": {
+          "observed": 36,
+          "p50": 34.135666996007785,
+          "p95": 1237.21070800093
+        }
+      },
+      "repeated_runs": {
+        "k": 3,
+        "single_run": {
+          "numerator": 150,
+          "denominator": 150,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "all_k_success": {
+          "numerator": 50,
+          "denominator": 50,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "any_k_success": {
+          "numerator": 50,
+          "denominator": 50,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "scope": "empirical_scripted_all_k_and_any_k_not_live_model_estimates"
+      },
+      "by_suite": {
+        "agent": {
+          "numerator": 42,
+          "denominator": 42,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "content": {
+          "numerator": 72,
+          "denominator": 72,
+          "value": 1.0,
+          "unknown": 0
+        },
+        "reliability": {
+          "numerator": 36,
+          "denominator": 36,
+          "value": 1.0,
+          "unknown": 0
+        }
+      },
+      "failures": []
+    },
+    "same_case_verdicts_as_final_source_snapshot": true
+  },
+  "source_sha256": {
+    "apps/dev-agent/src/agent/completion.py": "06decd70428c06ebc964d3a7693532e45a3da4555775f5240c963cb33dcdb208",
+    "apps/dev-agent/src/agent/context.py": "076d39b9a7778fc8cd010d73ccc76debb50b26b9fb7309a68878ef8532118e6a",
+    "apps/dev-agent/src/agent/loop.py": "d41511f4b9b35d07312f4b98b067948cea471bcebb9b25f94a270c93f2ba98e9",
+    "apps/dev-agent/src/tools/rpa_xiaohongshu.py": "7e3511740403e43af96f4c64a43399e5e01805a28d1e4689d26a11aa0d1982f2",
+    "apps/dev-agent/src/web_agent/app.py": "ca185163698a114a8c39d95846d2154f46d240608c370dfe6b745b74cea10c5f",
+    "apps/dev-agent/src/web_agent/content_production.py": "6edbd1150ae12918926c05dc32d2fdd9d40750372751026a2ccb159fcba2ad10",
+    "apps/dev-agent/src/web_agent/content_workflow.py": "12496c28caa27955b1100721f4b1b4236a809c50ae4ccf451a8f311339e73787",
+    "apps/dev-agent/src/web_agent/conversations.py": "996bd2a3d8707b76e1675aad0a9361647b919c885de0452a29627f4c3953ee5d",
+    "apps/dev-agent/src/web_agent/weekly_planning.py": "500120c4f4d0b32915acfc0195a27376716a80d04b1d22300ece179f7ed028bd",
+    "docs/EVAL_INTERVIEW.md": "7d7193705844bf9733d5bbcd75431453f2e1086f5252ca322b3ff1f5b9600c4c",
+    "docs/EVAL_PHASE3.md": "6138955fc9bae74e3e9a86c59e7d5cc4460781fb39883f578af3d07d32b5b23f",
+    "evals/RELIABILITY.md": "71e6d82a1a3c31164ee32a0fd6046a9abef58e5281b37c238cb349eb40922d9a",
+    "evals/datasets/reliability_v2.json": "837c4d9274565437e5c201d95540af98cd26e51b5acd845badb63486732f0351",
+    "evals/recovery_analysis.py": "33860cec61e7c955b0addf818faf65f217e18159ab063f5b271fcb2d187cf829",
+    "evals/reliability_v2_runner.py": "5935efc7ea5492cc21746bc9540bb89f581609ac881fe1e9afe2e717c0be7ed6",
+    "tests/test_content_operations.py": "96878214ea0dc2f45eb584a78df314c2be75c9857e8ce5e0f44975163acdedc5",
+    "tests/test_content_workflow.py": "83093206d0148829342a53c4fddf276e3df1206b55cd4161b7b0e6ed4fd782e0",
+    "tests/test_phase3_completion.py": "0579d7383e745dfceba2f669e567238afaad24b914c5868943708a1095087d1e",
+    "tests/test_phase3_legacy.py": "cf402c1000982fc4bfacf9cf2cec9673b32ccd31803088441dddb08d135128df",
+    "tests/test_recovery_analysis.py": "0026992e02f31661b462a8c2d7276ba6758f75e1bc16e283ef5f4e63fba13601",
+    "tests/test_reliability_evals.py": "21967db3614bd56270f2b4720e89e940efe181f2c73f47d9b9fb97f2e0f8f6d1",
+    "tests/test_reliability_v2.py": "3e00a167f89d87ebef5fb78cac77ee61aada02aae1f058c33f47ea76ae956d18",
+    "tests/test_weekly_planning.py": "cf82728dafc2063e6bd59c621772419ec2346369864c962a7e5c881b92048dd8"
+  },
+  "paid_model_calls": 0,
+  "real_account_operations": 0,
+  "dependency_environment": "reused installed dependencies; fresh installation not verified",
+  "ci": "local isolated checks; remote CI not claimed",
+  "excluded": "parallel Runtime changes, raw Trace, full observation payloads, databases, credentials and source archives"
+}

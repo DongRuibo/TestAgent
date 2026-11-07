@@ -13,6 +13,7 @@ from typing import Any, Protocol
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from agent.completion import CompletionContract, complete_answer
 from agent.context import (
     ContextConfig,
     ContextReceipt,
@@ -472,6 +473,7 @@ class AgentLoop:
         clock: Callable[[], datetime] | None = None,
         attachment_filenames: Sequence[str] = (),
         skill_catalog: SkillCatalog | None = None,
+        completion_contract: CompletionContract | None = None,
     ) -> None:
         """保存模型客户端、运行时日期、工具预算、轨迹和可替换处理器。"""
         if max_steps < 1:
@@ -484,6 +486,9 @@ class AgentLoop:
         self.memory_recall_policy = memory_recall_policy or MemoryRecallPolicy.from_env()
         self.last_context_receipt: ContextReceipt | None = None
         self.last_tool_results: list[dict[str, Any]] = []
+        self.completion_contract = completion_contract
+        self.last_completion_receipt: dict[str, Any] | None = None
+        self.last_model_answer: str | None = None
         configured_timezone = (
             timezone_name or os.getenv("AGENT_TIMEZONE", DEFAULT_AGENT_TIMEZONE)
         ).strip()
@@ -559,6 +564,10 @@ class AgentLoop:
             if is_cancelled is not None and is_cancelled():
                 raise LLMStreamCancelled("Agent run cancelled")
 
+        # 新一轮即使在入口取消，也不能暴露上一轮的权威完成证据。
+        self.last_completion_receipt = None
+        self.last_model_answer = None
+        self.last_context_receipt = None
         ensure_running()
         self.last_tool_results = []
         current_datetime = self._current_datetime()
@@ -887,7 +896,7 @@ class AgentLoop:
                     message = self.client.stream_complete(
                         messages,
                         tools=run_tools,
-                        on_text_delta=on_answer_delta,
+                        on_text_delta=(lambda _: None) if self.completion_contract else on_answer_delta,
                         is_cancelled=is_cancelled,
                     )
             finally:
@@ -910,6 +919,15 @@ class AgentLoop:
                     raise RuntimeError("模型既没有返回文本，也没有调用工具。")
                 self._log(f"Step {step}: 模型给出最终回答")
                 ensure_running()
+                self.last_model_answer = message.content
+                answer, self.last_completion_receipt = complete_answer(message.content, self.completion_contract)
+                receipt.completion = self.last_completion_receipt
+                if self.last_completion_receipt is not None:
+                    self._log("Completion: " + json.dumps(self.last_completion_receipt, ensure_ascii=False))
+                    if on_answer_reset is not None:
+                        on_answer_reset()
+                    if on_answer_delta is not None:
+                        on_answer_delta(answer)
                 receipt.estimated_context_chars = estimate_messages_chars(messages[:-1]) + tool_definitions_chars
                 if (
                     self.memory is not None
@@ -922,7 +940,7 @@ class AgentLoop:
                             episode_id=memory_episode_id,
                             attempt_id=memory_attempt_id,
                             user_content=task,
-                            assistant_content=message.content,
+                            assistant_content=answer,
                             verified_tool_results=verified_tool_results,
                             completed_at=self._current_datetime(),
                             task_id=memory_task_id,
@@ -937,7 +955,7 @@ class AgentLoop:
                             "Memory: 完整对话提交失败，不影响本轮回答"
                             f"（{type(exc).__name__}）"
                         )
-                return message.content
+                return answer
 
             if message.content and on_answer_reset is not None:
                 on_answer_reset()

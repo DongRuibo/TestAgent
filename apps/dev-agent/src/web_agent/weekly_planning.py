@@ -11,6 +11,7 @@ from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 from pydantic import ValidationError
+from agent.completion import CompletionContract, CompletionDecision
 
 from testagent_dev_agent.paths import REPOSITORY_ROOT
 from tools.weekly_plans import ResearchChoice, WeeklySave
@@ -242,6 +243,21 @@ class WeeklyPlanning:
         def configure(agent):
             agent.tool_handlers.update(load_weekly_plan_inputs=load_inputs,
                 choose_weekly_research=choose, save_weekly_plan=save)
+            def verify_plan():
+                current = self.workflow.store.content_workflow(identifier)
+                if prepare:
+                    ok = chosen and bool(current.get("weekly_choice"))
+                    return CompletionDecision(status="completed" if ok else "needs_review",
+                        reason="PREPARATION_RECORDED" if ok else "PREPARATION_MISSING",
+                        evidence={"workflow_id": current["workflow_id"], "choice": current["weekly_choice"]} if ok else {})
+                plan = (current or {}).get("weekly_saved") or {}
+                ok = saved and plan == state.get("weekly_saved") and Path(plan["path"]).read_text("utf-8") == plan["markdown"]
+                if ok:
+                    ok = not validator_module().validate(plan["markdown"], now=self.now())[0]
+                return CompletionDecision(status="completed" if ok else "needs_review",
+                    reason="PLAN_PERSISTED_AND_VALIDATED" if ok else "PLAN_NOT_VERIFIED",
+                    evidence={"workflow_id": current["workflow_id"], "version": plan["version"], "content_ids": plan["content_ids"]} if ok else {})
+            agent.completion_contract = CompletionContract("weekly_prepare" if prepare else "weekly_plan", verify_plan)
 
         try:
             self.run_plan(identifier, "准备" if prepare else "编排", configure)

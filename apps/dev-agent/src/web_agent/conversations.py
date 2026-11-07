@@ -1224,8 +1224,6 @@ class SQLiteConversationStore:
                 "save_xiaohongshu_draft",
                 arguments,
             )
-            if existing is not None:
-                return {"existing_response": existing}
             row = connection.execute(
                 """
                 SELECT scenario, data_json
@@ -1253,6 +1251,11 @@ class SQLiteConversationStore:
             )
             if item is None:
                 raise GenerationUiActionConflictError("内容编号不存在。")
+            if existing is not None:
+                return {"existing_response": {**existing, "replayed": True,
+                    "original_execution_status": existing["status"],
+                    "current_business_status": item.get("rpa_status", "not_started"),
+                    "current_data_patch": {"contents": contents, "metrics": data["metrics"]}}}
             if item.get("status") != "approved":
                 raise GenerationUiActionConflictError("只有已审核内容才能保存到小红书草稿箱。")
             if item.get("rpa_status") == "running":
@@ -1372,6 +1375,7 @@ class SQLiteConversationStore:
         idempotency_key: str,
         rpa_result: dict[str, Any],
         reconcile: bool = False,
+        query_draft=None,
     ) -> dict[str, Any]:
         """把小红书草稿 RPA 的终态写回卡片和 Action 审计。"""
 
@@ -1410,6 +1414,16 @@ class SQLiteConversationStore:
             )
             if item is None:
                 raise GenerationUiActionConflictError("内容编号不存在。")
+            if item.get("rpa_status") == "manually_confirmed":
+                return {"success": True, "status": "manually_confirmed", "message": item.get("rpa_message", "人工确认草稿存在。"),
+                    "data_patch": {"contents": contents, "metrics": data["metrics"]}, "form_patch": {}, "spec_patch": {},
+                    "agent_message": "人工结论保持不变；不代表机器完成完整核验。"}
+            if reconcile or not isinstance(rpa_result, dict) or rpa_result.get("success") is not False:
+                from tools.rpa_xiaohongshu import query_verified_draft, query_xiaohongshu_draft
+                rpa_result = query_verified_draft(target=item,
+                    authorized=item.get("status") == "approved" and bool(item.get("approved_at")),
+                    execution_id=item.get("rpa_execution_id", ""), job_id=item.get("rpa_job_id") or None,
+                    query=query_draft or query_xiaohongshu_draft)
             if rpa_result.get("success") is True:
                 rpa_status, rpa_label = "draft_saved", "草稿已保存"
             elif rpa_result.get("needs_user_action") is True:
@@ -1424,8 +1438,9 @@ class SQLiteConversationStore:
                 {
                     "rpa_status": rpa_status,
                     "rpa_status_label": rpa_label,
-                    "rpa_job_id": str(rpa_result.get("job_id") or ""),
+                    "rpa_job_id": str(item.get("rpa_job_id") or rpa_result.get("job_id") or ""),
                     "rpa_message": str(rpa_result.get("message") or ""),
+                    "rpa_result": rpa_result,
                 }
             )
             _refresh_content_metrics(data)
@@ -1446,8 +1461,7 @@ class SQLiteConversationStore:
                 ),
             }
             if existing is not None:
-                connection.execute("UPDATE generation_ui_actions SET response_json=? WHERE idempotency_key=?",
-                    (json.dumps(response, ensure_ascii=False), idempotency_key))
+                # 对账只刷新业务对象；原请求的历史回执永久保留，重放另带当前快照。
                 return response
             _insert_generation_action(
                 connection,

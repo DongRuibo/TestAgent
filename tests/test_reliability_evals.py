@@ -20,15 +20,15 @@ def test_baseline_preserves_real_failures_and_all_suites(evaluated):
     output, report = evaluated
     assert len(runner.load_dataset().cases) == 50
     assert report["summary"]["planned"] == 50
-    assert report["summary"]["passed"] == 48
-    assert {r["case_id"] for r in report["cases"] if not r["passed"]} == {"RT-E10", "RT-E12"}
+    assert report["summary"]["passed"] == 49
+    assert {r["case_id"] for r in report["cases"] if not r["passed"]} == {"RT-E10"}
     assert next(row for row in report["cases"] if row["case_id"] == "RT-E08")["passed"]
     assert next(row for row in report["cases"] if row["case_id"] == "RT-E09")["passed"]
     # 这里断言框架保留已知失败；这些场景在 Benchmark 中仍然失败。
     assert not any(row["status"] == "harness_error" for row in report["cases"])
     assert (output / "environments/RT-E07-1/chat.sqlite3").is_file()
     assert (output / "environments/RT-E07-1/effects.jsonl").is_file()
-    assert json.loads((output / "report.json").read_text())["summary"]["passed"] == 48
+    assert json.loads((output / "report.json").read_text())["summary"]["passed"] == 49
 
 
 @pytest.mark.parametrize("case_id", ["RT-E01", "RT-E02", "RT-E03", "RT-E04", "RT-E05", "RT-E06", "RT-E07", "RT-E11"])
@@ -65,7 +65,7 @@ def test_stale_receipt_failure_does_not_become_duplicate_side_effect(evaluated):
     metrics = report["summary"]["metrics"]
     assert metrics["idempotency_success_rate"] == runner.fraction(8, 8)
     assert metrics["duplicate_side_effect_rate"] == runner.fraction(0, 10)
-    assert metrics["false_completion_rate"] == runner.fraction(1, 3)
+    assert metrics["false_completion_rate"] == runner.fraction(0, 3)
     assert metrics["live_model_task_success_rate"] is None
     assert metrics["tokens_per_successful_task"] is None
 

@@ -182,6 +182,30 @@ def save_xiaohongshu_draft(
     return _draft_job_result(completed)
 
 
+def query_verified_draft(*, target: dict, authorized: bool, execution_id: str, job_id: str | None, query):
+    """新旧宿主共用原执行读回入口；保存应答和模型声明均不是完成凭证。"""
+    try:
+        result = query(execution_id=execution_id, job_id=job_id)
+    except Exception:
+        result = None
+    if (isinstance(result, dict) and result.get("success") is False
+        and (job_id is None or result.get("job_id") is None or result.get("job_id") == job_id)):
+        return result
+    if (isinstance(result, dict) and result.get("success") is True
+        and result.get("workflow") == "xiaohongshu_draft" and result.get("status") == "succeeded"
+        and isinstance(result.get("job_id"), str) and bool(result["job_id"])
+        and (job_id is None or result["job_id"] == job_id)
+        and result.get("result_type") == "xiaohongshu_draft_saved"
+        and result.get("final_publish_performed") is False
+        and not result.get("needs_review") and not result.get("needs_user_action")
+        and authorized and verified_draft_result(result.get("result"), target)
+        and result.get("verification") == result["result"]["verification"]):
+        return result
+    return {"success": False, "status": "needs_review", "needs_review": True, "job_id": job_id,
+        "error_type": "RPA_RESULT_UNVERIFIED", "message": "原执行未取得与审核内容一致的完整核验回执，请人工核对；不会重复保存。",
+        "result": result, "final_publish_performed": result.get("final_publish_performed") if isinstance(result, dict) else None}
+
+
 def query_xiaohongshu_draft(*, execution_id: str, job_id: str | None = None) -> dict[str, Any]:
     """只读核对原任务，不创建模块、浏览器或新的保存动作。"""
 
